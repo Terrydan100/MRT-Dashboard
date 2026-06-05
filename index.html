@@ -54,6 +54,10 @@
   --card2: #f5f7fa; --border: #d0d5e0; --text: #1a1f36; --text2: #4a5568;
   --text3: #8892b0; --glow: rgba(245,197,24,0.2); --glow-strong: rgba(245,197,24,0.4);
 }
+@keyframes pulse-red {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.4; transform:scale(1.3); }
+}
 @keyframes pulse-border {
   0%,100% { box-shadow: 0 0 0 0 rgba(255,23,68,0.4); }
   50% { box-shadow: 0 0 0 6px rgba(255,23,68,0); }
@@ -581,7 +585,9 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <div class="clock" id="clock" style="font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--accent)">--:--:-- --</div>
         <button id="premkt-btn" onclick="checkPreMarket()" style="background:rgba(0,180,255,0.15);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px" title="Pre-Market Status">🔵 PRE-MKT</button>
-        <button onclick="toggleAlerts()" id="alert-btn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 10px;border-radius:8px;font-size:14px;cursor:pointer" title="Alerts">🔔</button>
+        <button onclick="toggleAlerts()" id="alert-btn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 10px;border-radius:8px;font-size:14px;cursor:pointer;position:relative" title="Alerts">🔔
+          <span id="global-alert-badge" style="display:none;position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:var(--red);border-radius:50%;animation:pulse-red 1s infinite"></span>
+        </button>
         <button onclick="toggleSound()" id="sound-btn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 10px;border-radius:8px;font-size:14px;cursor:pointer" title="Sound">🔇</button>
         <button onclick="showCmdPalette()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px">⌘ CMD</button>
         <button onclick="toggleHideFigures()" id="hide-figures-btn" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px">👁 HIDE FIGURES</button>
@@ -594,6 +600,18 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <button class="icon-btn" onclick="showEmergencyNews()" title="Breaking News">🚨</button>
         <button class="icon-btn" onclick="openModal('pin-modal')" title="Change PIN">🔑</button>
       </div>
+    </div>
+  </div>
+
+  <!-- PERSISTENT ALERT STRIP — always visible on all tabs -->
+  <div id="alert-strip" style="display:none;background:linear-gradient(90deg,rgba(255,23,68,0.95),rgba(255,109,0,0.9));padding:7px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:99;position:sticky;top:56px">
+    <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+      <span id="strip-icon" style="font-size:16px;flex-shrink:0">🚨</span>
+      <span id="strip-msg" style="font-size:12px;font-weight:700;color:#fff;font-family:Rajdhani,sans-serif;letter-spacing:0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Alert</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <button onclick="showTab('dashboard')" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">VIEW</button>
+      <button onclick="dismissAlertStrip()" style="background:transparent;border:none;color:rgba(255,255,255,0.7);font-size:14px;cursor:pointer;padding:2px 6px">✕</button>
     </div>
   </div>
 
@@ -711,6 +729,17 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div style="margin-left:auto;font-size:10px;color:var(--text3)" id="pattern-brief-time"></div>
       </div>
       <div id="pattern-brief-content" style="font-size:13px;color:var(--text);line-height:1.6"></div>
+    </div>
+
+    <!-- MARKET OPEN/CLOSE CONTEXT -->
+    <div id="market-context-card" style="display:none;background:linear-gradient(135deg,rgba(245,197,24,0.06),rgba(0,0,0,0));border:1px solid rgba(245,197,24,0.2);border-radius:14px;padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span id="ctx-icon" style="font-size:16px">📊</span>
+        <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:1.5px" id="ctx-title">MARKET CONTEXT</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3)" id="ctx-time"></div>
+      </div>
+      <div id="ctx-content" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      </div>
     </div>
 
     <!-- GOAL ROW -->
@@ -2624,6 +2653,7 @@ async function initDashboard() {
   renderViolations();
   updateCEOScoreboard();
   showPatternBrief();
+  showMarketContext();
   setInterval(checkMarketShock, 90000);
   setInterval(updateCEOScoreboard, 120000);
   setTimeout(checkMarketShock, 8000);
@@ -2651,8 +2681,14 @@ function checkTradingAlerts(now) {
   if(total===9*60+45 && now.getSeconds()<5) showToast('success','Session 1 Open','9:45 AM — Trading window is now OPEN! 🟢','⚡');
   if(total===11*60+30 && now.getSeconds()<5) showToast('warning','Session 1 Closed','11:30 AM — First session closing. Review your trades.','⏰');
   if(total===14*60+30 && now.getSeconds()<5) showToast('success','Session 2 Open','2:30 PM — Afternoon session is OPEN! 🟢','⚡');
-  if(total===15*60+50 && now.getSeconds()<5) showToast('warning','Close Soon','3:50 PM — 5 minutes to session close. Manage positions!','⚠️');
-  if(total===15*60+55 && now.getSeconds()<5) showToast('danger','Session Closed','3:55 PM — Session CLOSED. No more trades today.','🔒');
+  if(total===15*60+50 && now.getSeconds()<5) {
+    showToast('warning','Close Soon','3:50 PM — 5 minutes to session close. Manage positions!','⚠️');
+    showAlertStrip('PRECLOSE','⚡ 5 MIN TO SESSION END — Exit positions. No new entries after 3:55 PM');
+  }
+  if(total===15*60+55 && now.getSeconds()<5) {
+    showToast('danger','Session Closed','3:55 PM — Session CLOSED. No more trades today.','🔒');
+    showAlertStrip('SESSION','🔒 SESSION CLOSED — 3:55 PM. No more trades today.');
+  }
 }
 
 // ==================== SESSION STATUS ====================
@@ -3148,23 +3184,6 @@ async function fetchBreakingNews() {
 }
 
 // ==================== CRYPTO ====================
-async function fetchCryptoPrices() {
-  if(!state.cryptoHoldings.length) return;
-  const ids=state.cryptoHoldings.map(h=>h.id).join(',');
-  try {
-    const r=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&x_cg_demo_api_key=${COINGECKO_KEY}`);
-    if(!r.ok) return;
-    const d=await r.json();
-    state.cryptoHoldings.forEach(h=>{
-      if(d[h.id]){h.price=d[h.id].usd||0;h.change=d[h.id].usd_24h_change||0;}
-    });
-    renderCrypto();
-    fetchCryptoMarket();
-    fetchTopMovers();
-    fetchNews('cryptocurrency bitcoin','crypto-news');
-  } catch(e) { renderCrypto(); }
-}
-
 async function fetchCryptoMarket(order='market_cap_desc') {
   const el=document.getElementById('crypto-market');
   if(!el) return;
@@ -3204,71 +3223,6 @@ async function fetchCryptoMarket(order='market_cap_desc') {
       }).join('')}</tbody>
     </table>`;
   } catch(e) { el.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px">Could not load market data</div>'; }
-}
-
-function renderCrypto() {
-  const grid=document.getElementById('crypto-grid');
-  const cryptoIcons={bitcoin:'₿',ethereum:'Ξ',dogecoin:'Ð','shiba-inu':'🐕',cardano:'₳','binance-coin':'BNB',solana:'◎',ripple:'✕',jupiter:'🪐'};
-  let totalVal=0;
-  const html=state.cryptoHoldings.map(h=>{
-    const val=h.price*h.amount;
-    totalVal+=val;
-    const gainLoss=h.buyPrice>0?(h.price-h.buyPrice)*h.amount:0;
-    const gainPct=h.buyPrice>0?((h.price-h.buyPrice)/h.buyPrice*100):0;
-    const chgCls=h.change>=0?'pos':'neg';
-    const chgColor=h.change>=0?'#00e676':'#ff1744';
-    const sparkId='spark-'+h.id.replace(/[^a-z0-9]/g,'');
-    return `<div class="crypto-card" style="position:relative;overflow:hidden">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="font-size:22px">${cryptoIcons[h.id]||'🪙'}</div>
-          <div>
-            <div style="font-weight:700;font-size:14px;color:var(--text)">${h.sym}</div>
-            <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px">${h.id.replace(/-/g,' ')}</div>
-          </div>
-        </div>
-        <button class="btn btn-sm btn-danger" onclick="removeCrypto('${h.id}')" style="font-size:10px;padding:3px 8px">✕</button>
-      </div>
-      <!-- SPARKLINE -->
-      <canvas id="${sparkId}" height="40" style="width:100%;margin-bottom:8px;opacity:0.8"></canvas>
-      <div style="display:flex;justify-content:space-between;align-items:flex-end">
-        <div>
-          <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:var(--text)">$${h.price?h.price.toLocaleString(undefined,{maximumFractionDigits:6}):'--'}</div>
-          <div style="font-size:12px;font-weight:600;color:${chgColor}">${h.change>=0?'+':''}${h.change.toFixed(2)}% 24h</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:12px;color:var(--text2)">Holdings</div>
-          <div style="font-size:11px;color:var(--text)">${h.amount.toLocaleString(undefined,{maximumFractionDigits:4})}</div>
-        </div>
-      </div>
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
-        <div>
-          <div style="font-size:10px;color:var(--text2)">VALUE</div>
-          <div style="font-size:14px;font-weight:700;color:var(--accent)">$${val.toFixed(2)}</div>
-        </div>
-        ${h.buyPrice>0?`<div style="text-align:right">
-          <div style="font-size:10px;color:var(--text2)">P&L</div>
-          <div style="font-size:13px;font-weight:700;color:${gainLoss>=0?'var(--green)':'var(--red)'}">${gainLoss>=0?'+':''}$${gainLoss.toFixed(2)}<br><span style="font-size:10px">(${gainPct.toFixed(1)}%)</span></div>
-        </div>`:''}
-      </div>
-    </div>`;
-  }).join('');
-  grid.innerHTML=html||'<div style="color:var(--text2);grid-column:1/-1;text-align:center;padding:30px">No crypto holdings. Click + ADD HOLDING</div>';
-  // Draw sparklines after DOM update
-  setTimeout(()=>{ state.cryptoHoldings.forEach(h=>drawSparkline(h)); }, 50);
-  // Update stats
-  document.getElementById('crypto-total').textContent='$'+totalVal.toFixed(2);
-  const changes=state.cryptoHoldings.filter(h=>h.change);
-  if(changes.length){
-    const avgChg=changes.reduce((s,h)=>s+h.change,0)/changes.length;
-    const el=document.getElementById('crypto-change');
-    el.textContent=(avgChg>=0?'+':'')+avgChg.toFixed(2)+'% avg';
-    el.className='stat-val '+(avgChg>=0?'pos':'neg');
-    const best=state.cryptoHoldings.reduce((a,b)=>a.change>b.change?a:b);
-    document.getElementById('crypto-best').textContent=best.sym+' +'+best.change.toFixed(2)+'%';
-  }
-  // Fetch sparkline data from CoinGecko
-  fetchSparklines();
 }
 
 async function fetchSparklines() {
@@ -6095,6 +6049,7 @@ async function checkMarketShock() {
       }
       banner.style.display = 'block';
       showToast('danger','🚨 MARKET SHOCK', shocks.join(' · '), '🚨', 10000);
+      showAlertStrip('SHOCK', '🚨 MARKET SHOCK: ' + shocks.join(' · ') + ' — Reduce size, widen targets');
     } else {
       banner.style.display = 'none';
     }
@@ -6270,6 +6225,285 @@ function generateWeeklyReport() {
       <div style="font-size:11px;color:var(--text3);margin-top:4px">Generated ${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div>
     </div>`;
   showToast('success','Weekly Report Ready','Your CEO wealth summary is ready.','📊');
+}
+
+// ==================== GLOBAL ALERT STRIP ====================
+let alertStripDismissed = false;
+let alertStripLevel = 0; // 0=none, 1=info, 2=warning, 3=critical
+
+const ALERT_PRIORITY = {
+  SHOCK:    { level:3, icon:'🚨', color:'linear-gradient(90deg,rgba(255,23,68,0.95),rgba(200,0,0,0.9))', badge:true },
+  GOAL:     { level:3, icon:'🎯', color:'linear-gradient(90deg,rgba(0,200,100,0.95),rgba(0,150,60,0.9))', badge:true },
+  LOSS:     { level:3, icon:'🛑', color:'linear-gradient(90deg,rgba(255,23,68,0.95),rgba(180,0,0,0.9))', badge:true },
+  SESSION:  { level:2, icon:'⏰', color:'linear-gradient(90deg,rgba(245,197,24,0.9),rgba(200,150,0,0.85))', badge:true },
+  PRECLOSE: { level:2, icon:'⚡', color:'linear-gradient(90deg,rgba(255,109,0,0.9),rgba(200,80,0,0.85))', badge:true },
+};
+
+function showAlertStrip(type, msg) {
+  const cfg = ALERT_PRIORITY[type];
+  if (!cfg) return;
+  const strip = document.getElementById('alert-strip');
+  const icon = document.getElementById('strip-icon');
+  const msgEl = document.getElementById('strip-msg');
+  const badge = document.getElementById('global-alert-badge');
+  if (!strip) return;
+  alertStripDismissed = false;
+  strip.style.display = 'flex';
+  strip.style.background = cfg.color;
+  if (icon) icon.textContent = cfg.icon;
+  if (msgEl) msgEl.textContent = msg;
+  if (badge && cfg.badge) badge.style.display = 'block';
+  alertStripLevel = cfg.level;
+}
+
+function hideAlertStrip() {
+  const strip = document.getElementById('alert-strip');
+  const badge = document.getElementById('global-alert-badge');
+  if (strip) strip.style.display = 'none';
+  if (badge) badge.style.display = 'none';
+  alertStripLevel = 0;
+}
+
+function dismissAlertStrip() {
+  alertStripDismissed = true;
+  hideAlertStrip();
+}
+
+// Hook into checkDailyGoal to also fire strip
+const _origCheckDailyGoal = checkDailyGoal;
+function checkDailyGoal() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayTrades = state.trades.filter(t=>t.date===today&&t.type!=='WITHDRAWAL'&&t.type!=='DEPOSIT'&&t.type!=='FEES');
+  const todayPnl = todayTrades.reduce((s,t)=>s+t.pnl,0);
+  const dailyGoal = state.goal/252;
+  if (todayPnl >= dailyGoal) {
+    showPlanPopup('🎯','DAILY GOAL HIT!',`You've hit your daily goal! CLOSE THINKORSWIM NOW. Lock in the win!`,
+      ['Close ThinkorSwim immediately','Log your trades','Review what worked today','Rest and prepare for tomorrow']);
+    showAlertStrip('GOAL', `🎯 DAILY GOAL HIT $${todayPnl.toFixed(2)} — CLOSE THINKORSWIM NOW`);
+  } else if (todayPnl <= -120) {
+    showPlanPopup('🛑','DAILY LOSS LIMIT HIT',`You've hit your -$120 daily loss limit. STOP TRADING NOW.`,
+      ['Stop all trading immediately','Close all positions','Do not revenge trade','Review what went wrong tonight']);
+    showAlertStrip('LOSS', `🛑 LOSS LIMIT -$120 HIT — STOP ALL TRADING NOW`);
+  }
+}
+
+// Session end warning — fires at 3:50 PM (5 min before close)
+function checkSessionEndWarning(h, m) {
+  if (h === 15 && m === 50 && !alertStripDismissed) {
+    showAlertStrip('PRECLOSE', '⚡ 5 MIN TO SESSION END — Exit positions, no new entries after 3:55 PM');
+  }
+  if (h === 15 && m >= 55) {
+    showAlertStrip('SESSION', '🔒 SESSION CLOSED — 3:55 PM. No more trades today.');
+  }
+  if ((h === 11 && m >= 30 && h < 14) || (h >= 16)) {
+    // Between sessions or after market — clear strip unless it's a goal/loss alert
+    if (alertStripLevel <= 2 && !alertStripDismissed) hideAlertStrip();
+  }
+}
+
+// ==================== MARKET OPEN/CLOSE CONTEXT ====================
+const openDrivers = [
+  { trigger: 'gap_up', label:'Gap Up Drivers', color:'var(--green)', items:[
+    'Positive futures overnight (ES/NQ green pre-market)',
+    'Strong earnings from major company after hours',
+    'CPI/PPI came in below expectations (cooling inflation)',
+    'Fed comment interpreted as dovish',
+    'Geopolitical tension eased overnight',
+    'Strong jobs data or GDP beat'
+  ]},
+  { trigger: 'gap_down', label:'Gap Down Drivers', color:'var(--red)', items:[
+    'Negative futures overnight (ES/NQ red pre-market)',
+    'Hot CPI/PPI print (inflation running hotter than expected)',
+    'Fed hawkish comment or rate hike surprise',
+    'Major company earnings miss after hours',
+    'Geopolitical shock or escalation overnight',
+    'VIX spiked above 25 pre-market'
+  ]},
+];
+
+const closeDrivers = [
+  { trigger: 'close_up', label:'Close Green Drivers', color:'var(--green)', items:[
+    'Buyers stepped in at VWAP or morning lows',
+    'Short covering into close (shorts buying back)',
+    'Positive economic data released mid-day',
+    'Fed speaker or headline gave market confidence',
+    'End-of-month fund rebalancing (buying pressure)',
+    'Options market makers hedging into close (supportive)'
+  ]},
+  { trigger: 'close_down', label:'Close Red / Fade Drivers', color:'var(--red)', items:[
+    'Institutions sold into strength (distribution day)',
+    'No follow-through after morning gap — trapped longs selling',
+    'Risk-off into close (Friday, pre-holiday, or pre-FOMC)',
+    'Heavy put buying on SPY/QQQ (hedging or bearish bets)',
+    'Sector rotation out of tech into defensive',
+    'VIX elevated — fear staying elevated into close'
+  ]},
+  { trigger: 'rebound', label:'Rebound From Lows Drivers', color:'var(--cyan)', items:[
+    'Price hit major support (prior day low, VWAP, round number)',
+    'Short sellers took profits — covering rally',
+    'Oversold RSI bounce (RSI < 30 on 5-min chart)',
+    'News headline reversed (rumor denied or statement clarified)',
+    'Large call buying in options (market maker delta hedging = buying)',
+    'Institutional dip buyers stepped in at key technical level'
+  ]},
+];
+
+function showMarketContext() {
+  const card = document.getElementById('market-context-card');
+  const content = document.getElementById('ctx-content');
+  const title = document.getElementById('ctx-title');
+  const icon = document.getElementById('ctx-icon');
+  const timeEl = document.getElementById('ctx-time');
+  if (!card || !content) return;
+
+  const now = new Date();
+  const h = now.getHours();
+  const spyChgEl = document.getElementById('tc-spy');
+  const spyChg = parseFloat((spyChgEl?.textContent||'0').replace('%',''));
+
+  let drivers, contextTitle, ctxIcon;
+
+  // Pre-market / open context
+  if (h < 10) {
+    contextTitle = 'WHY MARKET MIGHT OPEN THIS WAY';
+    ctxIcon = '🌅';
+    drivers = openDrivers;
+    content.style.gridTemplateColumns = '1fr 1fr';
+  }
+  // Mid-day or close context
+  else if (h >= 15) {
+    contextTitle = 'WHY MARKET CLOSED / IS MOVING THIS WAY';
+    ctxIcon = '🌇';
+    if (!isNaN(spyChg) && spyChg > 0.3) {
+      drivers = [closeDrivers[0]]; // green
+    } else if (!isNaN(spyChg) && spyChg < -0.3) {
+      // Check if rebounding from lows
+      drivers = [closeDrivers[1], closeDrivers[2]];
+    } else {
+      drivers = closeDrivers;
+    }
+    content.style.gridTemplateColumns = drivers.length === 1 ? '1fr' : '1fr 1fr';
+  }
+  else {
+    contextTitle = 'WHAT MOVES THE MARKET TODAY';
+    ctxIcon = '📊';
+    drivers = [...openDrivers, closeDrivers[2]];
+    content.style.gridTemplateColumns = '1fr 1fr';
+  }
+
+  if (title) title.textContent = contextTitle;
+  if (icon) icon.textContent = ctxIcon;
+  if (timeEl) timeEl.textContent = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  content.innerHTML = drivers.slice(0,2).map(d => `
+    <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-left:3px solid ${d.color};border-radius:8px;padding:10px 14px">
+      <div style="font-size:10px;font-weight:700;color:${d.color};margin-bottom:6px;letter-spacing:1px">${d.label}</div>
+      ${d.items.slice(0,4).map(item => `<div style="font-size:11px;color:var(--text2);margin-bottom:3px;line-height:1.4">· ${item}</div>`).join('')}
+    </div>`).join('');
+
+  card.style.display = 'block';
+}
+
+// ==================== DOGE VALUE FIX ====================
+// Wrap fetchCryptoPrices to add fallback for zero prices
+const _origFetchCrypto = fetchCryptoPrices;
+async function fetchCryptoPrices() {
+  if(!state.cryptoHoldings.length) return;
+  const ids=state.cryptoHoldings.map(h=>h.id).join(',');
+  try {
+    const r=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&x_cg_demo_api_key=${COINGECKO_KEY}`);
+    if(!r.ok) throw new Error('API fail');
+    const d=await r.json();
+    state.cryptoHoldings.forEach(h=>{
+      if(d[h.id] && d[h.id].usd > 0) {
+        h.price=d[h.id].usd;
+        h.change=d[h.id].usd_24h_change||0;
+      }
+      // If price still 0, try backup fetch for that coin specifically
+    });
+    // Validate — if any price is 0 or missing, fetch individually
+    const zeroPriced = state.cryptoHoldings.filter(h => !h.price || h.price === 0);
+    if (zeroPriced.length) {
+      for (const coin of zeroPriced) {
+        try {
+          const r2 = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coin.id}&vs_currencies=usd&include_24hr_change=true&x_cg_demo_api_key=${COINGECKO_KEY}`);
+          if(r2.ok) {
+            const d2 = await r2.json();
+            if(d2[coin.id]?.usd > 0) { coin.price = d2[coin.id].usd; coin.change = d2[coin.id].usd_24h_change||0; }
+          }
+        } catch(e2) {}
+      }
+    }
+    renderCrypto();
+    updateCEOScoreboard();
+    fetchCryptoMarket();
+    fetchTopMovers();
+    fetchNews('cryptocurrency bitcoin','crypto-news');
+  } catch(e) { renderCrypto(); }
+}
+
+// ==================== CLICKABLE CRYPTO HOLDINGS ====================
+function renderCrypto() {
+  const grid=document.getElementById('crypto-grid');
+  const cryptoIcons={bitcoin:'₿',ethereum:'Ξ',dogecoin:'Ð','shiba-inu':'🐕',cardano:'₳','binance-coin':'BNB',solana:'◎',ripple:'✕',jupiter:'🪐'};
+  const coinLinks={bitcoin:'https://www.coingecko.com/en/coins/bitcoin',ethereum:'https://www.coingecko.com/en/coins/ethereum',dogecoin:'https://www.coingecko.com/en/coins/dogecoin','shiba-inu':'https://www.coingecko.com/en/coins/shiba-inu',cardano:'https://www.coingecko.com/en/coins/cardano',solana:'https://www.coingecko.com/en/coins/solana'};
+  let totalVal=0;
+  const html=state.cryptoHoldings.map(h=>{
+    const val=h.price*h.amount;
+    totalVal+=val;
+    const gainLoss=h.buyPrice>0?(h.price-h.buyPrice)*h.amount:0;
+    const gainPct=h.buyPrice>0?((h.price-h.buyPrice)/h.buyPrice*100):0;
+    const chgColor=h.change>=0?'#00e676':'#ff1744';
+    const sparkId='spark-'+h.id.replace(/[^a-z0-9]/g,'');
+    const link=coinLinks[h.id]||`https://www.coingecko.com/en/coins/${h.id}`;
+    return `<div class="crypto-card" style="position:relative;overflow:hidden;cursor:pointer" onclick="window.open('${link}','_blank')" title="Click to view ${h.sym} on CoinGecko">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:22px">${cryptoIcons[h.id]||'🪙'}</div>
+          <div>
+            <div style="font-weight:700;font-size:14px;color:var(--text)">${h.sym}</div>
+            <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px">${h.id.replace(/-/g,' ')}</div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removeCrypto('${h.id}')" style="font-size:10px;padding:3px 8px">✕</button>
+      </div>
+      <canvas id="${sparkId}" height="40" style="width:100%;margin-bottom:8px;opacity:0.8"></canvas>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:var(--text)">$${h.price?h.price.toLocaleString(undefined,{maximumFractionDigits:6}):'--'}</div>
+          <div style="font-size:12px;font-weight:600;color:${chgColor}">${h.change>=0?'+':''}${h.change.toFixed(2)}% 24h</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--text2)">Holdings</div>
+          <div style="font-size:11px;color:var(--text)">${h.amount.toLocaleString(undefined,{maximumFractionDigits:4})}</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:10px;color:var(--text2)">VALUE</div>
+          <div style="font-size:14px;font-weight:700;color:var(--accent)">$${val>0?val.toFixed(2):'--'}</div>
+        </div>
+        <div style="text-align:right">
+          ${h.buyPrice>0?`<div style="font-size:10px;color:var(--text2)">P&L</div>
+          <div style="font-size:13px;font-weight:700;color:${gainLoss>=0?'var(--green)':'var(--red)'}">${gainLoss>=0?'+':''}$${gainLoss.toFixed(2)}</div>`
+          :`<div style="font-size:10px;color:var(--text3)">↗ View chart</div>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  grid.innerHTML=html||'<div style="color:var(--text2);grid-column:1/-1;text-align:center;padding:30px">No crypto holdings. Click + ADD HOLDING</div>';
+  setTimeout(()=>{ state.cryptoHoldings.forEach(h=>drawSparkline(h)); }, 50);
+  document.getElementById('crypto-total').textContent='$'+totalVal.toFixed(2);
+  const changes=state.cryptoHoldings.filter(h=>h.change);
+  if(changes.length){
+    const avgChg=changes.reduce((s,h)=>s+h.change,0)/changes.length;
+    const el=document.getElementById('crypto-change');
+    if(el){el.textContent=(avgChg>=0?'+':'')+avgChg.toFixed(2)+'% avg';el.className='stat-val '+(avgChg>=0?'pos':'neg');}
+    const best=state.cryptoHoldings.reduce((a,b)=>a.change>b.change?a:b);
+    const bestEl=document.getElementById('crypto-best');
+    if(bestEl) bestEl.textContent=best.sym+(best.change>=0?' +':' ')+best.change.toFixed(2)+'%';
+  }
+  fetchSparklines();
 }
 
 // ==================== KEYBOARD SHORTCUTS ====================
