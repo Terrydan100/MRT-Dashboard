@@ -928,6 +928,39 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- S&R DETECTOR -->
+    <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(0,180,255,0.04),rgba(0,0,0,0));border:1px solid rgba(0,180,255,0.15)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title" style="color:var(--blue)">📊 LIVE S&amp;R LEVELS</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Support &amp; Resistance · Updates every 5 minutes</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="fetchSRLevels('SPY')" id="sr-spy-btn" style="font-size:11px;background:var(--accent);color:#000">SPY</button>
+          <button class="btn btn-sm" onclick="fetchSRLevels('QQQ')" id="sr-qqq-btn" style="font-size:11px">QQQ</button>
+          <button class="btn btn-sm" onclick="fetchSRLevels(currentSRSym)" style="font-size:11px">🔄</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:8px">🔴 RESISTANCE LEVELS</div>
+          <div id="sr-resistance" style="display:flex;flex-direction:column;gap:4px">
+            <div style="color:var(--text2);font-size:12px;text-align:center;padding:10px">Loading...</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:8px">🟢 SUPPORT LEVELS</div>
+          <div id="sr-support" style="display:flex;flex-direction:column;gap:4px">
+            <div style="color:var(--text2);font-size:12px;text-align:center;padding:10px">Loading...</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:11px;color:var(--text2)">Current: <span id="sr-current-price" style="color:var(--accent);font-weight:700;font-family:Orbitron,sans-serif">--</span></div>
+        <div style="font-size:11px;color:var(--text2)">Nearest Support: <span id="sr-nearest-support" style="color:#00e676;font-weight:700">--</span> &nbsp;|&nbsp; Nearest Resistance: <span id="sr-nearest-resist" style="color:#ff5252;font-weight:700">--</span></div>
+      </div>
+    </div>
+
     <!-- NET WORTH TRACKER -->
     <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(0,230,118,0.05),rgba(245,197,24,0.03));border:1px solid rgba(0,230,118,0.2)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -1823,6 +1856,25 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div id="festival-grid"></div>
     </div>
 
+    <!-- BARBADOS NEWS -->
+    <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(0,180,255,0.03),rgba(0,0,0,0))">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title">📰 BARBADOS NEWS</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Latest from Barbados Today · Nation News · CBC Barbados</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="fetchBarbadosNews('barbadostoday')" id="btn-bbt" style="font-size:11px;border-color:var(--accent);color:var(--accent)">🇧🇧 Bim Today</button>
+          <button class="btn btn-sm" onclick="fetchBarbadosNews('nationnews')" id="btn-nation" style="font-size:11px">📰 Nation</button>
+          <button class="btn btn-sm" onclick="fetchBarbadosNews('cbc')" id="btn-cbc" style="font-size:11px">📺 CBC</button>
+          <button class="btn btn-sm" onclick="fetchBarbadosNews('all')" id="btn-all-news" style="font-size:11px">🌐 All</button>
+        </div>
+      </div>
+      <div id="barbados-news-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+        <div style="color:var(--text2);text-align:center;padding:20px;grid-column:1/-1;font-size:13px">Click a source above to load latest Barbados news</div>
+      </div>
+    </div>
+
     <div class="grid-2">
       <div class="card">
         <div class="section-title" style="margin-bottom:12px">💱 USD / BBD CONVERTER</div>
@@ -1841,6 +1893,32 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div class="chart-container"><canvas id="bdbChart"></canvas></div>
       </div>
     </div>
+
+    <!-- BARBADOS NEWS FEED -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title">📰 BARBADOS LIVE NEWS</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Nation News · Barbados Today · CBC TV8</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="filterBarbNews('all')" id="bnews-all" style="font-size:11px;background:var(--accent);color:#000">All</button>
+          <button class="btn btn-sm" onclick="filterBarbNews('nation')" id="bnews-nation" style="font-size:11px">🗞️ Nation</button>
+          <button class="btn btn-sm" onclick="filterBarbNews('today')" id="bnews-today" style="font-size:11px">📱 Bim Today</button>
+          <button class="btn btn-sm" onclick="filterBarbNews('cbc')" id="bnews-cbc" style="font-size:11px">📺 CBC</button>
+          <button class="btn btn-sm" onclick="fetchBarbadosNews()" style="font-size:11px">🔄 Refresh</button>
+        </div>
+      </div>
+      <div id="barbados-news-grid" style="display:flex;flex-direction:column;gap:8px">
+        <div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">Loading Barbados news...</div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border)">
+        <a href="https://nationnews.com" target="_blank" class="btn btn-sm" style="font-size:11px">🗞️ Nation News →</a>
+        <a href="https://barbadostoday.bb" target="_blank" class="btn btn-sm" style="font-size:11px">📱 Barbados Today →</a>
+        <a href="https://cbc.bb" target="_blank" class="btn btn-sm" style="font-size:11px">📺 CBC Barbados →</a>
+      </div>
+    </div>
+
   </div>
 
   <!-- ===================== EDUCATION TAB ===================== -->
@@ -2240,6 +2318,8 @@ async function initDashboard() {
   renderNetWorth();
   buildPLCalendar();
   setTimeout(updateTradingIntelligence, 3000);
+  setTimeout(() => fetchSRLevels('SPY'), 4000);
+  setInterval(() => fetchSRLevels(currentSRSym), 300000);
   fetchWeather();
   fetchMarketStatus();
   checkPreMarket();
@@ -2306,7 +2386,7 @@ function showTab(id) {
     if(id==='dashboard') { tryInitEquityChart(); loadTradingViewCharts(); }
     if(id==='analytics') tryInitAnalyticsCharts();
     if(id==='research') loadTradingViewCharts();
-    if(id==='barbados') { initBarbadosMap(); setTimeout(()=>{ if(barbadosMap) barbadosMap.invalidateSize(); renderFestivals(); renderRealEstate(); }, 200); }
+    if(id==='barbados') { initBarbadosMap(); setTimeout(()=>{ if(barbadosMap) barbadosMap.invalidateSize(); renderFestivals(); renderRealEstate(); fetchBarbadosNews(); }, 200); }
   }, 150);
   // Apply per-tab accent color if set
   if(state.tabColors && state.tabColors[id]) {
@@ -5262,6 +5342,287 @@ function updateTradingIntelligence() {
   updateIVRank();
   fetchPutCallRatio();
   checkConfluenceSignal();
+}
+
+// ==================== BARBADOS NEWS ====================
+let allBarbadosNews = [];
+let barbNewsFilter = 'all';
+
+const barbNewsFeeds = [
+  { id: 'today', name: 'Barbados Today', url: 'https://barbadostoday.bb/feed/', color: '#00b4ff', icon: '📱' },
+  { id: 'cbc', name: 'CBC Barbados', url: 'https://cbc.bb/feed/', color: '#00e676', icon: '📺' },
+];
+
+// Nation News doesnt have public RSS - use NewsAPI with barbados query
+async function fetchBarbadosNews() {
+  const grid = document.getElementById('barbados-news-grid');
+  if(!grid) return;
+  grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">Loading Barbados news...</div>';
+  allBarbadosNews = [];
+
+  // Fetch from RSS feeds via rss2json proxy (free)
+  const rssProxy = 'https://api.rss2json.com/v1/api.json?rss_url=';
+  const fetchPromises = barbNewsFeeds.map(async feed => {
+    try {
+      const r = await fetch(rssProxy + encodeURIComponent(feed.url) + '&count=6');
+      if(!r.ok) return [];
+      const data = await r.json();
+      if(data.status !== 'ok' || !data.items) return [];
+      return data.items.map(item => ({
+        source: feed.id,
+        sourceName: feed.name,
+        color: feed.color,
+        icon: feed.icon,
+        title: item.title,
+        desc: item.description ? item.description.replace(/<[^>]*>/g,'').substring(0,120) + '...' : '',
+        url: item.link,
+        date: item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '',
+      }));
+    } catch(e) { return []; }
+  });
+
+  // Also fetch from NewsAPI with Barbados query
+  try {
+    const newsR = await fetch(`https://newsapi.org/v2/everything?q=Barbados&language=en&sortBy=publishedAt&pageSize=6&apiKey=${NEWSAPI_KEY}`);
+    if(newsR.ok) {
+      const newsData = await newsR.json();
+      if(newsData.articles) {
+        const nationItems = newsData.articles.map(a => ({
+          source: 'nation',
+          sourceName: a.source?.name || 'Nation News',
+          color: '#f5c518',
+          icon: '🗞️',
+          title: a.title,
+          desc: a.description ? a.description.substring(0,120) + '...' : '',
+          url: a.url,
+          date: a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '',
+        }));
+        allBarbadosNews.push(...nationItems);
+      }
+    }
+  } catch(e) {}
+
+  const results = await Promise.all(fetchPromises);
+  results.forEach(items => allBarbadosNews.push(...items));
+
+  // Sort by date (newest first)
+  allBarbadosNews.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  if(!allBarbadosNews.length) {
+    // Fallback: show links to sources
+    grid.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">
+      Could not load live feeds. Click the links below to visit each source directly.
+    </div>`;
+    return;
+  }
+
+  renderBarbadosNews();
+}
+
+function renderBarbadosNews() {
+  const grid = document.getElementById('barbados-news-grid');
+  if(!grid) return;
+  const filtered = barbNewsFilter === 'all' ? allBarbadosNews : allBarbadosNews.filter(n => n.source === barbNewsFilter);
+  if(!filtered.length) {
+    grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">No stories from this source right now.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.slice(0,12).map(n => `
+    <div onclick="window.open('${n.url.replace(/'/g,'%27')}','_blank')"
+      style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid ${n.color};border-radius:10px;padding:12px 14px;cursor:pointer;transition:all 0.2s;display:flex;gap:12px;align-items:flex-start"
+      onmouseover="this.style.background='var(--card2)';this.style.borderColor='${n.color}'"
+      onmouseout="this.style.background='var(--bg2)';this.style.borderColor='var(--border)'">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="font-size:11px;font-weight:700;color:${n.color}">${n.icon} ${n.sourceName}</span>
+          ${n.date ? `<span style="font-size:10px;color:var(--text3)">· ${n.date}</span>` : ''}
+        </div>
+        <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px;line-height:1.4">${n.title}</div>
+        ${n.desc ? `<div style="font-size:11px;color:var(--text2);line-height:1.5">${n.desc}</div>` : ''}
+      </div>
+      <div style="font-size:16px;color:var(--text3);flex-shrink:0">→</div>
+    </div>`).join('');
+}
+
+function filterBarbNews(source) {
+  barbNewsFilter = source;
+  ['all','nation','today','cbc'].forEach(s => {
+    const el = document.getElementById('bnews-' + s);
+    if(el) { el.style.background = s===source?'var(--accent)':''; el.style.color = s===source?'#000':''; }
+  });
+  renderBarbadosNews();
+}
+
+// ==================== S&R DETECTOR ====================
+let currentSRSym = 'SPY';
+let srInterval = null;
+
+async function fetchSRLevels(sym) {
+  currentSRSym = sym;
+  // Update button states
+  ['SPY','QQQ'].forEach(s => {
+    const btn = document.getElementById('sr-' + s.toLowerCase() + '-btn');
+    if(btn) { btn.style.background = s===sym?'var(--accent)':''; btn.style.color = s===sym?'#000':''; }
+  });
+  try {
+    // Fetch candle data for S&R calculation
+    const now = Math.floor(Date.now()/1000);
+    const from = now - (5 * 24 * 3600); // 5 days of data
+    const r = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${sym}&resolution=60&from=${from}&to=${now}&token=${FINNHUB_KEY}`);
+    if(!r.ok) throw new Error('API error');
+    const data = await r.json();
+    if(data.s !== 'ok' || !data.c) throw new Error('No data');
+
+    const closes = data.c;
+    const highs = data.h;
+    const lows = data.l;
+    const currentPrice = closes[closes.length - 1];
+
+    // Find S&R by identifying price levels where price has reversed multiple times
+    const allLevels = [...highs, ...lows];
+    const levelMap = {};
+    const tolerance = currentPrice * 0.002; // 0.2% tolerance
+
+    allLevels.forEach(price => {
+      const rounded = Math.round(price / tolerance) * tolerance;
+      levelMap[rounded] = (levelMap[rounded] || 0) + 1;
+    });
+
+    // Filter levels with 2+ touches, sort
+    const significantLevels = Object.entries(levelMap)
+      .filter(([p, count]) => count >= 2)
+      .map(([p, count]) => ({ price: parseFloat(p), strength: count }))
+      .sort((a, b) => b.strength - a.strength)
+      .slice(0, 20);
+
+    const resistance = significantLevels.filter(l => l.price > currentPrice).sort((a,b) => a.price - b.price).slice(0,5);
+    const support = significantLevels.filter(l => l.price < currentPrice).sort((a,b) => b.price - a.price).slice(0,5);
+
+    // Render
+    const priceEl = document.getElementById('sr-current-price');
+    if(priceEl) priceEl.textContent = '$' + currentPrice.toFixed(2);
+
+    const resistEl = document.getElementById('sr-resistance');
+    const suppEl = document.getElementById('sr-support');
+    const nearResist = document.getElementById('sr-nearest-resist');
+    const nearSupp = document.getElementById('sr-nearest-support');
+
+    if(resistEl) resistEl.innerHTML = resistance.length ? resistance.map(l => `
+      <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);border-radius:6px;padding:6px 10px">
+        <span style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:#ff5252">$${l.price.toFixed(2)}</span>
+        <span style="font-size:10px;color:var(--text2)">${'★'.repeat(Math.min(l.strength,5))} ${l.strength} touches</span>
+      </div>`).join('') : '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">No resistance found</div>';
+
+    if(suppEl) suppEl.innerHTML = support.length ? support.map(l => `
+      <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:6px;padding:6px 10px">
+        <span style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:#00e676">$${l.price.toFixed(2)}</span>
+        <span style="font-size:10px;color:var(--text2)">${'★'.repeat(Math.min(l.strength,5))} ${l.strength} touches</span>
+      </div>`).join('') : '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">No support found</div>';
+
+    if(nearResist && resistance.length) nearResist.textContent = '$' + resistance[0].price.toFixed(2);
+    if(nearSupp && support.length) nearSupp.textContent = '$' + support[0].price.toFixed(2);
+
+  } catch(e) {
+    const resistEl = document.getElementById('sr-resistance');
+    if(resistEl) resistEl.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">⚠️ Data unavailable</div>';
+  }
+}
+
+// ==================== BARBADOS NEWS ====================
+const barbadosNewsSources = {
+  barbadostoday: {
+    name: 'Barbados Today',
+    url: 'https://barbadostoday.bb',
+    rss: 'https://api.rss2json.com/v1/api.json?rss_url=https://barbadostoday.bb/feed/',
+    color: '#f5c518',
+    icon: '🇧🇧'
+  },
+  nationnews: {
+    name: 'Nation News',
+    url: 'https://www.nationnews.com',
+    rss: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.nationnews.com/feed/',
+    color: '#00b4ff',
+    icon: '📰'
+  },
+  cbc: {
+    name: 'CBC Barbados',
+    url: 'https://www.cbc.bb',
+    rss: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.cbc.bb/feed/',
+    color: '#00e676',
+    icon: '📺'
+  }
+};
+
+async function fetchBarbadosNews(source) {
+  const grid = document.getElementById('barbados-news-grid');
+  if(!grid) return;
+
+  // Update active button
+  ['btn-bbt','btn-nation','btn-cbc','btn-all-news'].forEach(id => {
+    const b = document.getElementById(id);
+    if(b) { b.style.background = ''; b.style.color = ''; }
+  });
+  const btnMap = { barbadostoday:'btn-bbt', nationnews:'btn-nation', cbc:'btn-cbc', all:'btn-all-news' };
+  const activeBtn = document.getElementById(btnMap[source]);
+  if(activeBtn) { activeBtn.style.background = 'var(--accent)'; activeBtn.style.color = '#000'; }
+
+  grid.innerHTML = '<div style="color:var(--text2);text-align:center;padding:20px;grid-column:1/-1;font-size:13px">Loading Barbados news...</div>';
+
+  const sources = source === 'all' ? Object.keys(barbadosNewsSources) : [source];
+  let allArticles = [];
+
+  for(const src of sources) {
+    try {
+      const s = barbadosNewsSources[src];
+      const r = await fetch(s.rss);
+      if(!r.ok) throw new Error('Failed');
+      const data = await r.json();
+      if(data.items && data.items.length) {
+        const articles = data.items.slice(0, source === 'all' ? 4 : 8).map(item => ({
+          title: item.title,
+          desc: item.description ? item.description.replace(/<[^>]+>/g,'').substring(0,120) + '...' : '',
+          url: item.link,
+          date: item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '',
+          source: s.name,
+          color: s.color,
+          icon: s.icon,
+          thumb: item.thumbnail || item.enclosure?.link || ''
+        }));
+        allArticles = allArticles.concat(articles);
+      }
+    } catch(e) {
+      // Source failed — add placeholder
+      allArticles.push({
+        title: barbadosNewsSources[src].name + ' — Click to visit',
+        desc: 'Direct link to latest Barbados news',
+        url: barbadosNewsSources[src].url,
+        date: 'Live',
+        source: barbadosNewsSources[src].name,
+        color: barbadosNewsSources[src].color,
+        icon: barbadosNewsSources[src].icon,
+        thumb: ''
+      });
+    }
+  }
+
+  if(!allArticles.length) {
+    grid.innerHTML = '<div style="color:var(--text2);text-align:center;padding:20px;grid-column:1/-1">No articles found. Click source name to visit directly.</div>';
+    return;
+  }
+
+  grid.innerHTML = allArticles.map(a => `
+    <div onclick="window.open('${a.url}','_blank')"
+      style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid ${a.color};border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s"
+      onmouseover="this.style.borderColor='${a.color}';this.style.transform='translateY(-2px)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.borderLeftColor='${a.color}';this.style.transform='translateY(0)'">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:10px;font-weight:700;color:${a.color}">${a.icon} ${a.source.toUpperCase()}</span>
+        <span style="font-size:10px;color:var(--text2)">${a.date}</span>
+      </div>
+      <div style="font-weight:700;font-size:13px;color:var(--text);line-height:1.4;margin-bottom:6px">${a.title}</div>
+      ${a.desc ? `<div style="font-size:11px;color:var(--text2);line-height:1.5">${a.desc}</div>` : ''}
+      <div style="margin-top:8px;font-size:10px;color:${a.color};font-weight:600">Read more →</div>
+    </div>`).join('');
 }
 
 // ==================== KEYBOARD SHORTCUTS ====================
