@@ -1856,25 +1856,6 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div id="festival-grid"></div>
     </div>
 
-    <!-- BARBADOS NEWS -->
-    <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(0,180,255,0.03),rgba(0,0,0,0))">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <div>
-          <div class="section-title">📰 BARBADOS NEWS</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">Latest from Barbados Today · Nation News · CBC Barbados</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-sm" onclick="fetchBarbadosNews('barbadostoday')" id="btn-bbt" style="font-size:11px;border-color:var(--accent);color:var(--accent)">🇧🇧 Bim Today</button>
-          <button class="btn btn-sm" onclick="fetchBarbadosNews('nationnews')" id="btn-nation" style="font-size:11px">📰 Nation</button>
-          <button class="btn btn-sm" onclick="fetchBarbadosNews('cbc')" id="btn-cbc" style="font-size:11px">📺 CBC</button>
-          <button class="btn btn-sm" onclick="fetchBarbadosNews('all')" id="btn-all-news" style="font-size:11px">🌐 All</button>
-        </div>
-      </div>
-      <div id="barbados-news-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
-        <div style="color:var(--text2);text-align:center;padding:20px;grid-column:1/-1;font-size:13px">Click a source above to load latest Barbados news</div>
-      </div>
-    </div>
-
     <div class="grid-2">
       <div class="card">
         <div class="section-title" style="margin-bottom:12px">💱 USD / BBD CONVERTER</div>
@@ -5526,103 +5507,6 @@ async function fetchSRLevels(sym) {
     const resistEl = document.getElementById('sr-resistance');
     if(resistEl) resistEl.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">⚠️ Data unavailable</div>';
   }
-}
-
-// ==================== BARBADOS NEWS ====================
-const barbadosNewsSources = {
-  barbadostoday: {
-    name: 'Barbados Today',
-    url: 'https://barbadostoday.bb',
-    rss: 'https://api.rss2json.com/v1/api.json?rss_url=https://barbadostoday.bb/feed/',
-    color: '#f5c518',
-    icon: '🇧🇧'
-  },
-  nationnews: {
-    name: 'Nation News',
-    url: 'https://www.nationnews.com',
-    rss: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.nationnews.com/feed/',
-    color: '#00b4ff',
-    icon: '📰'
-  },
-  cbc: {
-    name: 'CBC Barbados',
-    url: 'https://www.cbc.bb',
-    rss: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.cbc.bb/feed/',
-    color: '#00e676',
-    icon: '📺'
-  }
-};
-
-async function fetchBarbadosNews(source) {
-  const grid = document.getElementById('barbados-news-grid');
-  if(!grid) return;
-
-  // Update active button
-  ['btn-bbt','btn-nation','btn-cbc','btn-all-news'].forEach(id => {
-    const b = document.getElementById(id);
-    if(b) { b.style.background = ''; b.style.color = ''; }
-  });
-  const btnMap = { barbadostoday:'btn-bbt', nationnews:'btn-nation', cbc:'btn-cbc', all:'btn-all-news' };
-  const activeBtn = document.getElementById(btnMap[source]);
-  if(activeBtn) { activeBtn.style.background = 'var(--accent)'; activeBtn.style.color = '#000'; }
-
-  grid.innerHTML = '<div style="color:var(--text2);text-align:center;padding:20px;grid-column:1/-1;font-size:13px">Loading Barbados news...</div>';
-
-  const sources = source === 'all' ? Object.keys(barbadosNewsSources) : [source];
-  let allArticles = [];
-
-  for(const src of sources) {
-    try {
-      const s = barbadosNewsSources[src];
-      const r = await fetch(s.rss);
-      if(!r.ok) throw new Error('Failed');
-      const data = await r.json();
-      if(data.items && data.items.length) {
-        const articles = data.items.slice(0, source === 'all' ? 4 : 8).map(item => ({
-          title: item.title,
-          desc: item.description ? item.description.replace(/<[^>]+>/g,'').substring(0,120) + '...' : '',
-          url: item.link,
-          date: item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '',
-          source: s.name,
-          color: s.color,
-          icon: s.icon,
-          thumb: item.thumbnail || item.enclosure?.link || ''
-        }));
-        allArticles = allArticles.concat(articles);
-      }
-    } catch(e) {
-      // Source failed — add placeholder
-      allArticles.push({
-        title: barbadosNewsSources[src].name + ' — Click to visit',
-        desc: 'Direct link to latest Barbados news',
-        url: barbadosNewsSources[src].url,
-        date: 'Live',
-        source: barbadosNewsSources[src].name,
-        color: barbadosNewsSources[src].color,
-        icon: barbadosNewsSources[src].icon,
-        thumb: ''
-      });
-    }
-  }
-
-  if(!allArticles.length) {
-    grid.innerHTML = '<div style="color:var(--text2);text-align:center;padding:20px;grid-column:1/-1">No articles found. Click source name to visit directly.</div>';
-    return;
-  }
-
-  grid.innerHTML = allArticles.map(a => `
-    <div onclick="window.open('${a.url}','_blank')"
-      style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid ${a.color};border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s"
-      onmouseover="this.style.borderColor='${a.color}';this.style.transform='translateY(-2px)'"
-      onmouseout="this.style.borderColor='var(--border)';this.style.borderLeftColor='${a.color}';this.style.transform='translateY(0)'">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:10px;font-weight:700;color:${a.color}">${a.icon} ${a.source.toUpperCase()}</span>
-        <span style="font-size:10px;color:var(--text2)">${a.date}</span>
-      </div>
-      <div style="font-weight:700;font-size:13px;color:var(--text);line-height:1.4;margin-bottom:6px">${a.title}</div>
-      ${a.desc ? `<div style="font-size:11px;color:var(--text2);line-height:1.5">${a.desc}</div>` : ''}
-      <div style="margin-top:8px;font-size:10px;color:${a.color};font-weight:600">Read more →</div>
-    </div>`).join('');
 }
 
 // ==================== KEYBOARD SHORTCUTS ====================
