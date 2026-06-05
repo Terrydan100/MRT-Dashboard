@@ -515,9 +515,57 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
   <!-- HERO HEADER -->
   <div style="background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px 10px;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-      <div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:var(--accent);letter-spacing:2px;line-height:1;text-shadow:0 0 20px var(--glow)">MR. T TRADING DASHBOARD</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--text2);letter-spacing:3px;text-transform:uppercase;margin-top:4px">AUSTIN WEALTH VENTURES LLC &nbsp;·&nbsp; OPTIONS SCALPING</div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:var(--accent);letter-spacing:2px;line-height:1;text-shadow:0 0 20px var(--glow)" id="main-dashboard-title">MR. T TRADING DASHBOARD</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--text2);letter-spacing:3px;text-transform:uppercase;margin-top:4px">AUSTIN WEALTH VENTURES LLC &nbsp;·&nbsp; OPTIONS SCALPING</div>
+        </div>
+        <!-- DASHBOARD SWITCHER DROPDOWN -->
+        <div style="position:relative" id="dash-switcher-wrap">
+          <button onclick="toggleDashSwitcher()" id="dash-switcher-btn"
+            style="background:linear-gradient(135deg,rgba(245,197,24,0.15),rgba(245,197,24,0.05));border:1px solid var(--accent);color:var(--accent);padding:8px 16px;border-radius:10px;font-size:13px;font-family:'Rajdhani',sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px;display:flex;align-items:center;gap:8px;transition:all 0.2s;box-shadow:0 0 12px rgba(245,197,24,0.1)"
+            onmouseover="this.style.boxShadow='0 0 20px rgba(245,197,24,0.3)'"
+            onmouseout="this.style.boxShadow='0 0 12px rgba(245,197,24,0.1)'">
+            <span id="dash-switcher-label">▼ SWITCH DASHBOARD</span>
+          </button>
+          <div id="dash-switcher-menu" style="display:none;position:absolute;top:calc(100% + 8px);left:0;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;z-index:999;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:fadeIn 0.15s ease">
+            <div onclick="switchDashboard('dashboard','📊 TRADING','#f5c518','dashboard')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+              <span style="font-size:18px">📊</span>
+              <div>
+                <div style="font-weight:700;font-size:13px;color:#f5c518;font-family:'Rajdhani',sans-serif;letter-spacing:1px">TRADING</div>
+                <div style="font-size:10px;color:var(--text2)">Options Scalping Dashboard</div>
+              </div>
+            </div>
+            <div onclick="switchDashboard('crypto','₿ CRYPTO','#ff6d00','crypto')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+              <span style="font-size:18px">₿</span>
+              <div>
+                <div style="font-weight:700;font-size:13px;color:#ff6d00;font-family:'Rajdhani',sans-serif;letter-spacing:1px">CRYPTO</div>
+                <div style="font-size:10px;color:var(--text2)">Holdings & Solana Movers</div>
+              </div>
+            </div>
+            <div onclick="switchDashboard('snkrs','👟 SNKRS','#00b4ff','snkrs')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+              <span style="font-size:18px">👟</span>
+              <div>
+                <div style="font-weight:700;font-size:13px;color:#00b4ff;font-family:'Rajdhani',sans-serif;letter-spacing:1px">SNKRS</div>
+                <div style="font-size:10px;color:var(--text2)">Collection & Resell Tracker</div>
+              </div>
+            </div>
+            <div onclick="switchDashboard('pokemon','🃏 POKÉMON','#ce93d8','pokemon')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+              <span style="font-size:18px">🃏</span>
+              <div>
+                <div style="font-weight:700;font-size:13px;color:#ce93d8;font-family:'Rajdhani',sans-serif;letter-spacing:1px">POKÉMON</div>
+                <div style="font-size:10px;color:var(--text2)">Card Collection & PSA Tracker</div>
+              </div>
+            </div>
+            <div onclick="switchDashboard('barbados','🌴 BARBADOS','#00e676','barbados')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+              <span style="font-size:18px">🌴</span>
+              <div>
+                <div style="font-weight:700;font-size:13px;color:#00e676;font-family:'Rajdhani',sans-serif;letter-spacing:1px">BARBADOS</div>
+                <div style="font-size:10px;color:var(--text2)">Investments, Map & Real Estate</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <div class="clock" id="clock" style="font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--accent)">--:--:-- --</div>
@@ -4888,6 +4936,50 @@ function filterFest(cat) {
   });
   renderFestivals();
 }
+
+// ==================== DASHBOARD SWITCHER ====================
+const dashTitles = {
+  dashboard: { label: 'MR. T TRADING DASHBOARD', sub: 'AUSTIN WEALTH VENTURES LLC · OPTIONS SCALPING', color: '#f5c518' },
+  crypto:    { label: 'MR. T CRYPTO DASHBOARD',  sub: 'HOLDINGS · SOLANA MOVERS · MARKET DATA',       color: '#ff6d00' },
+  snkrs:     { label: 'MR. T SNKRS DASHBOARD',   sub: 'COLLECTION · RESELL VALUES · RELEASES',        color: '#00b4ff' },
+  pokemon:   { label: 'MR. T POKÉMON DASHBOARD', sub: 'CARD COLLECTION · PSA GRADING · SET RELEASES', color: '#ce93d8' },
+  barbados:  { label: 'MR. T BARBADOS DASHBOARD',sub: 'INVESTMENTS · MAP · REAL ESTATE · FESTIVALS',  color: '#00e676' },
+};
+
+function toggleDashSwitcher() {
+  const menu = document.getElementById('dash-switcher-menu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+function switchDashboard(tabId, label, color, key) {
+  // Close menu
+  document.getElementById('dash-switcher-menu').style.display = 'none';
+  // Update title
+  const titleEl = document.getElementById('main-dashboard-title');
+  const info = dashTitles[key] || dashTitles.dashboard;
+  if(titleEl) {
+    titleEl.textContent = info.label;
+    titleEl.style.color = info.color;
+    titleEl.style.textShadow = `0 0 20px ${info.color}40`;
+  }
+  // Update button label
+  const btnLabel = document.getElementById('dash-switcher-label');
+  if(btnLabel) btnLabel.textContent = '▼ ' + label;
+  // Update button border color
+  const btn = document.getElementById('dash-switcher-btn');
+  if(btn) { btn.style.borderColor = color; btn.style.color = color; }
+  // Switch tab
+  showTab(tabId);
+}
+
+// Close switcher when clicking outside
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('dash-switcher-wrap');
+  if(wrap && !wrap.contains(e.target)) {
+    const menu = document.getElementById('dash-switcher-menu');
+    if(menu) menu.style.display = 'none';
+  }
+});
 
 // ==================== KEYBOARD SHORTCUTS ====================
 document.addEventListener('keydown',e=>{
