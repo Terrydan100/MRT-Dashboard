@@ -54,6 +54,10 @@
   --card2: #f5f7fa; --border: #d0d5e0; --text: #1a1f36; --text2: #4a5568;
   --text3: #8892b0; --glow: rgba(245,197,24,0.2); --glow-strong: rgba(245,197,24,0.4);
 }
+@keyframes pulse-border {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,23,68,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(255,23,68,0); }
+}
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background: var(--bg); color: var(--text); font-family: 'Rajdhani', sans-serif; overflow-x: hidden; min-height: 100vh; }
 body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; background: radial-gradient(ellipse at 20% 20%, rgba(245,197,24,0.03) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(0,180,255,0.03) 0%, transparent 60%); pointer-events:none; z-index:0; }
@@ -557,11 +561,18 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
                 <div style="font-size:10px;color:var(--text2)">Card Collection & PSA Tracker</div>
               </div>
             </div>
-            <div onclick="switchDashboard('barbados','🌴 BARBADOS','#00e676','barbados')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+            <div onclick="switchDashboard('barbados','🌴 BARBADOS','#00e676','barbados')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
               <span style="font-size:18px">🌴</span>
               <div>
                 <div style="font-weight:700;font-size:13px;color:#00e676;font-family:'Rajdhani',sans-serif;letter-spacing:1px">BARBADOS</div>
                 <div style="font-size:10px;color:var(--text2)">Investments, Map & Real Estate</div>
+              </div>
+            </div>
+            <div onclick="switchDashboard('sportscards','🏆 SPORTS CARDS','#ff6d00','sportscards')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+              <span style="font-size:18px">🏆</span>
+              <div>
+                <div style="font-weight:700;font-size:13px;color:#ff6d00;font-family:'Rajdhani',sans-serif;letter-spacing:1px">SPORTS CARDS</div>
+                <div style="font-size:10px;color:var(--text2)">Buy, Sell & Trade Tracker</div>
               </div>
             </div>
           </div>
@@ -600,6 +611,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
     <button class="nav-tab" onclick="showTab('pokemon')" id="tab-pokemon"><span class="tab-icon">🃏</span>Pokémon</button>
     <button class="nav-tab" onclick="showTab('barbados')" id="tab-barbados"><span class="tab-icon">🌴</span>Barbados</button>
     <button class="nav-tab" onclick="showTab('education')" id="tab-education"><span class="tab-icon">🎓</span>Learn</button>
+    <button class="nav-tab" onclick="showTab('sportscards')" id="tab-sportscards"><span class="tab-icon">🏆</span>Sports Cards</button>
   </div>
 
   <!-- LIVE TICKER -->
@@ -633,6 +645,74 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
   <!-- ===================== DASHBOARD TAB ===================== -->
   <div class="tab-content active" id="content-dashboard">
+    <!-- CEO SCOREBOARD -->
+    <div style="background:linear-gradient(135deg,rgba(245,197,24,0.08),rgba(0,180,255,0.05));border:1px solid rgba(245,197,24,0.3);border-radius:14px;padding:14px 18px;margin-bottom:16px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--blue),var(--green),var(--purple))"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--accent);letter-spacing:2px">⚡ MR. T COMMAND CENTER — LIVE SNAPSHOT</div>
+        <div style="font-size:10px;color:var(--text3)" id="ceo-updated">Updating...</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;border-left:3px solid var(--accent)">
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">📊 TRADING P&L</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="ceo-trading-pnl">$0.00</div>
+          <div style="font-size:10px;color:var(--text3)" id="ceo-trading-sub">Today</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;border-left:3px solid var(--orange)">
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">₿ CRYPTO VALUE</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--orange)" id="ceo-crypto-val">$--</div>
+          <div style="font-size:10px;color:var(--text3)" id="ceo-crypto-sub">Portfolio</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;border-left:3px solid var(--green)">
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">🌴 BARBADOS INV</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--green)" id="ceo-barb-val">$8,700</div>
+          <div style="font-size:10px;color:var(--green)" id="ceo-barb-sub">+8.75% ROI</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;border-left:3px solid var(--blue)">
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">🏆 CARDS INV</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--blue)" id="ceo-cards-val">$0</div>
+          <div style="font-size:10px;color:var(--text3)" id="ceo-cards-sub">0 cards</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;border-left:3px solid var(--purple)">
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">💼 NET WORTH EST</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--purple)" id="ceo-networth">$--</div>
+          <div style="font-size:10px;color:var(--text3)">All assets</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;border-left:3px solid var(--cyan)">
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">🎯 ANNUAL GOAL</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--cyan)" id="ceo-goal-pct">0%</div>
+          <div style="font-size:10px;color:var(--text3)" id="ceo-goal-sub">of $50K</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARKET SHOCK ALERT BANNER (hidden by default) -->
+    <div id="shock-alert-banner" style="display:none;background:linear-gradient(135deg,rgba(255,23,68,0.15),rgba(255,109,0,0.1));border:2px solid var(--red);border-radius:14px;padding:14px 18px;margin-bottom:16px;animation:pulse-border 1s infinite">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:24px">🚨</div>
+          <div>
+            <div style="font-family:Orbitron,sans-serif;font-size:13px;color:var(--red);letter-spacing:2px">MARKET SHOCK DETECTED</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px" id="shock-detail">---</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div id="shock-actions" style="font-size:12px;color:var(--accent)"></div>
+          <button onclick="document.getElementById('shock-alert-banner').style.display='none'" style="background:transparent;border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px">DISMISS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORICAL PATTERN BRIEF -->
+    <div id="pattern-brief-card" style="display:none;background:linear-gradient(135deg,rgba(0,229,255,0.06),rgba(0,0,0,0));border:1px solid rgba(0,229,255,0.25);border-radius:14px;padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:16px">🧠</span>
+        <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--cyan);letter-spacing:1.5px">HISTORICAL PATTERN BRIEF</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3)" id="pattern-brief-time"></div>
+      </div>
+      <div id="pattern-brief-content" style="font-size:13px;color:var(--text);line-height:1.6"></div>
+    </div>
+
     <!-- GOAL ROW -->
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
@@ -1471,9 +1551,61 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div style="position:relative;height:250px"><canvas id="drawdownChart"></canvas></div>
     </div>
     <!-- WIN RATE + DOW -->
-    <div class="grid-2">
+    <div class="grid-2" style="margin-bottom:16px">
       <div class="card"><div class="section-title" style="margin-bottom:12px">🎯 WIN RATE BY TICKER</div><div style="height:200px;position:relative"><canvas id="winrateChart"></canvas></div></div>
       <div class="card"><div class="section-title" style="margin-bottom:12px">📅 TRADES BY DAY OF WEEK</div><div style="height:200px;position:relative"><canvas id="dowChart"></canvas></div></div>
+    </div>
+    <!-- MISTAKE TRACKER -->
+    <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(255,23,68,0.04),rgba(0,0,0,0))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title">❌ RULE VIOLATION TRACKER</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Log any rule you broke — patterns reveal your leaks</div>
+        </div>
+        <button onclick="openModal('violation-modal')" class="btn" style="font-size:12px;border-color:var(--red);color:var(--red)">+ LOG VIOLATION</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">
+        <div style="background:var(--bg2);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">HELD TOO LONG</div>
+          <div style="font-size:20px;font-family:Orbitron,sans-serif;color:var(--red)" id="vio-held">0</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">EARLY ENTRY</div>
+          <div style="font-size:20px;font-family:Orbitron,sans-serif;color:var(--red)" id="vio-early">0</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">IGNORED TAPE</div>
+          <div style="font-size:20px;font-family:Orbitron,sans-serif;color:var(--red)" id="vio-tape">0</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">IGNORED RESIST</div>
+          <div style="font-size:20px;font-family:Orbitron,sans-serif;color:var(--red)" id="vio-resist">0</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">MOVED STOP</div>
+          <div style="font-size:20px;font-family:Orbitron,sans-serif;color:var(--red)" id="vio-stop">0</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">OTHER</div>
+          <div style="font-size:20px;font-family:Orbitron,sans-serif;color:var(--red)" id="vio-other">0</div>
+        </div>
+      </div>
+      <div id="vio-log" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px">
+        <div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">No violations logged. Keep it that way! 💪</div>
+      </div>
+    </div>
+    <!-- WEEKLY WEALTH REPORT -->
+    <div class="card" style="background:linear-gradient(135deg,rgba(245,197,24,0.05),rgba(0,180,255,0.03))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title">📊 WEEKLY WEALTH REPORT</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Auto-generates every Friday · CEO-level summary</div>
+        </div>
+        <button onclick="generateWeeklyReport()" class="btn btn-primary" style="font-size:12px">🔄 GENERATE NOW</button>
+      </div>
+      <div id="weekly-report-content">
+        <div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">Click Generate to build your weekly report.</div>
+      </div>
     </div>
   </div>
 
@@ -1949,6 +2081,183 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
   </div>
 </div>
 
+  <!-- ===================== SPORTS CARDS TAB ===================== -->
+  <div class="tab-content" id="content-sportscards">
+    <!-- HEADER -->
+    <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(255,109,0,0.08),rgba(245,197,24,0.04))">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-family:Orbitron,sans-serif;font-size:18px;color:var(--orange);margin-bottom:4px">🏆 SPORTS CARDS</div>
+          <div style="color:var(--text2);font-size:13px">Buy · Sell · Trade · Track</div>
+        </div>
+        <button onclick="openModal('sc-modal')" class="btn btn-primary" style="background:var(--orange);border-color:var(--orange)">+ ADD CARD</button>
+      </div>
+    </div>
+
+    <!-- STATS ROW -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px">
+      <div class="stat-card" style="border-left:3px solid var(--orange)">
+        <div class="stat-label">Total Cards</div>
+        <div class="stat-val" id="sc-total-cards" style="color:var(--orange)">0</div>
+        <div class="stat-sub">In collection</div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid var(--accent)">
+        <div class="stat-label">Total Invested</div>
+        <div class="stat-val neu" id="sc-total-cost">$0</div>
+        <div class="stat-sub">Cost basis</div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid var(--green)">
+        <div class="stat-label">Current Value</div>
+        <div class="stat-val pos" id="sc-total-value">$0</div>
+        <div class="stat-sub">Est. market</div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid var(--blue)">
+        <div class="stat-label">Total P&L</div>
+        <div class="stat-val" id="sc-total-pnl">$0</div>
+        <div class="stat-sub">Unrealized</div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid var(--green)">
+        <div class="stat-label">Sold Profit</div>
+        <div class="stat-val pos" id="sc-sold-profit">$0</div>
+        <div class="stat-sub">Realized</div>
+      </div>
+    </div>
+
+    <!-- FILTER ROW -->
+    <div class="card" style="margin-bottom:16px;padding:12px 16px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:11px;color:var(--text2);letter-spacing:1px">FILTER:</span>
+        <button onclick="filterSCTab('ALL')" id="sc-f-all" class="btn btn-sm" style="font-size:11px;background:var(--orange);color:#000;border-color:var(--orange)">All</button>
+        <button onclick="filterSCTab('HELD')" id="sc-f-held" class="btn btn-sm" style="font-size:11px">Held</button>
+        <button onclick="filterSCTab('SOLD')" id="sc-f-sold" class="btn btn-sm" style="font-size:11px">Sold</button>
+        <button onclick="filterSCTab('LISTED')" id="sc-f-listed" class="btn btn-sm" style="font-size:11px">Listed</button>
+        <button onclick="filterSCTab('GRADING')" id="sc-f-grading" class="btn btn-sm" style="font-size:11px">Grading</button>
+        <input id="sc-search" oninput="renderSportsCards()" placeholder="🔍 Search player, team, year..." class="form-input" style="max-width:220px;font-size:12px;padding:6px 10px;margin-left:auto">
+      </div>
+    </div>
+
+    <!-- CARDS GRID -->
+    <div id="sc-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:16px">
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text2);font-size:14px">No cards yet. Click <strong>+ ADD CARD</strong> to get started.</div>
+    </div>
+
+    <!-- SELL LOG -->
+    <div class="card">
+      <div class="section-title" style="margin-bottom:12px">💰 SOLD CARDS LOG</div>
+      <div id="sc-sold-log">
+        <div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">No sold cards yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPORTS CARD MODAL -->
+  <div class="modal-overlay" id="sc-modal">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-title">🏆 ADD / EDIT CARD <button class="modal-close" onclick="closeModal('sc-modal')">✕</button></div>
+      <input type="hidden" id="sc-edit-id">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Player Name *</label>
+          <input class="form-input" id="sc-player" placeholder="e.g. LeBron James">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Year</label>
+          <input class="form-input" id="sc-year" placeholder="e.g. 2003">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Sport</label>
+          <select class="form-select" id="sc-sport">
+            <option>Basketball</option><option>Baseball</option><option>Football</option><option>Soccer</option><option>Hockey</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Team</label>
+          <input class="form-input" id="sc-team" placeholder="e.g. Lakers">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Brand / Set</label>
+          <input class="form-input" id="sc-brand" placeholder="e.g. Topps Chrome">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Card # / Variation</label>
+          <input class="form-input" id="sc-variation" placeholder="e.g. #/99 Refractor">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Grade</label>
+          <select class="form-select" id="sc-grade">
+            <option>Raw</option><option>PSA 10</option><option>PSA 9</option><option>PSA 8</option><option>PSA 7</option><option>BGS 10</option><option>BGS 9.5</option><option>BGS 9</option><option>SGC 10</option><option>SGC 9.5</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="sc-status">
+            <option>HELD</option><option>LISTED</option><option>GRADING</option><option>SOLD</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Cost Paid ($)</label>
+          <input class="form-input" type="number" id="sc-cost" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Est. Value / Sold For ($)</label>
+          <input class="form-input" type="number" id="sc-value" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Platform (if listed/sold)</label>
+        <select class="form-select" id="sc-platform">
+          <option value="">-- N/A --</option><option>eBay</option><option>COMC</option><option>Whatnot</option><option>Facebook</option><option>PWE</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <input class="form-input" id="sc-note" placeholder="Any notes...">
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn" onclick="closeModal('sc-modal')">Cancel</button>
+        <button class="btn btn-primary" style="background:var(--orange);border-color:var(--orange)" onclick="saveSportsCard()">SAVE CARD</button>
+      </div>
+    </div>
+  </div>
+
+<!-- VIOLATION MODAL -->
+<div class="modal-overlay" id="violation-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">❌ LOG RULE VIOLATION <button class="modal-close" onclick="closeModal('violation-modal')">✕</button></div>
+    <div class="form-group">
+      <label class="form-label">Rule Broken</label>
+      <select class="form-select" id="vio-type">
+        <option value="held">Held past 10:30 AM / too long</option>
+        <option value="early">Entered before 9:45 AM</option>
+        <option value="tape">Ignored tape signal</option>
+        <option value="resist">Ignored resistance level</option>
+        <option value="stop">Moved stop loss</option>
+        <option value="other">Other violation</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">What happened? (brief)</label>
+      <input class="form-input" id="vio-note" placeholder="e.g. Held CALL through 10:45, got chopped out">
+    </div>
+    <div class="form-group">
+      <label class="form-label">P&L Impact ($)</label>
+      <input class="form-input" type="number" id="vio-pnl" placeholder="e.g. -45">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn" onclick="closeModal('violation-modal')">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--red);border-color:var(--red)" onclick="logViolation()">LOG IT</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== MODALS ===================== -->
 
 <!-- TRADE MODAL -->
@@ -2198,7 +2507,11 @@ let state = {
   calMonth: new Date().getMonth(),
   tvSymbol: 'SPY',
   tabColors: {},
-  currentTab: 'dashboard'
+  currentTab: 'dashboard',
+  sportsCards: [],
+  scFilter: 'ALL',
+  ruleViolations: [],
+  weeklyReport: null
 };
 
 // ==================== PIN SYSTEM ====================
@@ -2307,6 +2620,15 @@ async function initDashboard() {
   loadTradingViewCharts();
   setInterval(fetchMarketStatus, 60000);
   setInterval(fetchWeather, 600000);
+  renderSportsCards();
+  renderViolations();
+  updateCEOScoreboard();
+  showPatternBrief();
+  setInterval(checkMarketShock, 90000);
+  setInterval(updateCEOScoreboard, 120000);
+  setTimeout(checkMarketShock, 8000);
+  // Auto weekly report on Fridays
+  if (new Date().getDay() === 5) setTimeout(generateWeeklyReport, 5000);
   // Restore light mode if saved
   if(state.lightMode) { lightMode=false; toggleLightMode(); }
 }
@@ -2364,10 +2686,11 @@ function showTab(id) {
   document.getElementById('tab-'+id).classList.add('active');
   // Lazy-init charts when tab becomes visible
   setTimeout(()=>{
-    if(id==='dashboard') { tryInitEquityChart(); loadTradingViewCharts(); }
-    if(id==='analytics') tryInitAnalyticsCharts();
+    if(id==='dashboard') { tryInitEquityChart(); loadTradingViewCharts(); updateCEOScoreboard(); showPatternBrief(); }
+    if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); }
     if(id==='research') loadTradingViewCharts();
     if(id==='barbados') { initBarbadosMap(); setTimeout(()=>{ if(barbadosMap) barbadosMap.invalidateSize(); renderFestivals(); renderRealEstate(); fetchBarbadosNews(); }, 200); }
+    if(id==='sportscards') renderSportsCards();
   }, 150);
   // Apply per-tab accent color if set
   if(state.tabColors && state.tabColors[id]) {
@@ -5507,6 +5830,446 @@ async function fetchSRLevels(sym) {
     const resistEl = document.getElementById('sr-resistance');
     if(resistEl) resistEl.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">⚠️ Data unavailable</div>';
   }
+}
+
+// ==================== SPORTS CARDS ====================
+let scFilterCurrent = 'ALL';
+
+function saveSportsCard() {
+  const id = document.getElementById('sc-edit-id').value;
+  const card = {
+    id: id ? parseInt(id) : Date.now(),
+    player: document.getElementById('sc-player').value.trim(),
+    year: document.getElementById('sc-year').value.trim(),
+    sport: document.getElementById('sc-sport').value,
+    team: document.getElementById('sc-team').value.trim(),
+    brand: document.getElementById('sc-brand').value.trim(),
+    variation: document.getElementById('sc-variation').value.trim(),
+    grade: document.getElementById('sc-grade').value,
+    status: document.getElementById('sc-status').value,
+    cost: parseFloat(document.getElementById('sc-cost').value) || 0,
+    value: parseFloat(document.getElementById('sc-value').value) || 0,
+    platform: document.getElementById('sc-platform').value,
+    note: document.getElementById('sc-note').value.trim(),
+    dateAdded: new Date().toISOString().split('T')[0]
+  };
+  if (!card.player) { showToast('danger','Missing Info','Player name is required','❌'); return; }
+  if (id) {
+    const idx = state.sportsCards.findIndex(c => c.id === parseInt(id));
+    if (idx > -1) state.sportsCards[idx] = card;
+  } else {
+    state.sportsCards.unshift(card);
+  }
+  saveState();
+  renderSportsCards();
+  updateCEOScoreboard();
+  closeModal('sc-modal');
+  // Reset form
+  ['sc-edit-id','sc-player','sc-year','sc-team','sc-brand','sc-variation','sc-note','sc-cost','sc-value'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  showToast('success','Card Saved',`${card.player} added to collection`,'🏆');
+}
+
+function editSportsCard(id) {
+  const card = state.sportsCards.find(c => c.id === id);
+  if (!card) return;
+  document.getElementById('sc-edit-id').value = card.id;
+  document.getElementById('sc-player').value = card.player;
+  document.getElementById('sc-year').value = card.year;
+  document.getElementById('sc-sport').value = card.sport;
+  document.getElementById('sc-team').value = card.team;
+  document.getElementById('sc-brand').value = card.brand;
+  document.getElementById('sc-variation').value = card.variation;
+  document.getElementById('sc-grade').value = card.grade;
+  document.getElementById('sc-status').value = card.status;
+  document.getElementById('sc-cost').value = card.cost;
+  document.getElementById('sc-value').value = card.value;
+  document.getElementById('sc-platform').value = card.platform || '';
+  document.getElementById('sc-note').value = card.note;
+  openModal('sc-modal');
+}
+
+function deleteSportsCard(id) {
+  if (!confirm('Delete this card?')) return;
+  state.sportsCards = state.sportsCards.filter(c => c.id !== id);
+  saveState(); renderSportsCards(); updateCEOScoreboard();
+}
+
+function filterSCTab(f) {
+  scFilterCurrent = f;
+  ['ALL','HELD','SOLD','LISTED','GRADING'].forEach(s => {
+    const el = document.getElementById('sc-f-' + s.toLowerCase());
+    if (el) { el.style.background = s === f ? 'var(--orange)' : ''; el.style.color = s === f ? '#000' : ''; el.style.borderColor = s === f ? 'var(--orange)' : ''; }
+  });
+  renderSportsCards();
+}
+
+function renderSportsCards() {
+  const grid = document.getElementById('sc-grid');
+  const soldLog = document.getElementById('sc-sold-log');
+  if (!grid) return;
+  const search = (document.getElementById('sc-search')?.value || '').toLowerCase();
+  let cards = state.sportsCards.filter(c => {
+    const matchFilter = scFilterCurrent === 'ALL' || c.status === scFilterCurrent;
+    const matchSearch = !search || [c.player,c.team,c.year,c.brand,c.sport].join(' ').toLowerCase().includes(search);
+    return matchFilter && matchSearch;
+  });
+
+  // Update stats
+  const all = state.sportsCards;
+  const held = all.filter(c => c.status !== 'SOLD');
+  const sold = all.filter(c => c.status === 'SOLD');
+  const totalCost = held.reduce((s,c) => s + c.cost, 0);
+  const totalVal = held.reduce((s,c) => s + c.value, 0);
+  const totalPnl = totalVal - totalCost;
+  const soldProfit = sold.reduce((s,c) => s + (c.value - c.cost), 0);
+  const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setEl('sc-total-cards', held.length);
+  setEl('sc-total-cost', '$' + totalCost.toFixed(2));
+  setEl('sc-total-value', '$' + totalVal.toFixed(2));
+  const pnlEl = document.getElementById('sc-total-pnl');
+  if (pnlEl) { pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toFixed(2); pnlEl.className = 'stat-val ' + (totalPnl >= 0 ? 'pos' : 'neg'); }
+  const spEl = document.getElementById('sc-sold-profit');
+  if (spEl) { spEl.textContent = (soldProfit >= 0 ? '+' : '') + '$' + soldProfit.toFixed(2); spEl.className = 'stat-val ' + (soldProfit >= 0 ? 'pos' : 'neg'); }
+
+  const sportColors = { Basketball:'#ff6d00', Baseball:'#f5c518', Football:'#00e676', Soccer:'#00b4ff', Hockey:'#9c27b0', Other:'#8892b0' };
+  const statusColors = { HELD:'#00e676', SOLD:'#ff1744', LISTED:'#f5c518', GRADING:'#00b4ff' };
+
+  if (!cards.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text2);font-size:14px">No cards match your filter.</div>';
+  } else {
+    grid.innerHTML = cards.map(c => {
+      const pnl = c.value - c.cost;
+      const pnlColor = pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--text2)';
+      const sc = sportColors[c.sport] || '#8892b0';
+      const stc = statusColors[c.status] || 'var(--text2)';
+      return `<div style="background:var(--card);border:1px solid var(--border);border-top:3px solid ${sc};border-radius:12px;padding:14px;transition:all 0.2s;position:relative" onmouseover="this.style.borderColor='${sc}'" onmouseout="this.style.borderTopColor='${sc}';this.style.borderColor='var(--border)';this.style.borderTopColor='${sc}'">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-weight:700;font-size:14px;color:var(--text)">${c.player}</div>
+            <div style="font-size:11px;color:var(--text2)">${c.year} ${c.team} · ${c.sport}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <span style="font-size:10px;font-weight:700;background:${stc}22;color:${stc};border:1px solid ${stc};padding:2px 8px;border-radius:10px">${c.status}</span>
+            <span style="font-size:10px;color:var(--text3)">${c.grade}</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px">${c.brand}${c.variation ? ' · ' + c.variation : ''}</div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:10px">
+          <div style="text-align:center">
+            <div style="font-size:10px;color:var(--text2)">Paid</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text)">$${c.cost.toFixed(2)}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;color:var(--text2)">${c.status==='SOLD'?'Sold For':'Est. Value'}</div>
+            <div style="font-size:13px;font-weight:700;color:var(--accent)">$${c.value.toFixed(2)}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;color:var(--text2)">P&L</div>
+            <div style="font-size:13px;font-weight:700;color:${pnlColor}">${pnl>=0?'+':''}$${pnl.toFixed(2)}</div>
+          </div>
+        </div>
+        ${c.note ? `<div style="font-size:11px;color:var(--text3);margin-bottom:8px">📝 ${c.note}</div>` : ''}
+        ${c.platform ? `<div style="font-size:11px;color:var(--text2);margin-bottom:8px">🛒 ${c.platform}</div>` : ''}
+        <div style="display:flex;gap:6px">
+          <button onclick="editSportsCard(${c.id})" class="btn btn-sm" style="flex:1;font-size:11px">✏️ Edit</button>
+          <button onclick="deleteSportsCard(${c.id})" class="btn btn-sm" style="font-size:11px;border-color:var(--red);color:var(--red)">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Sold log
+  if (sold.length) {
+    soldLog.innerHTML = sold.map(c => {
+      const profit = c.value - c.cost;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg2);border:1px solid var(--border);border-left:3px solid ${profit>=0?'var(--green)':'var(--red)'};border-radius:8px;padding:10px 14px">
+        <div>
+          <div style="font-weight:700;font-size:13px">${c.player} <span style="color:var(--text2);font-size:11px">${c.year} ${c.team}</span></div>
+          <div style="font-size:11px;color:var(--text2)">${c.brand} · ${c.grade}${c.platform?' · '+c.platform:''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;font-weight:700;color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}$${profit.toFixed(2)}</div>
+          <div style="font-size:10px;color:var(--text3)">$${c.cost.toFixed(2)} → $${c.value.toFixed(2)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    soldLog.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">No sold cards yet.</div>';
+  }
+}
+
+// ==================== CEO SCOREBOARD ====================
+function updateCEOScoreboard() {
+  try {
+    const tradingTrades = state.trades.filter(t => t.type!=='WITHDRAWAL'&&t.type!=='DEPOSIT'&&t.type!=='FEES');
+    const today = new Date().toISOString().split('T')[0];
+    const todayTrades = tradingTrades.filter(t => t.date === today);
+    const todayPnl = todayTrades.reduce((s,t) => s + t.pnl, 0);
+    const allPnl = tradingTrades.reduce((s,t) => s + t.pnl, 0);
+
+    const tPnlEl = document.getElementById('ceo-trading-pnl');
+    if (tPnlEl) {
+      tPnlEl.textContent = (todayPnl >= 0 ? '+' : '') + '$' + todayPnl.toFixed(2);
+      tPnlEl.style.color = todayPnl > 0 ? 'var(--green)' : todayPnl < 0 ? 'var(--red)' : 'var(--accent)';
+    }
+    const tSub = document.getElementById('ceo-trading-sub');
+    if (tSub) tSub.textContent = 'Today · All time: ' + (allPnl>=0?'+':'') + '$' + allPnl.toFixed(2);
+
+    // Crypto
+    const cryptoTotal = state.cryptoHoldings.reduce((s,c) => s + (c.price * c.amount), 0);
+    const cEl = document.getElementById('ceo-crypto-val');
+    if (cEl) cEl.textContent = cryptoTotal > 0 ? '$' + cryptoTotal.toFixed(2) : '$--';
+
+    // Barbados
+    const barbTotal = state.barbadosInvestments.reduce((s,b) => s + b.current, 0);
+    const barbCost = state.barbadosInvestments.reduce((s,b) => s + b.amount, 0);
+    const barbRoi = barbCost > 0 ? ((barbTotal - barbCost) / barbCost * 100).toFixed(2) : 0;
+    const bEl = document.getElementById('ceo-barb-val');
+    if (bEl) bEl.textContent = '$' + barbTotal.toLocaleString();
+    const bSub = document.getElementById('ceo-barb-sub');
+    if (bSub) { bSub.textContent = (barbRoi >= 0 ? '+' : '') + barbRoi + '% ROI'; bSub.style.color = barbRoi >= 0 ? 'var(--green)' : 'var(--red)'; }
+
+    // Sports Cards
+    const heldCards = state.sportsCards.filter(c => c.status !== 'SOLD');
+    const cardsVal = heldCards.reduce((s,c) => s + c.value, 0);
+    const cCardEl = document.getElementById('ceo-cards-val');
+    if (cCardEl) cCardEl.textContent = '$' + cardsVal.toFixed(0);
+    const cCardSub = document.getElementById('ceo-cards-sub');
+    if (cCardSub) cCardSub.textContent = heldCards.length + ' card' + (heldCards.length !== 1 ? 's' : '');
+
+    // Net worth
+    const netWorth = (state.balance || 0) + cryptoTotal + barbTotal + cardsVal + (state.netWorth?.realestate || 0);
+    const nwEl = document.getElementById('ceo-networth');
+    if (nwEl) nwEl.textContent = '$' + netWorth.toLocaleString(undefined, {maximumFractionDigits:0});
+
+    // Goal progress
+    const goal = state.goal || 50000;
+    const pct = Math.min(100, (allPnl / goal * 100)).toFixed(1);
+    const gpEl = document.getElementById('ceo-goal-pct');
+    if (gpEl) { gpEl.textContent = pct + '%'; gpEl.style.color = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--accent)' : 'var(--cyan)'; }
+    const gSub = document.getElementById('ceo-goal-sub');
+    if (gSub) gSub.textContent = 'of $' + (goal/1000).toFixed(0) + 'K · $' + Math.max(0, goal - allPnl).toFixed(0) + ' remaining';
+
+    const updEl = document.getElementById('ceo-updated');
+    if (updEl) updEl.textContent = 'Updated ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) {}
+}
+
+// ==================== MARKET SHOCK ALERT ====================
+let lastShockCheck = 0;
+async function checkMarketShock() {
+  if (Date.now() - lastShockCheck < 60000) return; // check every 60s
+  lastShockCheck = Date.now();
+  try {
+    const vixEl = document.getElementById('t-vix');
+    const spyEl = document.getElementById('t-spy');
+    const qqqEl = document.getElementById('t-qqq');
+    if (!vixEl || !spyEl) return;
+
+    const vixTxt = vixEl.textContent.replace(/[^0-9.]/g,'');
+    const vix = parseFloat(vixTxt);
+
+    // Get SPY % change from ticker
+    const spyChg = document.getElementById('tc-spy')?.textContent || '';
+    const qqqChg = document.getElementById('tc-qqq')?.textContent || '';
+    const spyPct = parseFloat(spyChg.replace('%',''));
+    const qqqPct = parseFloat(qqqChg.replace('%',''));
+    const vixChg = parseFloat(document.getElementById('tc-vix')?.textContent?.replace('%','') || '0');
+
+    const shocks = [];
+    if (!isNaN(spyPct) && spyPct <= -1) shocks.push(`SPY ${spyPct.toFixed(2)}%`);
+    if (!isNaN(qqqPct) && qqqPct <= -1.5) shocks.push(`QQQ ${qqqPct.toFixed(2)}%`);
+    if (!isNaN(vix) && vix > 25) shocks.push(`VIX at ${vix.toFixed(1)}`);
+    if (!isNaN(vixChg) && vixChg >= 10) shocks.push(`VIX spiked +${vixChg.toFixed(1)}%`);
+
+    const banner = document.getElementById('shock-alert-banner');
+    const detail = document.getElementById('shock-detail');
+    const actions = document.getElementById('shock-actions');
+    if (!banner) return;
+
+    if (shocks.length > 0) {
+      if (detail) detail.textContent = shocks.join(' · ');
+      if (actions) {
+        const rec = vix > 30 ? 'Use +$0.50 targets · Reduce size · Expect whipsaws' : 'Trade smaller · Widen targets · Confirm before entry';
+        actions.textContent = '⚡ Recommend: ' + rec;
+      }
+      banner.style.display = 'block';
+      showToast('danger','🚨 MARKET SHOCK', shocks.join(' · '), '🚨', 10000);
+    } else {
+      banner.style.display = 'none';
+    }
+  } catch(e) {}
+}
+
+// ==================== HISTORICAL PATTERN BRIEF ====================
+const marketPatterns = [
+  { trigger: 'FOMC', pattern: 'FOMC days historically show a "sell the news" reaction 60% of the time. SPY tends to whipsaw in the 30 min before and after announcement. Best play: stay flat until 30 min post-announcement, then follow the confirmed direction.' },
+  { trigger: 'CPI', pattern: 'Hot CPI prints (above expectations) typically drop SPY 0.5–1.5% on open, then reverse 40% of the move by close. Cold prints often gap up then fade into midday. Wait for the first 15-min candle to confirm direction.' },
+  { trigger: 'PPI', pattern: 'PPI data moves markets similarly to CPI but with less force. If PPI and CPI both run hot, expect sustained selling. Historically, SPY and QQQ follow the same direction within the same session.' },
+  { trigger: 'FED', pattern: 'Fed speak days (Powell testimony, Fed minutes) create uncertainty. Historically, the market moves in one direction for 15–30 mins then reverses. Best approach: wait for the chop to settle before taking any position.' },
+  { trigger: 'earnings', pattern: 'Major earnings weeks (especially big tech) historically raise IV across the board. SPY tends to be more volatile Mon–Wed during earnings season. Theta decay accelerates post-earnings — avoid holding options through reports.' },
+  { trigger: 'friday', pattern: 'Fridays historically see profit-taking and position squaring. Volume drops after 2:30 PM. SPY and QQQ have a tendency to pull back from weekly highs on Friday afternoon — use tighter targets in Session 2.' },
+  { trigger: 'monday', pattern: 'Mondays can gap and trap. The first 15–30 minutes often set a false direction. Historically, if SPY gaps up on Monday, 45% of the time it fills part of the gap by noon. Wait for 9:45 AM confirmation.' },
+  { trigger: 'vix_high', pattern: 'When VIX is above 20, historical data shows SPY intraday ranges expand 60–80% vs. low-vol days. Larger swings = better reward but higher risk. Confirm with tape before entry — false moves are more common in fear regimes.' },
+  { trigger: 'vix_low', pattern: 'VIX below 15 signals low volatility — smaller daily ranges. Options premium is cheaper but moves are smaller. Historical win rates on momentum trades drop in low-VIX environments. Scalps work better than swings.' },
+  { trigger: 'opex', pattern: 'Options expiration week (OpEx, typically 3rd Friday) creates unusual price magnetism toward max pain levels. SPY historically trades in a tighter range early in OpEx week then breaks sharply on Thursday or Friday.' },
+];
+
+function showPatternBrief() {
+  const card = document.getElementById('pattern-brief-card');
+  const content = document.getElementById('pattern-brief-content');
+  const timeEl = document.getElementById('pattern-brief-time');
+  if (!card || !content) return;
+
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun, 1=Mon, 5=Fri
+  const vixTxt = document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'');
+  const vix = parseFloat(vixTxt) || 0;
+
+  let patterns = [];
+  if (day === 1) patterns.push(marketPatterns.find(p => p.trigger === 'monday'));
+  if (day === 5) patterns.push(marketPatterns.find(p => p.trigger === 'friday'));
+  if (vix > 20) patterns.push(marketPatterns.find(p => p.trigger === 'vix_high'));
+  if (vix > 0 && vix < 15) patterns.push(marketPatterns.find(p => p.trigger === 'vix_low'));
+
+  // Default: show a rotating daily pattern
+  if (!patterns.length) {
+    const idx = now.getDate() % marketPatterns.length;
+    patterns.push(marketPatterns[idx]);
+  }
+
+  const validPatterns = patterns.filter(Boolean).slice(0,2);
+  if (!validPatterns.length) return;
+
+  content.innerHTML = validPatterns.map(p => `
+    <div style="background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.15);border-radius:8px;padding:10px 14px;margin-bottom:8px">
+      <div style="font-size:11px;font-weight:700;color:var(--cyan);margin-bottom:4px;letter-spacing:1px">${p.trigger.toUpperCase()} PATTERN</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.6">${p.pattern}</div>
+    </div>`).join('');
+
+  if (timeEl) timeEl.textContent = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  card.style.display = 'block';
+}
+
+// ==================== RULE VIOLATION TRACKER ====================
+function logViolation() {
+  const type = document.getElementById('vio-type').value;
+  const note = document.getElementById('vio-note').value.trim();
+  const pnl = parseFloat(document.getElementById('vio-pnl').value) || 0;
+  const v = { id: Date.now(), type, note, pnl, date: new Date().toISOString().split('T')[0] };
+  if (!state.ruleViolations) state.ruleViolations = [];
+  state.ruleViolations.unshift(v);
+  saveState();
+  renderViolations();
+  closeModal('violation-modal');
+  document.getElementById('vio-note').value = '';
+  document.getElementById('vio-pnl').value = '';
+  showToast('danger','Violation Logged','Hold yourself accountable. Do better next session.','❌', 6000);
+}
+
+function renderViolations() {
+  if (!state.ruleViolations) state.ruleViolations = [];
+  const vios = state.ruleViolations;
+  const counts = { held:0, early:0, tape:0, resist:0, stop:0, other:0 };
+  vios.forEach(v => { if (counts[v.type] !== undefined) counts[v.type]++; else counts.other++; });
+  Object.keys(counts).forEach(k => { const el = document.getElementById('vio-' + k); if(el) el.textContent = counts[k]; });
+
+  const log = document.getElementById('vio-log');
+  if (!log) return;
+  if (!vios.length) {
+    log.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">No violations logged. Keep it that way! 💪</div>';
+    return;
+  }
+  const labels = { held:'Held Too Long', early:'Early Entry', tape:'Ignored Tape', resist:'Ignored Resistance', stop:'Moved Stop', other:'Other' };
+  log.innerHTML = vios.slice(0,15).map(v => `
+    <div style="background:rgba(255,23,68,0.06);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--red)">${labels[v.type] || v.type}</div>
+        ${v.note ? `<div style="font-size:11px;color:var(--text2)">${v.note}</div>` : ''}
+        <div style="font-size:10px;color:var(--text3)">${v.date}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        ${v.pnl ? `<div style="font-size:12px;font-weight:700;color:var(--red)">${v.pnl > 0 ? '+' : ''}$${v.pnl.toFixed(2)}</div>` : ''}
+        <button onclick="state.ruleViolations=state.ruleViolations.filter(x=>x.id!==${v.id});saveState();renderViolations();" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// ==================== WEEKLY WEALTH REPORT ====================
+function generateWeeklyReport() {
+  const el = document.getElementById('weekly-report-content');
+  if (!el) return;
+
+  const tradingTrades = state.trades.filter(t => t.type!=='WITHDRAWAL'&&t.type!=='DEPOSIT'&&t.type!=='FEES');
+  const now = new Date();
+  const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  const weekTrades = tradingTrades.filter(t => new Date(t.date) >= weekAgo);
+  const wins = weekTrades.filter(t => t.pnl > 0);
+  const losses = weekTrades.filter(t => t.pnl < 0);
+  const weekPnl = weekTrades.reduce((s,t) => s + t.pnl, 0);
+  const allPnl = tradingTrades.reduce((s,t) => s + t.pnl, 0);
+  const winRate = weekTrades.length ? ((wins.length / weekTrades.length) * 100).toFixed(0) : 0;
+  const avgWin = wins.length ? (wins.reduce((s,t) => s + t.pnl, 0) / wins.length).toFixed(2) : 0;
+  const avgLoss = losses.length ? (losses.reduce((s,t) => s + t.pnl, 0) / losses.length).toFixed(2) : 0;
+  const bestTrade = weekTrades.length ? weekTrades.reduce((a,b) => a.pnl > b.pnl ? a : b) : null;
+  const worstTrade = weekTrades.length ? weekTrades.reduce((a,b) => a.pnl < b.pnl ? a : b) : null;
+
+  const cryptoTotal = state.cryptoHoldings.reduce((s,c) => s + (c.price * c.amount), 0);
+  const barbTotal = state.barbadosInvestments.reduce((s,b) => s + b.current, 0);
+  const cardsVal = state.sportsCards.filter(c=>c.status!=='SOLD').reduce((s,c) => s + c.value, 0);
+  const violations = (state.ruleViolations || []).filter(v => new Date(v.date) >= weekAgo);
+  const biggestLeak = violations.length ? Object.entries(violations.reduce((acc,v)=>{acc[v.type]=(acc[v.type]||0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1])[0] : null;
+  const leakLabels = { held:'Holding too long', early:'Early entries before 9:45', tape:'Ignoring tape', resist:'Ignoring resistance', stop:'Moving stop loss', other:'Rule breaks' };
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px">WEEK TRADING P&L</div>
+        <div style="font-size:18px;font-family:Orbitron,sans-serif;font-weight:700;color:${weekPnl>=0?'var(--green)':'var(--red)'}">${weekPnl>=0?'+':''}$${weekPnl.toFixed(2)}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px">WIN RATE</div>
+        <div style="font-size:18px;font-family:Orbitron,sans-serif;font-weight:700;color:var(--blue)">${winRate}%</div>
+        <div style="font-size:10px;color:var(--text3)">${wins.length}W / ${losses.length}L of ${weekTrades.length}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px">AVG WINNER</div>
+        <div style="font-size:18px;font-family:Orbitron,sans-serif;font-weight:700;color:var(--green)">+$${avgWin}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px">AVG LOSER</div>
+        <div style="font-size:18px;font-family:Orbitron,sans-serif;font-weight:700;color:var(--red)">$${avgLoss}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--orange);border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px">CRYPTO VALUE</div>
+        <div style="font-size:18px;font-family:Orbitron,sans-serif;font-weight:700;color:var(--orange)">$${cryptoTotal.toFixed(0)}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px">WEALTH TOTAL</div>
+        <div style="font-size:18px;font-family:Orbitron,sans-serif;font-weight:700;color:var(--cyan)">$${((state.balance||0)+cryptoTotal+barbTotal+cardsVal).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);border-radius:8px;padding:12px">
+        <div style="font-size:10px;color:var(--green);font-weight:700;margin-bottom:6px">🏆 BEST TRADE THIS WEEK</div>
+        ${bestTrade ? `<div style="font-size:13px;color:var(--text)">${bestTrade.ticker} ${bestTrade.type} — <span style="color:var(--green);font-weight:700">+$${bestTrade.pnl.toFixed(2)}</span></div><div style="font-size:11px;color:var(--text2)">${bestTrade.date}${bestTrade.note?' · '+bestTrade.note:''}</div>` : '<div style="color:var(--text2);font-size:12px">No trades this week</div>'}
+      </div>
+      <div style="background:rgba(255,23,68,0.06);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:12px">
+        <div style="font-size:10px;color:var(--red);font-weight:700;margin-bottom:6px">💸 WORST TRADE THIS WEEK</div>
+        ${worstTrade && worstTrade.pnl < 0 ? `<div style="font-size:13px;color:var(--text)">${worstTrade.ticker} ${worstTrade.type} — <span style="color:var(--red);font-weight:700">$${worstTrade.pnl.toFixed(2)}</span></div><div style="font-size:11px;color:var(--text2)">${worstTrade.date}${worstTrade.note?' · '+worstTrade.note:''}</div>` : '<div style="color:var(--text2);font-size:12px">No losing trades this week 🔥</div>'}
+      </div>
+    </div>
+    ${biggestLeak ? `<div style="background:rgba(255,109,0,0.08);border:1px solid rgba(255,109,0,0.25);border-radius:8px;padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--orange);font-weight:700;margin-bottom:4px">🔍 BIGGEST LEAK THIS WEEK</div>
+      <div style="font-size:13px;color:var(--text)">${leakLabels[biggestLeak[0]]||biggestLeak[0]} — logged ${biggestLeak[1]}x this week</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Address this first before next session.</div>
+    </div>` : ''}
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">ALL-TIME TRADING P&L</div>
+      <div style="font-size:22px;font-family:Orbitron,sans-serif;font-weight:700;color:${allPnl>=0?'var(--green)':'var(--red)'}">${allPnl>=0?'+':''}$${allPnl.toFixed(2)}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Generated ${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div>
+    </div>`;
+  showToast('success','Weekly Report Ready','Your CEO wealth summary is ready.','📊');
 }
 
 // ==================== KEYBOARD SHORTCUTS ====================
