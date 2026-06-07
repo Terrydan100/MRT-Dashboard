@@ -2138,79 +2138,40 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <button class="btn btn-sm btn-primary" onclick="toggleRouteMode()" id="route-btn" style="font-size:11px">🧭 Directions</button>
         </div>
       </div>
-      <!-- ROUTE PANEL -->
-      <div id="route-panel" style="display:none;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--text2);margin-bottom:8px;letter-spacing:1px">ROUTE DIRECTIONS — Click two points on the map</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <div style="font-size:12px;color:var(--text)">From: <span id="route-from" style="color:var(--green)">Click map to set start</span></div>
-          <div style="font-size:12px;color:var(--text)">To: <span id="route-to" style="color:var(--accent)">Click map to set end</span></div>
-          <button class="btn btn-sm" onclick="clearRoute()" style="font-size:11px">✕ Clear</button>
-        </div>
-        <div id="route-info" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
-      </div>
-      <!-- SEARCH BAR -->
+      <!-- GOOGLE MAPS SEARCH BAR -->
       <div style="padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border)">
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
           <div style="flex:1;position:relative">
-            <input class="form-input" id="map-search-input" placeholder="🔍 Search — beaches, car rental, restaurants, hotels, turtles..." 
+            <input class="form-input" id="map-search-input" placeholder="🔍 Search Barbados — beaches, car rental, restaurants, hotels..." 
               style="width:100%;font-size:12px;padding:8px 12px;padding-right:80px"
-              oninput="handleMapSearch(this.value)" onkeydown="if(event.key==='Enter')searchMapPlace()">
-            <button onclick="searchMapPlace()" class="btn btn-sm btn-primary" 
+              onkeydown="if(event.key==='Enter')searchGoogleMap()">
+            <button onclick="searchGoogleMap()" class="btn btn-sm btn-primary" 
               style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:11px;padding:4px 10px">GO</button>
           </div>
-          <button onclick="clearMapSearch()" class="btn btn-sm" style="font-size:11px;white-space:nowrap">✕ Clear</button>
+          <a href="https://www.google.com/maps/place/Barbados" target="_blank" class="btn btn-sm" style="font-size:11px;white-space:nowrap;border-color:var(--blue);color:var(--blue)">🗺️ Full Screen</a>
         </div>
-        <!-- CATEGORY QUICK FILTERS -->
+        <!-- QUICK FILTERS -->
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button onclick="quickMapFilter('beaches')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--blue);color:var(--blue)">🏖️ Beaches</button>
-          <button onclick="quickMapFilter('carrental')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--green);color:var(--green)">🚗 Car Rental</button>
-          <button onclick="quickMapFilter('hotels')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--accent);color:var(--accent)">🏨 Hotels</button>
-          <button onclick="quickMapFilter('restaurants')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--orange);color:var(--orange)">🍽️ Restaurants</button>
-          <button onclick="quickMapFilter('turtles')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--cyan);color:var(--cyan)">🐢 Turtles</button>
-          <button onclick="quickMapFilter('investments')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--purple);color:var(--purple)">💰 Investments</button>
-          <button onclick="quickMapFilter('local rental')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:#ff6b9d;color:#ff6b9d">🏠 Local Renters</button>
-          <button onclick="clearMapSearch();barbadosMap.setView([13.1939,-59.5432],11)" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🗺️ Reset View</button>
+          <button onclick="searchGoogleMap('beaches Barbados')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--blue);color:var(--blue)">🏖️ Beaches</button>
+          <button onclick="searchGoogleMap('car rental Barbados')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--green);color:var(--green)">🚗 Car Rental</button>
+          <button onclick="searchGoogleMap('hotels Barbados')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--accent);color:var(--accent)">🏨 Hotels</button>
+          <button onclick="searchGoogleMap('restaurants Barbados')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--orange);color:var(--orange)">🍽️ Restaurants</button>
+          <button onclick="searchGoogleMap('sea turtles Barbados')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--cyan);color:var(--cyan)">🐢 Turtles</button>
+          <button onclick="searchGoogleMap('real estate Barbados')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--purple);color:var(--purple)">🏠 Real Estate</button>
+          <button onclick="searchGoogleMap('supermarket Barbados')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--text2);color:var(--text2)">🛒 Supermarkets</button>
+          <button onclick="resetGoogleMap()" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🗺️ Reset</button>
         </div>
       </div>
-      <!-- SEARCH RESULTS DROPDOWN -->
-      <div id="map-search-results" style="display:none;max-height:200px;overflow-y:auto;background:var(--card);border-bottom:1px solid var(--border)"></div>
-      <!-- LAYER TOGGLES -->
-      <div style="padding:8px 16px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-investments" checked onchange="toggleMapLayer('investments')"> 💰 Investments
-        </label>
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-beaches" checked onchange="toggleMapLayer('beaches')"> 🏖️ Beaches
-        </label>
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-hotels" checked onchange="toggleMapLayer('hotels')"> 🏨 Hotels
-        </label>
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-jetski" checked onchange="toggleMapLayer('jetski')"> 🚤 Jet Ski
-        </label>
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-turtles" checked onchange="toggleMapLayer('turtles')"> 🐢 Turtles
-        </label>
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-restaurants" checked onchange="toggleMapLayer('restaurants')"> 🍽️ Restaurants
-        </label>
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-catamarans" checked onchange="toggleMapLayer('catamarans')"> ⛵ Catamarans
-        </label>
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-carrental" checked onchange="toggleMapLayer('carrental')"> 🚗 Car Rental
-        </label>
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-malls" checked onchange="toggleMapLayer('malls')"> 🛍️ Malls
-        </label>
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-realestate" checked onchange="toggleMapLayer('realestate')"> 🏠 Real Estate
-        </label>
-        <label style="font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="toggle-alerts" checked onchange="toggleMapLayer('alerts')"> 🚨 Land Alerts
-        </label>
+      <!-- GOOGLE MAPS EMBED -->
+      <div style="width:calc(100% - 80px);max-width:1400px;margin:0 auto;border-radius:0 0 10px 10px;overflow:hidden">
+        <iframe id="barbados-map-iframe"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d241879!2d-59.5432!3d13.1939!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8c43e83c1df1ef55%3A0x4fd5c87bee6be3b0!2sBarbados!5e0!3m2!1sen!2sbb!4v1"
+          style="width:100%;height:500px;border:none;display:block"
+          allowfullscreen loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Barbados Map">
+        </iframe>
       </div>
-      <div id="barbados-map" style="height:500px;width:calc(100% - 80px);max-width:1400px;margin:0 auto;background:#0a0f1e"></div>
     </div>
 
     <!-- LAND ALERTS SECTION -->
@@ -2637,8 +2598,17 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
   <div class="modal">
     <div class="modal-title" id="crypto-modal-title">₿ ADD CRYPTO HOLDING <button class="modal-close" onclick="closeModal('crypto-modal')">✕</button></div>
     <input type="hidden" id="cr-edit-id" value="">
-    <div class="form-group"><label class="form-label">Coin ID (e.g. bitcoin, ethereum, dogecoin)</label><input class="form-input" type="text" id="cr-id" placeholder="dogecoin"></div>
-    <div class="form-group"><label class="form-label">Symbol (e.g. DOGE)</label><input class="form-input" type="text" id="cr-sym" placeholder="DOGE"></div>
+    <!-- Coin Search -->
+    <div class="form-group">
+      <label class="form-label">🔍 Search Coin (type name to find ID)</label>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" type="text" id="cr-search" placeholder="e.g. pepe, shiba, solana..." style="flex:1" oninput="searchCoinId(this.value)">
+        <button class="btn btn-sm" onclick="searchCoinId(document.getElementById('cr-search').value)" style="white-space:nowrap;border-color:var(--blue);color:var(--blue)">SEARCH</button>
+      </div>
+      <div id="cr-search-results" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-top:6px;max-height:150px;overflow-y:auto"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Coin ID (auto-filled from search)</label><input class="form-input" type="text" id="cr-id" placeholder="e.g. dogecoin, bitcoin, pepe"></div>
+    <div class="form-group"><label class="form-label">Symbol</label><input class="form-input" type="text" id="cr-sym" placeholder="e.g. DOGE, BTC, PEPE"></div>
     <div class="form-group"><label class="form-label">Amount Held</label><input class="form-input" type="number" id="cr-amt" placeholder="0.00"></div>
     <div class="form-group"><label class="form-label">Avg Buy Price ($)</label><input class="form-input" type="number" id="cr-buy" placeholder="0.00"></div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
@@ -3156,7 +3126,7 @@ function showTab(id) {
     if(id==='dashboard') { tryInitEquityChart(); loadTradingViewCharts(); updateCEOScoreboard(); showPatternBrief(); }
     if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); renderReplayLibrary(); }
     if(id==='research') loadTradingViewCharts();
-    if(id==='barbados') { initBarbadosMap(); setTimeout(()=>{ if(barbadosMap) barbadosMap.invalidateSize(); renderFestivals(); renderRealEstate(); fetchBarbadosNews(); }, 200); }
+    if(id==='barbados') { renderFestivals(); renderRealEstate(); fetchBarbadosNews(); }
     if(id==='sportscards') renderSportsCards();
   }, 150);
   // Apply per-tab accent color if set
@@ -3190,6 +3160,8 @@ function openModal(id) {
   }
   if (id === 'crypto-modal') {
     document.getElementById('cr-edit-id').value = '';
+    document.getElementById('cr-search').value = '';
+    document.getElementById('cr-search-results').style.display = 'none';
     document.getElementById('cr-id').value = '';
     document.getElementById('cr-sym').value = '';
     document.getElementById('cr-amt').value = '';
@@ -3838,8 +3810,51 @@ async function fetchTopMovers() {
   } catch(e) { el.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px">Could not load movers data</div>'; }
 }
 
+// ==================== COIN ID SEARCH ====================
+let coinSearchTimeout = null;
+async function searchCoinId(query) {
+  const resultsEl = document.getElementById('cr-search-results');
+  if (!query || query.length < 2) { resultsEl.style.display = 'none'; return; }
+  clearTimeout(coinSearchTimeout);
+  coinSearchTimeout = setTimeout(async () => {
+    resultsEl.style.display = 'block';
+    resultsEl.innerHTML = '<div style="padding:8px 12px;font-size:12px;color:var(--text2)">Searching...</div>';
+    try {
+      const r = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}&x_cg_demo_api_key=${COINGECKO_KEY}`);
+      if (!r.ok) throw new Error();
+      const d = await r.json();
+      const coins = (d.coins || []).slice(0, 8);
+      if (!coins.length) {
+        resultsEl.innerHTML = '<div style="padding:8px 12px;font-size:12px;color:var(--text2)">No coins found</div>';
+        return;
+      }
+      resultsEl.innerHTML = coins.map(c => `
+        <div onclick="selectCoin('${c.id}','${c.symbol.toUpperCase()}')"
+          style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s"
+          onmouseover="this.style.background='var(--card2)'" onmouseout="this.style.background=''">
+          ${c.thumb ? `<img src="${c.thumb}" style="width:20px;height:20px;border-radius:50%">` : '<span style="font-size:18px">🪙</span>'}
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:700;color:var(--text)">${c.name}</div>
+            <div style="font-size:10px;color:var(--text3)">${c.symbol.toUpperCase()} · ID: <span style="color:var(--blue)">${c.id}</span></div>
+          </div>
+          <div style="font-size:10px;color:var(--text2)">#${c.market_cap_rank||'--'}</div>
+        </div>`).join('');
+    } catch(e) {
+      resultsEl.innerHTML = '<div style="padding:8px 12px;font-size:12px;color:var(--red)">Search failed — check connection</div>';
+    }
+  }, 400);
+}
+
+function selectCoin(id, sym) {
+  document.getElementById('cr-id').value = id;
+  document.getElementById('cr-sym').value = sym;
+  document.getElementById('cr-search-results').style.display = 'none';
+  document.getElementById('cr-search').value = '';
+  document.getElementById('cr-amt').focus();
+}
+
+// ==================== CRYPTO HOLDINGS ====================
 function saveCryptoHolding() {
-  const editId = document.getElementById('cr-edit-id').value;
   const id = document.getElementById('cr-id').value.trim().toLowerCase();
   const sym = document.getElementById('cr-sym').value.trim().toUpperCase();
   const amt = parseFloat(document.getElementById('cr-amt').value) || 0;
@@ -5757,7 +5772,43 @@ function resetMapView() {
   if(barbadosMap) barbadosMap.setView([13.1939, -59.5432], 11);
 }
 
-// ==================== BARBADOS MAP SEARCH ====================
+// ==================== GOOGLE MAPS CONTROLS ====================
+function searchGoogleMap(query) {
+  const input = document.getElementById('map-search-input');
+  const q = query || (input ? input.value.trim() : '');
+  if (!q) return;
+  const iframe = document.getElementById('barbados-map-iframe');
+  if (!iframe) return;
+  // Use Google Maps embed search URL
+  const searchUrl = `https://www.google.com/maps/embed/v1/search?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=${encodeURIComponent(q + ' Barbados')}&center=13.1939,-59.5432&zoom=12`;
+  iframe.src = searchUrl;
+  if (input && !query) { /* keep typed value */ }
+  else if (input && query) input.value = '';
+}
+
+function resetGoogleMap() {
+  const iframe = document.getElementById('barbados-map-iframe');
+  if (!iframe) return;
+  iframe.src = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d241879!2d-59.5432!3d13.1939!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8c43e83c1df1ef55%3A0x4fd5c87bee6be3b0!2sBarbados!5e0!3m2!1sen!2sbb!4v1";
+  const input = document.getElementById('map-search-input');
+  if (input) input.value = '';
+}
+
+// Keep old Leaflet function stubs to avoid errors from any remaining references
+function handleMapSearch() {}
+function searchMapPlace() { searchGoogleMap(); }
+function clearMapSearch() { resetGoogleMap(); }
+function quickMapFilter(cat) {
+  const catMap = {
+    beaches: 'beaches Barbados', carrental: 'car rental Barbados',
+    hotels: 'hotels Barbados', restaurants: 'restaurants Barbados',
+    turtles: 'sea turtles Barbados', investments: 'real estate investment Barbados',
+    'local rental': 'local car rental Barbados', malls: 'shopping malls Barbados'
+  };
+  searchGoogleMap(catMap[cat] || cat + ' Barbados');
+}
+function toggleMapLayer() {} // no-op — Google Maps handles layers natively
+function initBarbadosMap() {} // no-op — replaced by iframe
 let searchTimeout = null;
 
 function handleMapSearch(val) {
