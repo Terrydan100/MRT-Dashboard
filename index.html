@@ -1006,7 +1006,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <input class="form-input" id="tv-custom-sym" placeholder="Custom..." style="width:90px;font-size:12px;padding:4px 8px">
         </div>
       </div>
-      <div id="tv-chart-container" style="height:420px;background:#131722;margin:0 40px">
+      <div id="tv-chart-container" style="height:420px;background:#131722;width:calc(100% - 80px);max-width:1400px;margin:0 auto">
         <div id="tv-dashboard-chart" style="height:100%"></div>
       </div>
     </div>
@@ -2715,56 +2715,84 @@ function importBackup(input) {
 }
 
 // ==================== STATE MANAGEMENT ====================
-function saveState() {
-  // Safety: never save if trades array is somehow empty during init race condition
-  // (this prevents wiping Firebase with empty defaults before loadState finishes)
-  const tradeCount = (state.trades || []).length;
-  
-  // Always save to localStorage immediately
-  localStorage.setItem('mrt_v2_state', JSON.stringify(state));
-  
-  // Save to Firebase — but protect against writing empty trades over real data
-  fbSet('state', state).then(() => {
-    console.log('Trades saved to Firebase:', tradeCount);
-  }).catch(e => console.warn('Firebase save failed:', e));
-}
-async function loadState() {
-  let saved = null;
+// ==================== TRADES STORAGE (dedicated, separate from state blob) ====================
+const TRADES_LS_KEY = 'mrt_trades_v2'; // separate localStorage key just for trades
 
-  // Step 1: Load localStorage backup
-  const local = localStorage.getItem('mrt_v2_state');
+function saveTrades() {
+  // 1. Save to localStorage immediately (instant, synchronous)
+  localStorage.setItem(TRADES_LS_KEY, JSON.stringify(state.trades));
+  // 2. Save to Firebase dedicated trades path (async backup)
+  fbSet('trades_v2', state.trades).then(() => {
+    console.log('Trades saved to Firebase:', state.trades.length);
+  }).catch(e => console.warn('Firebase trades save failed:', e));
+}
+
+async function loadTrades() {
+  let trades = null;
+
+  // 1. Try localStorage first (instant, no network)
+  const local = localStorage.getItem(TRADES_LS_KEY);
   if (local) {
-    try { saved = JSON.parse(local); console.log('Trades loaded from localStorage:', (saved.trades||[]).length); }
-    catch(e) { console.warn('localStorage parse failed'); }
+    try {
+      trades = JSON.parse(local);
+      console.log('Trades loaded from localStorage:', trades.length);
+    } catch(e) {}
   }
 
-  // Step 2: Load Firebase — only use it if it has MORE trades than localStorage
-  // (equal = localStorage is authoritative; Firebase with 0 never wins over localStorage with 0)
+  // 2. Try Firebase — only use if it has MORE trades than localStorage
+  try {
+    const remote = await fbGet('trades_v2');
+    if (Array.isArray(remote) && remote.length > (trades || []).length) {
+      trades = remote;
+      console.log('Trades loaded from Firebase:', trades.length);
+    }
+  } catch(e) { console.warn('Firebase trades load failed, using localStorage'); }
+
+  if (Array.isArray(trades) && trades.length > 0) {
+    state.trades = trades;
+    console.log('Final trades count:', state.trades.length);
+  }
+}
+
+// ==================== STATE MANAGEMENT ====================
+function saveState() {
+  // Save full state to localStorage (everything except trades which has its own key)
+  localStorage.setItem('mrt_v2_state', JSON.stringify(state));
+  // Save trades separately with dedicated function
+  saveTrades();
+  // Also save state blob to Firebase for settings/other data
+  fbSet('state', state).catch(e => console.warn('Firebase state save failed'));
+}
+
+async function loadState() {
+  // Step 1: Load full state from localStorage
+  const local = localStorage.getItem('mrt_v2_state');
+  if (local) {
+    try {
+      const s = JSON.parse(local);
+      const PROTECTED = ['balance','startBalance','positions','cryptoHoldings',
+        'sneakers','pokemon','psaSubmissions','barbadosInvestments','barbadosEntries',
+        'optionsWatch','sportsCards','ruleViolations','goal','netWorth','pin',
+        'checklistState','tabColors','currentTheme','tvSymbol','weeklyReport',
+        'calYear','calMonth','lightMode','soundOn'];
+      PROTECTED.forEach(k => { if (s[k] !== undefined && s[k] !== null) state[k] = s[k]; });
+    } catch(e) {}
+  }
+
+  // Step 2: Load settings from Firebase (non-trades)
   try {
     const remote = await fbGet('state');
     if (remote && typeof remote === 'object') {
-      const remoteCount = (remote.trades || []).length;
-      const localCount  = saved ? (saved.trades || []).length : 0;
-      if (remoteCount > localCount) {
-        saved = remote;
-        console.log('Trades loaded from Firebase:', remoteCount);
-      } else {
-        console.log('Using localStorage (' + localCount + ' trades) over Firebase (' + remoteCount + ' trades)');
-      }
+      const SETTINGS = ['balance','startBalance','goal','netWorth','checklistState',
+        'tabColors','currentTheme','tvSymbol','pin','lightMode','soundOn',
+        'barbadosInvestments','cryptoHoldings','sportsCards','sneakers','pokemon',
+        'psaSubmissions','ruleViolations','positions','optionsWatch'];
+      SETTINGS.forEach(k => { if (remote[k] !== undefined && remote[k] !== null) state[k] = remote[k]; });
     }
-  } catch(e) { console.warn('Firebase failed, using localStorage backup'); }
+  } catch(e) {}
 
-  // Step 3: Merge — saved data ALWAYS wins over hardcoded defaults
-  // Never overwrite a real value with a default
-  if (saved) {
-    const PROTECTED = ['trades','balance','startBalance','positions','cryptoHoldings',
-      'sneakers','pokemon','psaSubmissions','barbadosInvestments','barbadosEntries',
-      'optionsWatch','sportsCards','ruleViolations','goal','netWorth','pin',
-      'checklistState','tabColors','currentTheme','tvSymbol','weeklyReport',
-      'calYear','calMonth','lightMode','soundOn'];
-    PROTECTED.forEach(k => { if (saved[k] !== undefined && saved[k] !== null) state[k] = saved[k]; });
-    Object.keys(saved).forEach(k => { if (!PROTECTED.includes(k)) state[k] = saved[k]; });
-  }
+  // Step 3: Load trades separately (dedicated path — always wins)
+  await loadTrades();
 
   if (!state.pin) state.pin = '';
 }
@@ -2975,9 +3003,10 @@ function saveTrade() {
     showToast('success','Trade Logged', `${ticker.toUpperCase()} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '📝');
   }
 
-  saveState();
+  // Save trades immediately to both localStorage and Firebase (dedicated path)
+  saveTrades();
+  saveState(); // also save full state for settings
   refreshAllTradeViews();
-  closeModal('trade-modal');
   document.getElementById('t-edit-id').value = '';
   document.getElementById('t-pnl').value = '';
   document.getElementById('t-note').value = '';
@@ -3014,9 +3043,9 @@ function logTradeInline() {
   if (!date || !ticker) { if(msgEl){ msgEl.textContent='⚠️ Date and ticker required'; msgEl.style.color='var(--red)'; } return; }
   const trade = { id: Date.now(), date, ticker, type, pnl, note, strategy, timestamp: new Date().toISOString() };
   state.trades.unshift(trade);
+  saveTrades();
   saveState();
   refreshAllTradeViews();
-  document.getElementById('t-pnl-inline').value = '';
   document.getElementById('t-note-inline').value = '';
   document.getElementById('t-strategy-inline').value = '';
   if(msgEl){ msgEl.textContent=`✅ Logged: ${ticker} ${type} ${pnl>=0?'+':''}$${pnl.toFixed(2)}`; msgEl.style.color='var(--green)'; setTimeout(()=>{ msgEl.textContent=''; }, 3000); }
@@ -3027,6 +3056,7 @@ function logTradeInline() {
 function deleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
   state.trades = state.trades.filter(t => String(t.id) !== String(id));
+  saveTrades();
   saveState();
   refreshAllTradeViews();
 }
