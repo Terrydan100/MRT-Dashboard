@@ -721,6 +721,48 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- SIGNAL ALERT CARD -->
+    <div id="signal-alert-card" style="background:linear-gradient(135deg,rgba(0,180,255,0.08),rgba(0,0,0,0));border:1px solid rgba(0,180,255,0.3);border-radius:14px;padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="sig-pulse" style="width:10px;height:10px;border-radius:50%;background:var(--text3);display:inline-block;transition:background 0.3s"></span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--blue);letter-spacing:2px">⚡ LIVE SIGNAL ALERT</div>
+          <div style="font-size:10px;color:var(--text3)" id="sig-updated">--:--</div>
+        </div>
+        <button onclick="runSignalCheck()" style="background:rgba(0,180,255,0.15);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;font-family:Rajdhani,sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px">🔄 REFRESH</button>
+      </div>
+      <div id="sig-direction-banner" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">SIGNAL</div>
+          <div id="sig-direction" style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:var(--text2)">SCANNING...</div>
+          <div id="sig-reason" style="font-size:11px;color:var(--text3);margin-top:3px">Waiting for market data</div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="text-align:center;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 14px">
+            <div style="font-size:10px;color:var(--text2);margin-bottom:2px">ENTRY</div>
+            <div id="sig-entry" style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:var(--accent)">--</div>
+          </div>
+          <div style="text-align:center;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3);border-radius:8px;padding:8px 14px">
+            <div style="font-size:10px;color:var(--green);margin-bottom:2px">TARGET</div>
+            <div id="sig-target" style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:var(--green)">--</div>
+          </div>
+          <div style="text-align:center;background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.3);border-radius:8px;padding:8px 14px">
+            <div style="font-size:10px;color:var(--red);margin-bottom:2px">STOP</div>
+            <div id="sig-stop" style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:var(--red)">--</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin-bottom:12px">
+        <div style="text-align:center;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:10px;padding:10px 16px;min-width:80px">
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:2px">SCORE</div>
+          <div id="sig-score" style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:var(--text2)">0/10</div>
+          <div id="sig-grade" style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px">NO SIGNAL</div>
+        </div>
+        <div id="sig-factors" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+      <div id="sig-playbook" style="background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.6;display:none"></div>
+    </div>
+
     <!-- HISTORICAL PATTERN BRIEF -->
     <div id="pattern-brief-card" style="display:none;background:linear-gradient(135deg,rgba(0,229,255,0.06),rgba(0,0,0,0));border:1px solid rgba(0,229,255,0.25);border-radius:14px;padding:14px 18px;margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -2743,6 +2785,8 @@ async function initDashboard() {
   setInterval(checkMarketShock, 90000);
   setInterval(updateCEOScoreboard, 120000);
   setTimeout(checkMarketShock, 8000);
+  setTimeout(runSignalCheck, 5000); // initial signal check after data loads
+  setInterval(runSignalCheck, 120000); // refresh every 2 minutes
   // Auto weekly report on Fridays
   if (new Date().getDay() === 5) setTimeout(generateWeeklyReport, 5000);
   // Restore light mode if saved
@@ -5576,39 +5620,230 @@ async function fetchPutCallRatio() {
   } catch(e) {}
 }
 
-// --- Auto Signal Alert (10-point confluence check) ---
+// ==================== FULL SIGNAL ALERT ENGINE ====================
 let lastAlertTime = 0;
-function checkConfluenceSignal() {
-  if(Date.now() - lastAlertTime < 300000) return; // Max 1 alert per 5 min
-  const vixVal = document.getElementById('t-vix')?.textContent?.replace('$','');
-  const spyVal = document.getElementById('t-spy')?.textContent?.replace('$','');
-  const fgVal = document.getElementById('fg-value')?.textContent;
-  if(!vixVal || !spyVal || !fgVal) return;
-  const vix = parseFloat(vixVal);
-  const fg = parseInt(fgVal);
-  let score = 0;
-  let signals = [];
-  // VIX in tradeable range (not too extreme)
-  if(vix >= 13 && vix <= 35) { score++; signals.push('VIX in range'); }
-  // Fear & Greed not at extreme (not 0-10 or 90-100)
-  if(fg >= 15 && fg <= 85) { score++; signals.push('F&G neutral'); }
-  // Session time check
+let lastSignalDirection = '';
+
+async function runSignalCheck() {
   const now = new Date();
   const h = now.getHours(), m = now.getMinutes();
-  const inS1 = (h === 9 && m >= 45) || (h === 10) || (h === 11 && m <= 30);
-  const inS2 = (h === 14 && m >= 30) || (h === 15 && m <= 55);
-  if(inS1 || inS2) { score += 2; signals.push('In session window'); }
-  // Strong directional bias from VIX
-  if(vix > 20) { score++; signals.push('Elevated VIX = puts favored'); }
-  if(fg < 30) { score++; signals.push('Fear = put bias'); }
-  if(fg > 70) { score++; signals.push('Greed = call bias'); }
-  if(score >= 5 && (inS1 || inS2)) {
+  const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const eth = et.getHours(), etm = et.getMinutes();
+
+  // Session windows (ET)
+  const inS1 = (eth === 9 && etm >= 45) || eth === 10 || (eth === 11 && etm <= 30);
+  const inS2 = (eth === 14 && etm >= 30) || (eth === 15 && etm <= 55);
+  const inSession = inS1 || inS2;
+
+  // Read live data from ticker/elements
+  const spyPrice = parseFloat(document.getElementById('t-spy')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const qqqPrice = parseFloat(document.getElementById('t-qqq')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const vix = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const spyChg = parseFloat(document.getElementById('tc-spy')?.textContent?.replace('%','')) || 0;
+  const qqqChg = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
+  const fg = parseInt(document.getElementById('fg-value')?.textContent) || 50;
+
+  // Fetch SPY quote from Finnhub for precise price
+  let spyLive = spyPrice;
+  try {
+    const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=SPY&token=${FINNHUB_KEY}`);
+    if(r.ok) { const d = await r.json(); if(d.c) spyLive = d.c; }
+  } catch(e) {}
+
+  // ---- 10-POINT CONFLUENCE SCORING ----
+  let score = 0;
+  let factors = [];
+
+  // 1. Session timing (2pts)
+  if(inSession) {
+    score += 2;
+    factors.push({label: inS1 ? '✅ Session 1 (9:45–11:30)' : '✅ Session 2 (2:30–3:55)', pass:true});
+  } else {
+    factors.push({label:'❌ Outside session window', pass:false});
+  }
+
+  // 2. VIX in tradeable range (1pt)
+  if(vix >= 13 && vix <= 35) {
+    score++;
+    factors.push({label:`✅ VIX ${vix.toFixed(1)} — tradeable range`, pass:true});
+  } else if(vix > 35) {
+    factors.push({label:`⚠️ VIX ${vix.toFixed(1)} — extreme, caution`, pass:false});
+  } else {
+    factors.push({label:`⚠️ VIX ${vix.toFixed(1)} — low vol`, pass:false});
+  }
+
+  // 3. SPY moving (1pt)
+  const spyMoving = Math.abs(spyChg) >= 0.2;
+  if(spyMoving) {
+    score++;
+    factors.push({label:`✅ SPY moving ${spyChg >= 0 ? '+' : ''}${spyChg.toFixed(2)}%`, pass:true});
+  } else {
+    factors.push({label:`❌ SPY flat (${spyChg.toFixed(2)}%) — low momentum`, pass:false});
+  }
+
+  // 4. QQQ aligned with SPY (1pt)
+  const aligned = (spyChg > 0 && qqqChg > 0) || (spyChg < 0 && qqqChg < 0);
+  if(aligned && Math.abs(qqqChg) >= 0.2) {
+    score++;
+    factors.push({label:`✅ QQQ aligned ${qqqChg >= 0 ? '+' : ''}${qqqChg.toFixed(2)}%`, pass:true});
+  } else {
+    factors.push({label:`❌ QQQ not aligned (${qqqChg.toFixed(2)}%)`, pass:false});
+  }
+
+  // 5. Fear & Greed directional bias (1pt)
+  const fgBullish = fg > 55;
+  const fgBearish = fg < 45;
+  if(fgBullish || fgBearish) {
+    score++;
+    factors.push({label:`✅ F&G ${fg} — ${fgBullish ? 'greed/call bias' : 'fear/put bias'}`, pass:true});
+  } else {
+    factors.push({label:`⚠️ F&G ${fg} — neutral, no bias`, pass:false});
+  }
+
+  // 6. SPY & QQQ same direction (1pt)
+  const directionMatch = Math.sign(spyChg) === Math.sign(qqqChg);
+  if(directionMatch && Math.abs(spyChg) > 0.1) {
+    score++;
+    factors.push({label:'✅ SPY & QQQ same direction', pass:true});
+  } else {
+    factors.push({label:'❌ SPY/QQQ diverging', pass:false});
+  }
+
+  // 7. VIX elevated but not chaotic (1pt — A+ condition)
+  if(vix >= 17 && vix <= 30) {
+    score++;
+    factors.push({label:`✅ VIX ${vix.toFixed(1)} — elevated, premium rich`, pass:true});
+  } else {
+    factors.push({label:`— VIX ${vix.toFixed(1)} — not in premium-rich zone`, pass:false});
+  }
+
+  // 8. Clear momentum (1pt)
+  const strongMove = Math.abs(spyChg) >= 0.5;
+  if(strongMove) {
+    score++;
+    factors.push({label:`✅ Strong momentum ${spyChg >= 0 ? '+' : ''}${spyChg.toFixed(2)}%`, pass:true});
+  } else {
+    factors.push({label:'— Momentum below A+ threshold (0.5%)', pass:false});
+  }
+
+  // 9. Not market shock zone (1pt)
+  const shockZone = vix > 35 || Math.abs(spyChg) > 2.5;
+  if(!shockZone) {
+    score++;
+    factors.push({label:'✅ No shock conditions — clean entry environment', pass:true});
+  } else {
+    factors.push({label:'⚠️ Shock conditions — reduce size only', pass:false});
+  }
+
+  // 10. Market hours (1pt)
+  const marketOpen = (eth >= 9 && eth < 16);
+  if(marketOpen) {
+    score++;
+    factors.push({label:'✅ Market hours active', pass:true});
+  } else {
+    factors.push({label:'❌ Market closed', pass:false});
+  }
+
+  // ---- DETERMINE DIRECTION ----
+  let direction = 'WATCH';
+  let dirColor = 'var(--text2)';
+  let dirEmoji = '⚡';
+  let reason = 'Insufficient confluence for a signal';
+  let playbook = '';
+
+  const callBias = (spyChg > 0 && qqqChg > 0 && fg > 50);
+  const putBias = (spyChg < 0 && qqqChg < 0 && fg < 50);
+
+  if(score >= 7 && callBias) {
+    direction = '🟢 CALLS';
+    dirColor = 'var(--green)';
+    dirEmoji = '🟢';
+    reason = `${score}/10 confluence — strong bull alignment`;
+    playbook = `📋 PLAYBOOK: Enter SPY or QQQ CALLS near current price. Target: +$0.35 (A+ setup: +$0.50). Stop: -$0.20. At +$0.20 gain move stop to breakeven. Exit by 11:30 or 3:55 ET.`;
+  } else if(score >= 7 && putBias) {
+    direction = '🔴 PUTS';
+    dirColor = 'var(--red)';
+    dirEmoji = '🔴';
+    reason = `${score}/10 confluence — strong bear alignment`;
+    playbook = `📋 PLAYBOOK: Enter SPY or QQQ PUTS near current price. Target: +$0.35 (A+ setup: +$0.50). Stop: -$0.20. At +$0.20 gain move stop to breakeven. Exit by 11:30 or 3:55 ET.`;
+  } else if(score >= 5 && score < 7) {
+    direction = '⚡ WATCH';
+    dirColor = 'var(--accent)';
+    reason = `${score}/10 — developing, not A+ yet. Wait for confirmation.`;
+    playbook = `📋 PLAYBOOK: Conditions developing. Wait for one more confluence factor before entry. Use standard size only, not A+.`;
+  } else {
+    direction = 'NO SIGNAL';
+    dirColor = 'var(--text3)';
+    reason = `${score}/10 — below threshold. Stay flat.`;
+  }
+
+  // ---- ENTRY / TARGET / STOP ----
+  const entryPrice = spyLive > 0 ? `$${spyLive.toFixed(2)}` : '--';
+  const targetPrice = spyLive > 0 ? `+$0.${score >= 7 ? '50' : '35'}` : '--';
+  const stopPrice = '-$0.20';
+
+  // ---- GRADE ----
+  let grade = 'NO SIGNAL';
+  let gradeColor = 'var(--text3)';
+  if(score >= 9) { grade = 'A+ SETUP'; gradeColor = 'var(--green)'; }
+  else if(score >= 7) { grade = 'A SETUP'; gradeColor = 'var(--green)'; }
+  else if(score >= 5) { grade = 'B — WATCH'; gradeColor = 'var(--accent)'; }
+  else { grade = 'STAY FLAT'; gradeColor = 'var(--red)'; }
+
+  // ---- UPDATE UI ----
+  const pulse = document.getElementById('sig-pulse');
+  if(pulse) { pulse.style.background = score >= 7 ? (callBias ? 'var(--green)' : 'var(--red)') : score >= 5 ? 'var(--accent)' : 'var(--text3)'; }
+
+  const sigDir = document.getElementById('sig-direction');
+  if(sigDir) { sigDir.textContent = direction; sigDir.style.color = dirColor; }
+  const sigReason = document.getElementById('sig-reason');
+  if(sigReason) sigReason.textContent = reason;
+  const sigEntry = document.getElementById('sig-entry');
+  if(sigEntry) sigEntry.textContent = entryPrice;
+  const sigTarget = document.getElementById('sig-target');
+  if(sigTarget) sigTarget.textContent = targetPrice;
+  const sigStop = document.getElementById('sig-stop');
+  if(sigStop) sigStop.textContent = stopPrice;
+  const sigScore = document.getElementById('sig-score');
+  if(sigScore) { sigScore.textContent = `${score}/10`; sigScore.style.color = gradeColor; }
+  const sigGrade = document.getElementById('sig-grade');
+  if(sigGrade) { sigGrade.textContent = grade; sigGrade.style.color = gradeColor; }
+  const sigUpdated = document.getElementById('sig-updated');
+  if(sigUpdated) sigUpdated.textContent = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  // Render factors
+  const sigFactors = document.getElementById('sig-factors');
+  if(sigFactors) {
+    sigFactors.innerHTML = factors.map(f => `
+      <div style="font-size:11px;color:${f.pass ? 'var(--text)' : 'var(--text3)'};padding:2px 0;display:flex;align-items:center;gap:6px">
+        <span style="flex-shrink:0">${f.label}</span>
+      </div>`).join('');
+  }
+
+  // Playbook
+  const sigPlaybook = document.getElementById('sig-playbook');
+  if(sigPlaybook) {
+    if(playbook && score >= 5) {
+      sigPlaybook.textContent = playbook;
+      sigPlaybook.style.display = 'block';
+    } else {
+      sigPlaybook.style.display = 'none';
+    }
+  }
+
+  // Fire toast alert if A+ signal and direction changed
+  if(score >= 7 && direction !== lastSignalDirection && inSession) {
+    lastSignalDirection = direction;
     lastAlertTime = Date.now();
-    const direction = fg < 40 ? '🔴 PUTS' : fg > 60 ? '🟢 CALLS' : '⚡ WATCH';
-    showSignalToast(`🎯 SIGNAL ALERT: ${direction} — ${score}/6 confluence points
-${signals.slice(0,3).join(' · ')}`, 8000);
+    showToast(direction.includes('CALL') ? 'success' : 'danger',
+      `⚡ SIGNAL: ${direction}`,
+      `${score}/10 confluence · Entry ${entryPrice} · Target ${targetPrice} · Stop ${stopPrice}`,
+      dirEmoji, 10000);
   }
 }
+
+// Auto-run every 2 minutes when on dashboard
+function checkConfluenceSignal() { runSignalCheck(); }
 
 function showToast(msg, duration = 4000) {
   let toast = document.getElementById('signal-toast');
