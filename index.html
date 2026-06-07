@@ -2715,14 +2715,46 @@ function importBackup(input) {
 
 // ==================== STATE MANAGEMENT ====================
 function saveState() { localStorage.setItem('mrt_v2_state', JSON.stringify(state)); fbSet('state', state); }
+
 async function loadState() {
-  const savedPin = state.pin; // remember the current pin before loading
+  // Step 1: Try localStorage first (fastest)
+  let saved = null;
   const local = localStorage.getItem('mrt_v2_state');
-  if(local) { try{ const s=JSON.parse(local); Object.assign(state,s); }catch(e){} }
-  const remote = await fbGet('state');
-  if(remote) Object.assign(state, remote);
-  // PIN: use whatever was saved (could be user-changed), fall back to empty so getMasterHash() handles it
-  if(!state.pin) state.pin = '';
+  if (local) { try { saved = JSON.parse(local); } catch(e) {} }
+
+  // Step 2: Try Firebase (authoritative — may have newer data)
+  try {
+    const remote = await fbGet('state');
+    if (remote && typeof remote === 'object') {
+      // Firebase wins over localStorage if it has trades or a newer balance
+      if (!saved || (remote.trades && remote.trades.length >= (saved.trades||[]).length)) {
+        saved = remote;
+      }
+    }
+  } catch(e) {}
+
+  // Step 3: Merge saved data into state — saved data ALWAYS wins over defaults
+  // Only copy keys that exist in saved, never let defaults overwrite real data
+  if (saved) {
+    const protectedKeys = ['trades','balance','startBalance','positions','cryptoHoldings',
+      'sneakers','pokemon','psaSubmissions','barbadosInvestments','barbadosEntries',
+      'optionsWatch','sportsCards','ruleViolations','goal','netWorth','pin',
+      'checklistState','tabColors','currentTheme','tvSymbol','weeklyReport'];
+    protectedKeys.forEach(key => {
+      if (saved[key] !== undefined && saved[key] !== null) {
+        state[key] = saved[key];
+      }
+    });
+    // Also copy any other keys from saved
+    Object.keys(saved).forEach(key => {
+      if (!protectedKeys.includes(key) && saved[key] !== undefined) {
+        state[key] = saved[key];
+      }
+    });
+  }
+
+  // Step 4: PIN fallback
+  if (!state.pin) state.pin = '';
 }
 
 // ==================== INIT ====================
