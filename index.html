@@ -810,7 +810,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div style="flex:1">
           <div class="card-title">ACCOUNT BALANCE</div>
           <div style="display:flex;gap:12px;align-items:center">
-            <input class="form-input" type="number" id="balance-input" value="" style="max-width:200px">
+            <input class="form-input" type="number" id="balance-input" value="2009.69" style="max-width:200px">
             <button class="btn btn-primary" onclick="updateBalance()">UPDATE BALANCE</button>
           </div>
         </div>
@@ -2019,7 +2019,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <input type="checkbox" id="toggle-alerts" checked onchange="toggleMapLayer('alerts')"> 🚨 Land Alerts
         </label>
       </div>
-      <div id="barbados-map" style="height:500px;width:calc(100% - 80px);max-width:1400px;margin:0 auto;background:#0a0f1e"></div>
+      <div id="barbados-map" style="height:500px;width:calc(100% - 80px);margin:0 40px;background:#0a0f1e"></div>
     </div>
 
     <!-- LAND ALERTS SECTION -->
@@ -2342,7 +2342,8 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 <!-- TRADE MODAL -->
 <div class="modal-overlay" id="trade-modal">
   <div class="modal">
-    <div class="modal-title">📝 LOG TRADE <button class="modal-close" onclick="closeModal('trade-modal')">✕</button></div>
+    <div class="modal-title" id="trade-modal-title">📝 LOG TRADE <button class="modal-close" onclick="closeModal('trade-modal')">✕</button></div>
+    <input type="hidden" id="t-edit-id" value="">
     <div class="form-group">
       <label class="form-label">Date</label>
       <input class="form-input" type="date" id="t-date">
@@ -2369,7 +2370,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="btn" onclick="closeModal('trade-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="logTrade()">LOG TRADE</button>
+      <button class="btn btn-primary" id="trade-modal-save-btn" onclick="saveTrade()">LOG TRADE</button>
     </div>
   </div>
 </div>
@@ -2714,35 +2715,45 @@ function importBackup(input) {
 }
 
 // ==================== STATE MANAGEMENT ====================
-function saveState() { localStorage.setItem('mrt_v2_state', JSON.stringify(state)); fbSet('state', state); }
-
+function saveState() {
+  // Save to localStorage immediately (instant backup for refresh)
+  localStorage.setItem('mrt_v2_state', JSON.stringify(state));
+  // Then save to Firebase (async, authoritative)
+  fbSet('state', state).then(() => console.log('Trades saved to Firebase:', state.trades.length));
+}
 async function loadState() {
   let saved = null;
 
-  // Try localStorage first
+  // Step 1: Load localStorage backup
   const local = localStorage.getItem('mrt_v2_state');
-  if (local) { try { saved = JSON.parse(local); } catch(e) {} }
+  if (local) {
+    try { saved = JSON.parse(local); console.log('Trades loaded from localStorage:', (saved.trades||[]).length); }
+    catch(e) { console.warn('localStorage parse failed'); }
+  }
 
-  // Try Firebase — wins if it has equal or more trades than localStorage
+  // Step 2: Load Firebase — use it if it has equal or more trades
   try {
     const remote = await fbGet('state');
     if (remote && typeof remote === 'object') {
-      const remoteTradeCount = (remote.trades || []).length;
-      const localTradeCount = saved ? (saved.trades || []).length : 0;
-      if (remoteTradeCount >= localTradeCount) saved = remote;
+      const remoteCount = (remote.trades || []).length;
+      const localCount  = saved ? (saved.trades || []).length : 0;
+      if (remoteCount >= localCount) {
+        saved = remote;
+        console.log('Trades loaded from Firebase:', remoteCount);
+      }
     }
-  } catch(e) {}
+  } catch(e) { console.warn('Firebase failed, using localStorage backup'); }
 
-  // Merge: saved data ALWAYS wins over hardcoded defaults
+  // Step 3: Merge — saved data ALWAYS wins over hardcoded defaults
+  // Never overwrite a real value with a default
   if (saved) {
-    const keys = ['trades','balance','startBalance','positions','cryptoHoldings',
+    const PROTECTED = ['trades','balance','startBalance','positions','cryptoHoldings',
       'sneakers','pokemon','psaSubmissions','barbadosInvestments','barbadosEntries',
       'optionsWatch','sportsCards','ruleViolations','goal','netWorth','pin',
       'checklistState','tabColors','currentTheme','tvSymbol','weeklyReport',
       'calYear','calMonth','lightMode','soundOn'];
-    keys.forEach(k => { if (saved[k] !== undefined && saved[k] !== null) state[k] = saved[k]; });
-    // Copy any other keys not in the list
-    Object.keys(saved).forEach(k => { if (!keys.includes(k) && saved[k] !== undefined) state[k] = saved[k]; });
+    PROTECTED.forEach(k => { if (saved[k] !== undefined && saved[k] !== null) state[k] = saved[k]; });
+    Object.keys(saved).forEach(k => { if (!PROTECTED.includes(k)) state[k] = saved[k]; });
   }
 
   if (!state.pin) state.pin = '';
@@ -2899,8 +2910,20 @@ function showTab(id) {
 
 // ==================== MODALS ====================
 function openModal(id) {
-  const el=document.getElementById(id);
-  if(el) { el.classList.add('open'); if(id==='trade-modal') document.getElementById('t-date').value=new Date().toISOString().split('T')[0]; if(id==='bdb-entry-modal') document.getElementById('be-date').value=new Date().toISOString().split('T')[0]; if(id==='psa-modal') document.getElementById('psa-date').value=new Date().toISOString().split('T')[0]; }
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('open');
+  if (id === 'trade-modal') {
+    // Reset to ADD mode (not edit)
+    document.getElementById('t-edit-id').value = '';
+    document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('t-pnl').value = '';
+    document.getElementById('t-note').value = '';
+    document.getElementById('trade-modal-title').innerHTML = '📝 LOG TRADE <button class="modal-close" onclick="closeModal(\'trade-modal\')">✕</button>';
+    document.getElementById('trade-modal-save-btn').textContent = 'LOG TRADE';
+  }
+  if (id === 'bdb-entry-modal') document.getElementById('be-date').value = new Date().toISOString().split('T')[0];
+  if (id === 'psa-modal') document.getElementById('psa-date').value = new Date().toISOString().split('T')[0];
 }
 function closeModal(id) { const el=document.getElementById(id); if(el) el.classList.remove('open'); }
 document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');});
@@ -2916,71 +2939,127 @@ function showToast(type, title, msg, icon='ℹ️', duration=5000) {
 }
 
 // ==================== TRADE LOGGER ====================
-function logTrade() {
-  const date=document.getElementById('t-date').value;
-  const ticker=document.getElementById('t-ticker').value;
-  const type=document.getElementById('t-type').value;
-  const pnl=parseFloat(document.getElementById('t-pnl').value)||0;
-  const note=document.getElementById('t-note').value;
-  if(!date||!ticker) return showToast('danger','Missing Info','Please fill all required fields','❌');
-  const trade={id:Date.now(),date,ticker:ticker.toUpperCase(),type,pnl,note};
-  state.trades.unshift(trade);
-  saveState(); renderTrades(); updateStats(); renderNetWorth(); updateCharts();
-  document.getElementById('t-pnl').value=''; document.getElementById('t-note').value='';
-  showToast('success','Trade Logged',`${ticker.toUpperCase()} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`,'📝');
+// ==================== TRADE SAVE (ADD + EDIT) ====================
+function saveTrade() {
+  const editId = document.getElementById('t-edit-id').value;
+  const date = document.getElementById('t-date').value;
+  const ticker = document.getElementById('t-ticker').value;
+  const type = document.getElementById('t-type').value;
+  const pnl = parseFloat(document.getElementById('t-pnl').value) || 0;
+  const note = document.getElementById('t-note').value;
+  if (!date || !ticker) return showToast('danger','Missing Info','Please fill all required fields','❌');
+
+  if (editId) {
+    // EDIT existing trade
+    const idx = state.trades.findIndex(t => String(t.id) === String(editId));
+    if (idx > -1) {
+      state.trades[idx] = { ...state.trades[idx], date, ticker: ticker.toUpperCase(), type, pnl, note };
+      showToast('success','Trade Updated', `${ticker.toUpperCase()} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '✏️');
+    }
+  } else {
+    // ADD new trade
+    const trade = { id: Date.now(), date, ticker: ticker.toUpperCase(), type, pnl, note, timestamp: new Date().toISOString() };
+    state.trades.unshift(trade);
+    showToast('success','Trade Logged', `${ticker.toUpperCase()} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '📝');
+  }
+
+  saveState();
+  refreshAllTradeViews();
+  closeModal('trade-modal');
+  document.getElementById('t-edit-id').value = '';
+  document.getElementById('t-pnl').value = '';
+  document.getElementById('t-note').value = '';
+  document.getElementById('trade-modal-title').innerHTML = '📝 LOG TRADE <button class="modal-close" onclick="closeModal(\'trade-modal\')">✕</button>';
+  document.getElementById('trade-modal-save-btn').textContent = 'LOG TRADE';
   checkDailyGoal();
 }
 
+// Keep logTrade as alias for backward compat
+function logTrade() { saveTrade(); }
+
+function editTrade(id) {
+  const t = state.trades.find(t => String(t.id) === String(id));
+  if (!t) return;
+  document.getElementById('t-edit-id').value = t.id;
+  document.getElementById('t-date').value = t.date;
+  document.getElementById('t-ticker').value = t.ticker;
+  document.getElementById('t-type').value = t.type;
+  document.getElementById('t-pnl').value = t.pnl;
+  document.getElementById('t-note').value = t.note || '';
+  document.getElementById('trade-modal-title').innerHTML = '✏️ EDIT TRADE <button class="modal-close" onclick="closeModal(\'trade-modal\')">✕</button>';
+  document.getElementById('trade-modal-save-btn').textContent = 'SAVE CHANGES';
+  document.getElementById('trade-modal').classList.add('open');
+}
+
 function logTradeInline() {
-  const date=document.getElementById('t-date-inline').value;
-  const ticker=(document.getElementById('t-ticker-inline').value||'').toUpperCase().trim();
-  const type=document.getElementById('t-type-inline').value;
-  const pnl=parseFloat(document.getElementById('t-pnl-inline').value)||0;
-  const note=document.getElementById('t-note-inline').value;
-  const strategy=document.getElementById('t-strategy-inline').value;
-  const msgEl=document.getElementById('inline-trade-msg');
-  if(!date||!ticker){if(msgEl){msgEl.textContent='⚠️ Date and ticker required';msgEl.style.color='var(--red)';}return;}
-  const trade={id:Date.now(),date,ticker,type,pnl,note,strategy};
+  const date = document.getElementById('t-date-inline').value;
+  const ticker = (document.getElementById('t-ticker-inline').value || '').toUpperCase().trim();
+  const type = document.getElementById('t-type-inline').value;
+  const pnl = parseFloat(document.getElementById('t-pnl-inline').value) || 0;
+  const note = document.getElementById('t-note-inline').value;
+  const strategy = document.getElementById('t-strategy-inline').value;
+  const msgEl = document.getElementById('inline-trade-msg');
+  if (!date || !ticker) { if(msgEl){ msgEl.textContent='⚠️ Date and ticker required'; msgEl.style.color='var(--red)'; } return; }
+  const trade = { id: Date.now(), date, ticker, type, pnl, note, strategy, timestamp: new Date().toISOString() };
   state.trades.unshift(trade);
-  saveState(); renderTrades(); updateStats(); renderNetWorth(); updateCharts();
-  // Clear fields
-  document.getElementById('t-pnl-inline').value='';
-  document.getElementById('t-note-inline').value='';
-  document.getElementById('t-strategy-inline').value='';
-  if(msgEl){msgEl.textContent=`✅ Logged: ${ticker} ${type} ${pnl>=0?'+':''}$${pnl.toFixed(2)}`;msgEl.style.color='var(--green)';setTimeout(()=>{msgEl.textContent='';},3000);}
-  showToast('success','Trade Logged',`${ticker} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`,'📝');
+  saveState();
+  refreshAllTradeViews();
+  document.getElementById('t-pnl-inline').value = '';
+  document.getElementById('t-note-inline').value = '';
+  document.getElementById('t-strategy-inline').value = '';
+  if(msgEl){ msgEl.textContent=`✅ Logged: ${ticker} ${type} ${pnl>=0?'+':''}$${pnl.toFixed(2)}`; msgEl.style.color='var(--green)'; setTimeout(()=>{ msgEl.textContent=''; }, 3000); }
+  showToast('success','Trade Logged', `${ticker} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '📝');
   checkDailyGoal();
 }
 
 function deleteTrade(id) {
-  if(!confirm('Delete this trade?')) return;
-  state.trades=state.trades.filter(t=>t.id!==id);
-  saveState(); renderTrades(); updateStats(); renderNetWorth(); updateCharts();
+  if (!confirm('Delete this trade?')) return;
+  state.trades = state.trades.filter(t => String(t.id) !== String(id));
+  saveState();
+  refreshAllTradeViews();
+}
+
+function refreshAllTradeViews() {
+  renderTrades();
+  updateStats();
+  renderNetWorth();
+  updateCharts();
+  buildPLCalendar();
+  if (document.getElementById('content-analytics')?.classList.contains('active')) {
+    tryInitAnalyticsCharts();
+    renderViolations();
+  }
 }
 
 function renderTrades() {
-  const tbody=document.getElementById('trade-tbody');
-  if(!state.trades.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:30px">No trades logged yet. Click + LOG TRADE to begin.</td></tr>';return;}
-  let running=state.startBalance;
-  const rows=[...state.trades].reverse();
-  const html=rows.map(t=>{
-    const isTransfer=t.type==='WITHDRAWAL'||t.type==='DEPOSIT'||t.type==='FEES';
-    if(!isTransfer) running+=t.pnl;
-    else if(t.type==='DEPOSIT') running+=Math.abs(t.pnl);
-    else if(t.type==='WITHDRAWAL') running-=Math.abs(t.pnl);
-    const pnlCls=t.pnl>0?'pos':t.pnl<0?'neg':'';
-    const typeBadge=t.type==='CALL'?'badge-green':t.type==='PUT'?'badge-red':t.type==='WITHDRAWAL'||t.type==='DEPOSIT'?'badge-blue':'badge-yellow';
+  const tbody = document.getElementById('trade-tbody');
+  if (!state.trades || !state.trades.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:30px">No trades logged yet. Click + LOG TRADE to begin.</td></tr>';
+    return;
+  }
+  let running = state.startBalance;
+  const rows = [...state.trades].reverse();
+  const html = rows.map(t => {
+    const isTransfer = t.type==='WITHDRAWAL' || t.type==='DEPOSIT' || t.type==='FEES';
+    if (!isTransfer) running += t.pnl;
+    else if (t.type==='DEPOSIT') running += Math.abs(t.pnl);
+    else if (t.type==='WITHDRAWAL') running -= Math.abs(t.pnl);
+    const pnlCls = t.pnl > 0 ? 'pos' : t.pnl < 0 ? 'neg' : '';
+    const typeBadge = t.type==='CALL'?'badge-green':t.type==='PUT'?'badge-red':t.type==='WITHDRAWAL'||t.type==='DEPOSIT'?'badge-blue':'badge-yellow';
     return `<tr>
       <td>${t.date}</td>
       <td style="font-weight:700;color:var(--accent)">${t.ticker}</td>
       <td><span class="badge ${typeBadge}">${t.type}</span></td>
       <td class="${pnlCls}" style="font-weight:700">${t.pnl>0?'+':''}$${t.pnl.toFixed(2)}</td>
-      <td style="color:var(--text2)">$${running.toFixed(2)}</td>
+      <td style="color:var(--text2)">$${running.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
       <td style="color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.note||'—'}</td>
-      <td><button class="btn btn-sm btn-danger" onclick="deleteTrade(${t.id})">DEL</button></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="editTrade(${t.id})" style="border-color:var(--accent);color:var(--accent)">EDIT</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteTrade(${t.id})">DEL</button>
+      </td>
     </tr>`;
   }).reverse().join('');
-  tbody.innerHTML=html;
+  tbody.innerHTML = html;
 }
 
 // ==================== STATS ====================
@@ -4622,7 +4701,7 @@ let figuresHidden = false;
 function applyHideFiguresState(hidden) {
   figuresHidden = hidden;
   const btn = document.getElementById('hide-figures-btn');
-  const moneyEls = document.querySelectorAll('.stat-val, .card-value, .crypto-money, #stat-pnl, #stat-balance, #stat-best, #stat-worst, #progress-text, .crypto-value, .crypto-price, .invest-val, #nw-trading, #nw-crypto, #nw-barbados, #nw-realestate, #nw-business, #nw-total, #crypto-total, #ceo-trading-pnl, #ceo-crypto-val, #ceo-barb-val, #ceo-cards-val, #ceo-networth, #port-value');
+  const moneyEls = document.querySelectorAll('.stat-val, .card-value, #stat-pnl, #stat-balance, #stat-best, #stat-worst, #progress-text, .crypto-value, .crypto-price, .invest-val');
   moneyEls.forEach(el => {
     if(hidden) {
       el.dataset.orig = el.textContent;
@@ -6830,11 +6909,11 @@ function renderCrypto() {
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-size:10px;color:var(--text2)">VALUE</div>
-          <div class="crypto-money" style="font-size:14px;font-weight:700;color:var(--accent)">$${val>0?val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'--'}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--accent)">$${val>0?val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'--'}</div>
         </div>
         <div style="text-align:right">
           ${h.buyPrice>0?`<div style="font-size:10px;color:var(--text2)">P&L</div>
-          <div class="crypto-money" style="font-size:13px;font-weight:700;color:${gainLoss>=0?'var(--green)':'var(--red)'}">${gainLoss>=0?'+':''}$${gainLoss.toFixed(2)}</div>`
+          <div style="font-size:13px;font-weight:700;color:${gainLoss>=0?'var(--green)':'var(--red)'}">${gainLoss>=0?'+':''}$${gainLoss.toFixed(2)}</div>`
           :`<div style="font-size:10px;color:var(--text3)">↗ View chart</div>`}
         </div>
       </div>
