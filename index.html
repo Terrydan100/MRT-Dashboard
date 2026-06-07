@@ -796,6 +796,40 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- A+ DAY DETECTOR -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,229,255,0.2);background:linear-gradient(135deg,rgba(0,229,255,0.04),rgba(0,0,0,0))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">🏆</span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--cyan);letter-spacing:2px">A+ DAY DETECTOR</div>
+        </div>
+        <button onclick="runAPlusDetector()" style="background:rgba(0,229,255,0.1);border:1px solid var(--cyan);color:var(--cyan);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center">
+        <!-- Score Circle -->
+        <div style="text-align:center;background:rgba(0,0,0,0.4);border:2px solid var(--border);border-radius:50%;width:100px;height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0" id="aplus-circle">
+          <div id="aplus-score" style="font-family:Orbitron,sans-serif;font-size:28px;font-weight:900;color:var(--text2)">--</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px">/100</div>
+        </div>
+        <div>
+          <div id="aplus-grade" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:var(--text2);margin-bottom:6px">SCANNING...</div>
+          <div id="aplus-action" style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:8px">Loading market conditions...</div>
+          <div id="aplus-factors" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENT PROBABILITY ENGINE -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(255,109,0,0.2);background:linear-gradient(135deg,rgba(255,109,0,0.04),rgba(0,0,0,0))">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:18px">📅</span>
+        <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--orange);letter-spacing:2px">EVENT PROBABILITY ENGINE</div>
+      </div>
+      <div id="event-prob-content">
+        <div style="font-size:12px;color:var(--text2);text-align:center;padding:12px">Scanning for major market events today...</div>
+      </div>
+    </div>
+
     <!-- PREVIOUS DAY LEVELS -->
     <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.2)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
@@ -854,20 +888,31 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
-    <!-- FINVIZ SECTOR HEATMAP -->
+    <!-- SECTOR HEATMAP -->
     <div class="card" style="margin-bottom:16px;border:1px solid rgba(245,197,24,0.15)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
         <span style="font-size:16px">🔥</span>
         <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">SECTOR HEATMAP</div>
-        <div style="margin-left:auto;font-size:10px;color:var(--text2)">Powered by Finviz · Updates every refresh</div>
       </div>
-      <div style="border-radius:8px;overflow:hidden;background:#000">
-        <iframe src="https://finviz.com/map.ashx?t=sec&type=daily_perf" 
-          style="width:100%;height:500px;border:none;display:block" 
-          scrolling="no" frameborder="0" title="Finviz Sector Heatmap">
-        </iframe>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <a href="https://finviz.com/map.ashx?t=sec&type=daily_perf" target="_blank" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.3);border-radius:10px;text-decoration:none;transition:all 0.2s" onmouseover="this.style.background='rgba(245,197,24,0.15)'" onmouseout="this.style.background='rgba(245,197,24,0.08)'">
+          <span style="font-size:28px">📊</span>
+          <div><div style="font-weight:700;color:var(--accent);font-size:13px;margin-bottom:2px">Finviz Heatmap</div><div style="font-size:11px;color:var(--text2)">Sector performance · Opens in new tab</div></div>
+        </a>
+        <a href="https://finviz.com/map.ashx?t=sec_all" target="_blank" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,180,255,0.08);border:1px solid rgba(0,180,255,0.3);border-radius:10px;text-decoration:none;transition:all 0.2s" onmouseover="this.style.background='rgba(0,180,255,0.15)'" onmouseout="this.style.background='rgba(0,180,255,0.08)'">
+          <span style="font-size:28px">🗺️</span>
+          <div><div style="font-weight:700;color:var(--blue);font-size:13px;margin-bottom:2px">Full S&P 500 Map</div><div style="font-size:11px;color:var(--text2)">All 500 stocks by sector · Opens in new tab</div></div>
+        </a>
+        <a href="https://finviz.com/groups.ashx?g=sector&sg=sector&o=-perf1d" target="_blank" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3);border-radius:10px;text-decoration:none;transition:all 0.2s" onmouseover="this.style.background='rgba(0,230,118,0.15)'" onmouseout="this.style.background='rgba(0,230,118,0.08)'">
+          <span style="font-size:28px">📈</span>
+          <div><div style="font-weight:700;color:var(--green);font-size:13px;margin-bottom:2px">Sector Rankings</div><div style="font-size:11px;color:var(--text2)">Today's top & bottom sectors · Opens in new tab</div></div>
+        </a>
+        <a href="https://finviz.com/screener.ashx?v=111&s=ta_unusualvolume" target="_blank" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.3);border-radius:10px;text-decoration:none;transition:all 0.2s" onmouseover="this.style.background='rgba(255,23,68,0.15)'" onmouseout="this.style.background='rgba(255,23,68,0.08)'">
+          <span style="font-size:28px">🔥</span>
+          <div><div style="font-weight:700;color:var(--red);font-size:13px;margin-bottom:2px">Unusual Volume</div><div style="font-size:11px;color:var(--text2)">High activity movers · Opens in new tab</div></div>
+        </a>
       </div>
-      <div style="margin-top:8px;font-size:11px;color:var(--text3)">Green = outperforming · Red = underperforming · Size = market cap weight · <a href="https://finviz.com/map.ashx?t=sec" target="_blank" style="color:var(--blue)">Open full screen ↗</a></div>
+      <div style="font-size:11px;color:var(--text3);text-align:center">Finviz blocks direct embedding — click any card to open in a new tab</div>
     </div>
 
     <!-- HISTORICAL PATTERN BRIEF -->
@@ -1780,6 +1825,32 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">No violations logged. Keep it that way! 💪</div>
       </div>
     </div>
+      <!-- VIOLATION WEEKLY PATTERN REPORT -->
+      <div id="vio-pattern-report" style="margin-top:14px;background:rgba(255,23,68,0.04);border:1px solid rgba(255,23,68,0.15);border-radius:10px;padding:12px 16px;display:none">
+        <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--red);letter-spacing:1px;margin-bottom:10px">📊 WEEKLY PATTERN REPORT</div>
+        <div id="vio-pattern-content" style="font-size:12px;color:var(--text2);line-height:1.7"></div>
+      </div>
+    </div>
+
+    <!-- MARKET REPLAY LIBRARY -->
+    <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(0,180,255,0.04),rgba(0,0,0,0));border:1px solid rgba(0,180,255,0.2)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title" style="color:var(--blue)">📼 MARKET REPLAY LIBRARY</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Historical special event days — what happened, what to expect</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="filterReplay('all')" id="replay-all" class="btn btn-sm" style="font-size:10px;background:var(--blue);color:#000">All</button>
+          <button onclick="filterReplay('cpi')" id="replay-cpi" class="btn btn-sm" style="font-size:10px">📈 CPI</button>
+          <button onclick="filterReplay('fomc')" id="replay-fomc" class="btn btn-sm" style="font-size:10px">🏦 FOMC</button>
+          <button onclick="filterReplay('crash')" id="replay-crash" class="btn btn-sm" style="font-size:10px">📉 Crash</button>
+          <button onclick="filterReplay('earnings')" id="replay-earn" class="btn btn-sm" style="font-size:10px">💰 Earnings</button>
+          <button onclick="filterReplay('oil')" id="replay-oil" class="btn btn-sm" style="font-size:10px">🛢️ Oil</button>
+        </div>
+      </div>
+      <div id="replay-grid" style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto"></div>
+    </div>
+
     <!-- WEEKLY WEALTH REPORT -->
     <div class="card" style="background:linear-gradient(135deg,rgba(245,197,24,0.05),rgba(0,180,255,0.03))">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -3011,9 +3082,12 @@ async function initDashboard() {
   setTimeout(fetchWarRoom, 3000);
   setTimeout(fetchPrevDayLevels, 4000);
   setTimeout(fetchNewsIntel, 6000);
-  setInterval(fetchWarRoom, 300000); // refresh every 5 min
+  setTimeout(runAPlusDetector, 7000);
+  setTimeout(runEventEngine, 8000);
+  setInterval(fetchWarRoom, 300000);
   setInterval(fetchPrevDayLevels, 300000);
   setInterval(fetchNewsIntel, 300000);
+  setInterval(runAPlusDetector, 300000);
   // Auto weekly report on Fridays
   if (new Date().getDay() === 5) setTimeout(generateWeeklyReport, 5000);
   // Restore light mode if saved
@@ -3080,7 +3154,7 @@ function showTab(id) {
   // Lazy-init charts when tab becomes visible
   setTimeout(()=>{
     if(id==='dashboard') { tryInitEquityChart(); loadTradingViewCharts(); updateCEOScoreboard(); showPatternBrief(); }
-    if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); }
+    if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); renderReplayLibrary(); }
     if(id==='research') loadTradingViewCharts();
     if(id==='barbados') { initBarbadosMap(); setTimeout(()=>{ if(barbadosMap) barbadosMap.invalidateSize(); renderFestivals(); renderRealEstate(); fetchBarbadosNews(); }, 200); }
     if(id==='sportscards') renderSportsCards();
@@ -6754,7 +6828,232 @@ function updateCEOScoreboard() {
 
     const updEl = document.getElementById('ceo-updated');
     if (updEl) updEl.textContent = 'Updated ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    // Re-apply hide figures if active
+    if (figuresHidden) setTimeout(()=>applyHideFiguresState(true), 50);
   } catch(e) {}
+}
+
+// ==================== PRE-MARKET WAR ROOM ====================
+async function fetchWarRoom() {
+  const timeEl = document.getElementById('warroom-time');
+  if(timeEl) timeEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  async function fetchFinnhubQuote(symbol) {
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`);
+      if(!r.ok) return null;
+      const d = await r.json();
+      return d.c ? { price: d.c, prevClose: d.pc, change: d.dp } : null;
+    } catch(e) { return null; }
+  }
+
+  async function fetchYahooFallback(symbol) {
+    try {
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=2d`;
+      const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+      if(!r.ok) return null;
+      const d = await r.json();
+      const meta = d?.chart?.result?.[0]?.meta;
+      return meta ? { price: meta.regularMarketPrice, prevClose: meta.chartPreviousClose, change: ((meta.regularMarketPrice - meta.chartPreviousClose)/meta.chartPreviousClose*100) } : null;
+    } catch(e) { return null; }
+  }
+
+  const setCell = (key, data) => {
+    const valEl = document.getElementById(`wr-${key}-val`);
+    const chgEl = document.getElementById(`wr-${key}-chg`);
+    if(!data || !valEl) return;
+    const isFut = ['es','nq'].includes(key);
+    const fmt = key==='yield' ? data.price.toFixed(2)+'%' : key==='vix' ? data.price.toFixed(2) : '$'+data.price.toLocaleString(undefined,{maximumFractionDigits:2});
+    valEl.textContent = fmt;
+    if(chgEl && data.change != null) {
+      const c = data.change;
+      chgEl.textContent = (c>=0?'+':'')+c.toFixed(2)+'%';
+      chgEl.style.color = c>=0?'var(--green)':'var(--red)';
+    }
+  };
+
+  let bullish=0, bearish=0, signals=[];
+
+  // SPY/QQQ as proxy bias signals (already fetched by dashboard)
+  const spyChg = parseFloat(document.getElementById('tc-spy')?.textContent?.replace('%',''))||0;
+  const qqqChg = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%',''))||0;
+  if(spyChg>0.3) bullish++; else if(spyChg<-0.3) bearish++;
+  if(qqqChg>0.3) bullish++; else if(qqqChg<-0.3) bearish++;
+
+  // Futures — try Yahoo via allorigins
+  const es = await fetchYahooFallback('ES=F');
+  setCell('es', es);
+  if(es) { if(es.change>0.3) bullish++; else if(es.change<-0.3) bearish++; }
+
+  const nq = await fetchYahooFallback('NQ=F');
+  setCell('nq', nq);
+
+  // VIX from existing ticker
+  const vixVal = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,''))||0;
+  if(vixVal) {
+    const vixEl = document.getElementById('wr-vix-val');
+    const vixChgEl = document.getElementById('wr-vix-chg');
+    if(vixEl) vixEl.textContent = vixVal.toFixed(2);
+    if(vixChgEl) {
+      const vc = parseFloat(document.getElementById('tc-vix')?.textContent?.replace('%',''))||0;
+      vixChgEl.textContent = (vc>=0?'+':'')+vc.toFixed(2)+'%';
+      vixChgEl.style.color = vc>=0?'var(--red)':'var(--green)'; // VIX up = bearish
+      if(vixVal>30) { bearish++; signals.push('VIX elevated '+vixVal.toFixed(0)); }
+    }
+  }
+
+  // 10Y yield, DXY, Gold, Oil via Yahoo fallback
+  const tnx = await fetchYahooFallback('%5ETNX');
+  if(tnx) { const el=document.getElementById('wr-yield-val'); const ec=document.getElementById('wr-yield-chg'); if(el) el.textContent=tnx.price.toFixed(2)+'%'; if(ec){ec.textContent=(tnx.change>=0?'+':'')+tnx.change.toFixed(2)+'%';ec.style.color=tnx.change>=0?'var(--red)':'var(--green)';} if(tnx.change>=5) signals.push('Yield spike'); }
+  const dxy = await fetchYahooFallback('DX-Y.NYB');
+  if(dxy) { const el=document.getElementById('wr-dxy-val'); const ec=document.getElementById('wr-dxy-chg'); if(el) el.textContent='$'+dxy.price.toFixed(2); if(ec){ec.textContent=(dxy.change>=0?'+':'')+dxy.change.toFixed(2)+'%';ec.style.color=dxy.change>=0?'var(--red)':'var(--green)';} }
+  const gold = await fetchYahooFallback('GC=F');
+  if(gold) { const el=document.getElementById('wr-gold-val'); const ec=document.getElementById('wr-gold-chg'); if(el) el.textContent='$'+gold.price.toLocaleString(undefined,{maximumFractionDigits:0}); if(ec){ec.textContent=(gold.change>=0?'+':'')+gold.change.toFixed(2)+'%';ec.style.color=gold.change>=0?'var(--green)':'var(--red)';} }
+  const oil = await fetchYahooFallback('CL=F');
+  if(oil) { const el=document.getElementById('wr-oil-val'); const ec=document.getElementById('wr-oil-chg'); if(el) el.textContent='$'+oil.price.toFixed(2); if(ec){ec.textContent=(oil.change>=0?'+':'')+oil.change.toFixed(2)+'%';ec.style.color=oil.change>=0?'var(--green)':'var(--red)';} if(Math.abs(oil.change)>=3) signals.push('Oil '+oil.change.toFixed(1)+'%'); }
+
+  // Fear & Greed
+  try {
+    const fgr = await fetch('https://api.alternative.me/fng/');
+    if(fgr.ok){ const fg=await fgr.json(); const val=parseInt(fg.data[0].value); const lbl=fg.data[0].value_classification; const el=document.getElementById('wr-fg-val'); const ec=document.getElementById('wr-fg-chg'); if(el) el.textContent=val; if(ec){ec.textContent=lbl;ec.style.color=val>55?'var(--green)':val<45?'var(--red)':'var(--text2)';} if(val>65) bullish++; else if(val<35) bearish++; }
+  } catch(e){}
+
+  // Bias
+  const biasEl=document.getElementById('warroom-bias-text');
+  const biasReasonEl=document.getElementById('warroom-bias-reason');
+  let biasText,biasColor,biasReason;
+  if(bullish>=3&&bearish===0){biasText='🟢 BULLISH';biasColor='var(--green)';biasReason='Futures up, VIX calm, sentiment positive — watch for CALLS on pullbacks';}
+  else if(bearish>=2){biasText='🔴 BEARISH';biasColor='var(--red)';biasReason=(signals.length?signals.join(', ')+' — ':'')+'Risk-off signals active — watch for PUTS, reduce size';}
+  else if(bullish>bearish){biasText='🟡 LEAN BULLISH';biasColor='var(--accent)';biasReason='Mixed but tilting bullish — wait for 9:45 AM confirmation at open';}
+  else if(bearish>bullish){biasText='🟠 LEAN BEARISH';biasColor='var(--orange)';biasReason='Mixed but tilting bearish — reduce size, wait for clear structure';}
+  else{biasText='⚪ NEUTRAL / CHOP';biasColor='var(--text2)';biasReason='No clear direction — consider sitting out or minimum size only';}
+  if(biasEl){biasEl.textContent=biasText;biasEl.style.color=biasColor;}
+  if(biasReasonEl) biasReasonEl.textContent=biasReason;
+}
+
+// ==================== PREVIOUS DAY LEVELS ====================
+async function fetchPrevDayLevels() {
+  const updEl = document.getElementById('levels-updated');
+  if(updEl) updEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  async function getOHLC(symbol) {
+    try {
+      // Finnhub daily candle — primary source
+      const to = Math.floor(Date.now()/1000);
+      const from = to - (7*86400);
+      const r = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
+      if(!r.ok) throw new Error();
+      const d = await r.json();
+      if(!d || d.s==='no_data' || !d.c || d.c.length<2) throw new Error();
+      const len = d.c.length;
+      return { prev:{high:d.h[len-2],low:d.l[len-2],close:d.c[len-2]}, current:d.c[len-1] };
+    } catch(e) {
+      // Fallback: Finnhub quote — gives prevClose + current
+      try {
+        const r2 = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`);
+        if(!r2.ok) return null;
+        const q = await r2.json();
+        return { prev:{high:null,low:null,close:q.pc}, current:q.c, fallback:true };
+      } catch(e2) { return null; }
+    }
+  }
+
+  const fmt = v => (v!=null&&!isNaN(v)) ? '$'+parseFloat(v).toFixed(2) : '--';
+  const [spy,qqq] = await Promise.all([getOHLC('SPY'),getOHLC('QQQ')]);
+
+  if(spy){
+    document.getElementById('spy-ph').textContent = spy.prev.high ? fmt(spy.prev.high) : 'N/A';
+    document.getElementById('spy-pl').textContent = spy.prev.low ? fmt(spy.prev.low) : 'N/A';
+    document.getElementById('spy-pc').textContent = fmt(spy.prev.close);
+    document.getElementById('spy-curr').textContent = fmt(spy.current);
+  }
+  if(qqq){
+    document.getElementById('qqq-ph').textContent = qqq.prev.high ? fmt(qqq.prev.high) : 'N/A';
+    document.getElementById('qqq-pl').textContent = qqq.prev.low ? fmt(qqq.prev.low) : 'N/A';
+    document.getElementById('qqq-pc').textContent = fmt(qqq.prev.close);
+    document.getElementById('qqq-curr').textContent = fmt(qqq.current);
+  }
+
+  const guidanceEl = document.getElementById('level-guidance');
+  if(spy&&qqq&&spy.prev.close&&qqq.prev.close&&guidanceEl){
+    const spyAbove = spy.current>spy.prev.close;
+    const qqqAbove = qqq.current>qqq.prev.close;
+    let guidance='';
+    if(spyAbove&&qqqAbove) guidance=`✅ Both SPY & QQQ above yesterday's close — bullish structure. Resistance: SPY ${spy.prev.high?fmt(spy.prev.high):'prev high'}. Support: ${fmt(spy.prev.close)} (prev close).`;
+    else if(!spyAbove&&!qqqAbove) guidance=`⚠️ Both SPY & QQQ below yesterday's close — bearish. Support: SPY ${spy.prev.low?fmt(spy.prev.low):'prev low'}. Resistance: ${fmt(spy.prev.close)} (prev close).`;
+    else guidance=`⚡ SPY & QQQ diverging — mixed signals. Wait for confirmation. SPY prev close: ${fmt(spy.prev.close)} · QQQ prev close: ${fmt(qqq.prev.close)}.`;
+    guidanceEl.textContent=guidance;
+    guidanceEl.style.display='block';
+  }
+}
+
+// ==================== NEWS INTELLIGENCE PANEL ====================
+let newsIntelData=[];
+let newsIntelFilter='all';
+const NEWS_CATEGORIES={
+  fed:{keywords:['fed','federal reserve','powell','fomc','rate','hawkish','dovish','monetary'],icon:'🏦',label:'Fed/Rates',color:'var(--blue)'},
+  inflation:{keywords:['cpi','ppi','inflation','consumer price','producer price','core','deflation'],icon:'📈',label:'Inflation',color:'var(--orange)'},
+  oil:{keywords:['oil','crude','opec','energy','wti','brent','petroleum'],icon:'🛢️',label:'Oil/Energy',color:'var(--orange)'},
+  tech:{keywords:['nvidia','apple','microsoft','alphabet','meta','amazon','tesla','semiconductor','ai','chip','google'],icon:'💻',label:'Big Tech',color:'var(--cyan)'},
+  geo:{keywords:['war','conflict','ukraine','russia','china','taiwan','geopolit','sanction','military'],icon:'🌍',label:'Geopolitical',color:'var(--red)'},
+  earnings:{keywords:['earnings','revenue','eps','profit','quarterly','beat','miss','guidance'],icon:'💰',label:'Earnings',color:'var(--green)'},
+};
+
+function categorizeNews(headline){
+  const h=headline.toLowerCase();
+  for(const [cat,cfg] of Object.entries(NEWS_CATEGORIES)){if(cfg.keywords.some(k=>h.includes(k))) return{cat,...cfg};}
+  return{cat:'market',icon:'📊',label:'Market',color:'var(--text2)'};
+}
+
+function spyImpact(headline){
+  const h=headline.toLowerCase();
+  if((h.includes('fed')||h.includes('fomc'))&&(h.includes('hike')||h.includes('hawkish'))) return'🔴 SPY bearish';
+  if((h.includes('fed')||h.includes('fomc'))&&(h.includes('cut')||h.includes('dovish')||h.includes('pause'))) return'🟢 SPY bullish';
+  if(h.includes('cpi')&&(h.includes('hot')||h.includes('above')||h.includes('surge'))) return'🔴 SPY bearish';
+  if(h.includes('cpi')&&(h.includes('cool')||h.includes('lower')||h.includes('below'))) return'🟢 SPY bullish';
+  if(h.includes('war')||h.includes('attack')||h.includes('conflict')) return'🔴 Risk-off';
+  if(h.includes('beat')||h.includes('surge')||h.includes('record')) return'🟢 SPY positive';
+  if(h.includes('miss')||h.includes('drop')||h.includes('crash')||h.includes('layoff')) return'🔴 SPY negative';
+  return'⚪ Monitor';
+}
+
+async function fetchNewsIntel(){
+  const el=document.getElementById('news-intel-grid');
+  if(el) el.innerHTML='<div style="text-align:center;color:var(--text2);padding:20px;font-size:12px">Loading intelligence feed...</div>';
+  try{
+    const r=await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
+    if(!r.ok) throw new Error();
+    const articles=await r.json();
+    newsIntelData=articles.slice(0,30).map(a=>({headline:a.headline,source:a.source,url:a.url,time:new Date(a.datetime*1000),category:categorizeNews(a.headline),impact:spyImpact(a.headline)}));
+    renderNewsIntel();
+  }catch(e){if(el) el.innerHTML='<div style="text-align:center;color:var(--text2);padding:20px;font-size:12px">Could not load news feed — check connection</div>';}
+}
+
+function filterNewsIntel(cat){
+  newsIntelFilter=cat;
+  document.querySelectorAll('[id^="ni-"]').forEach(b=>{b.style.background='';b.style.color='';b.style.borderColor='';});
+  const btn=document.getElementById('ni-'+cat)||document.getElementById('ni-all');
+  if(btn){btn.style.background='var(--green)';btn.style.color='#000';}
+  renderNewsIntel();
+}
+
+function renderNewsIntel(){
+  const el=document.getElementById('news-intel-grid');
+  if(!el||!newsIntelData.length) return;
+  const filtered=newsIntelFilter==='all'?newsIntelData:newsIntelData.filter(n=>n.category.cat===newsIntelFilter);
+  if(!filtered.length){el.innerHTML='<div style="text-align:center;color:var(--text2);padding:20px;font-size:12px">No news in this category</div>';return;}
+  el.innerHTML=filtered.map(n=>`
+    <a href="${n.url}" target="_blank" style="display:block;text-decoration:none;padding:10px 12px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-left:3px solid ${n.category.color};border-radius:8px;transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+        <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.4;flex:1">${n.category.icon} ${n.headline}</div>
+        <div style="font-size:10px;font-weight:700;color:${n.impact.includes('🟢')?'var(--green)':n.impact.includes('🔴')?'var(--red)':'var(--text3)'};white-space:nowrap;flex-shrink:0">${n.impact}</div>
+      </div>
+      <div style="display:flex;gap:10px;font-size:10px;color:var(--text3)">
+        <span style="color:${n.category.color};font-weight:600">${n.category.icon} ${n.category.label}</span>
+        <span>${n.source}</span>
+        <span>${timeAgo(n.time.toISOString())}</span>
+      </div>
+    </a>`).join('');
 }
 
 // ==================== MARKET SHOCK ALERT (UPGRADED) ====================
@@ -6899,6 +7198,7 @@ function renderViolations() {
   if (!log) return;
   if (!vios.length) {
     log.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">No violations logged. Keep it that way! 💪</div>';
+    renderViolationPatternReport([]);
     return;
   }
   const labels = { held:'Held Too Long', early:'Early Entry', tape:'Ignored Tape', resist:'Ignored Resistance', stop:'Moved Stop', other:'Other' };
@@ -6913,6 +7213,255 @@ function renderViolations() {
         ${v.pnl ? `<div style="font-size:12px;font-weight:700;color:var(--red)">${v.pnl > 0 ? '+' : ''}$${v.pnl.toFixed(2)}</div>` : ''}
         <button onclick="state.ruleViolations=state.ruleViolations.filter(x=>x.id!==${v.id});saveState();renderViolations();" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">✕</button>
       </div>
+    </div>`).join('');
+
+  renderViolationPatternReport(vios);
+}
+
+function renderViolationPatternReport(vios) {
+  const reportEl = document.getElementById('vio-pattern-report');
+  const contentEl = document.getElementById('vio-pattern-content');
+  if (!reportEl || !contentEl) return;
+  if (!vios.length) { reportEl.style.display='none'; return; }
+
+  const weekAgo = new Date(Date.now() - 7*24*60*60*1000);
+  const weekVios = vios.filter(v => new Date(v.date) >= weekAgo);
+  const labels = { held:'Held Too Long', early:'Early Entry', tape:'Ignored Tape', resist:'Ignored Resistance', stop:'Moved Stop', other:'Other' };
+
+  // Count by type
+  const counts = {};
+  weekVios.forEach(v => { const k = labels[v.type]||v.type; counts[k]=(counts[k]||0)+1; });
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const topMistake = sorted[0];
+
+  // P&L impact
+  const pnlImpact = weekVios.filter(v=>v.pnl).reduce((s,v)=>s+v.pnl,0);
+  const withPnl = weekVios.filter(v=>v.pnl).length;
+
+  if (!weekVios.length) { reportEl.style.display='none'; return; }
+
+  reportEl.style.display='block';
+  contentEl.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:10px">
+      <div style="background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px">TOP MISTAKE THIS WEEK</div>
+        <div style="font-size:14px;font-weight:700;color:var(--red)">${topMistake ? topMistake[0] : 'None'}</div>
+        <div style="font-size:11px;color:var(--text3)">${topMistake ? topMistake[1]+' times' : ''}</div>
+      </div>
+      <div style="background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px">VIOLATIONS THIS WEEK</div>
+        <div style="font-size:14px;font-weight:700;color:var(--red)">${weekVios.length}</div>
+        <div style="font-size:11px;color:var(--text3)">vs ${vios.length} all time</div>
+      </div>
+      <div style="background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2);border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px">P&L IMPACT LOGGED</div>
+        <div style="font-size:14px;font-weight:700;color:${pnlImpact>=0?'var(--green)':'var(--red)'}">${pnlImpact>=0?'+':''}$${pnlImpact.toFixed(2)}</div>
+        <div style="font-size:11px;color:var(--text3)">${withPnl} trades with P&L logged</div>
+      </div>
+    </div>
+    ${sorted.length > 1 ? `<div style="font-size:11px;color:var(--text2)">All violations this week: ${sorted.map(([k,v])=>`${k} (${v})`).join(' · ')}</div>` : ''}
+    ${topMistake ? `<div style="margin-top:8px;font-size:12px;color:var(--accent);font-weight:600">💡 Focus: Work on eliminating "${topMistake[0]}" — it was your most common mistake this week.</div>` : ''}
+  `;
+}
+
+// ==================== A+ DAY DETECTOR ====================
+function runAPlusDetector() {
+  let score = 0;
+  const factors = [];
+
+  const spyChg = parseFloat(document.getElementById('tc-spy')?.textContent?.replace('%','')) || 0;
+  const qqqChg = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
+  const vix = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const fg = parseInt(document.getElementById('fg-value')?.textContent) || 50;
+
+  // 1. Market is open (10pts)
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const h = et.getHours(), m = et.getMinutes();
+  const marketOpen = h>=9&&(h<16||(h===9&&m>=30));
+  if(marketOpen){score+=10;factors.push({t:'✅ Market open',p:true});}
+  else{factors.push({t:'❌ Market closed',p:false});}
+
+  // 2. SPY moving (15pts)
+  if(Math.abs(spyChg)>=0.5){score+=15;factors.push({t:`✅ SPY moving ${spyChg>0?'+':''}${spyChg.toFixed(2)}%`,p:true});}
+  else if(Math.abs(spyChg)>=0.2){score+=8;factors.push({t:`⚡ SPY moderate ${spyChg>0?'+':''}${spyChg.toFixed(2)}%`,p:true});}
+  else{factors.push({t:`❌ SPY flat (${spyChg.toFixed(2)}%)`,p:false});}
+
+  // 3. QQQ aligned (10pts)
+  const aligned = Math.sign(spyChg)===Math.sign(qqqChg)&&Math.abs(qqqChg)>=0.2;
+  if(aligned){score+=10;factors.push({t:`✅ QQQ aligned ${qqqChg>0?'+':''}${qqqChg.toFixed(2)}%`,p:true});}
+  else{factors.push({t:'❌ QQQ not aligned',p:false});}
+
+  // 4. VIX in sweet spot (15pts)
+  if(vix>=17&&vix<=30){score+=15;factors.push({t:`✅ VIX ${vix.toFixed(1)} — premium rich`,p:true});}
+  else if(vix>=13&&vix<17){score+=8;factors.push({t:`⚡ VIX ${vix.toFixed(1)} — normal range`,p:true});}
+  else if(vix>30){factors.push({t:`⚠️ VIX ${vix.toFixed(1)} — shock zone, reduce size`,p:false});}
+  else{factors.push({t:`❌ VIX ${vix.toFixed(1)} — too low`,p:false});}
+
+  // 5. Fear & Greed has direction (10pts)
+  if(fg>60||fg<40){score+=10;factors.push({t:`✅ F&G ${fg} — clear bias`,p:true});}
+  else{factors.push({t:`⚡ F&G ${fg} — neutral`,p:false});}
+
+  // 6. Strong momentum (15pts)
+  if(Math.abs(spyChg)>=1){score+=15;factors.push({t:'✅ Strong momentum (1%+)',p:true});}
+  else if(Math.abs(spyChg)>=0.5){score+=8;factors.push({t:'⚡ Moderate momentum',p:true});}
+
+  // 7. Session window (15pts)
+  const inS1=(h===9&&m>=45)||h===10||(h===11&&m<=30);
+  const inS2=(h===14&&m>=30)||(h===15&&m<=55);
+  if(inS1){score+=15;factors.push({t:'✅ Session 1 (9:45–11:30)',p:true});}
+  else if(inS2){score+=15;factors.push({t:'✅ Session 2 (2:30–3:55)',p:true});}
+  else if(marketOpen){factors.push({t:'❌ Outside session windows',p:false});}
+
+  // 8. Not weekend (10pts)
+  const day=now.getDay();
+  if(day>=1&&day<=5){score+=10;factors.push({t:'✅ Weekday',p:true});}
+  else{factors.push({t:'❌ Weekend — market closed',p:false});}
+
+  score=Math.min(score,100);
+
+  // Grade
+  let grade,color,action;
+  if(score>=85){grade='🏆 A+ DAY';color='var(--green)';action='Prime opportunity. Follow your rules exactly. Full size on confirmed setups only.';}
+  else if(score>=70){grade='✅ A DAY';color='var(--green)';action='Good conditions. Standard size. Wait for 8+ confluence before entry.';}
+  else if(score>=50){grade='⚡ B DAY';color='var(--accent)';action='Moderate conditions. Reduce to 50% size. Only A+ setups. Be patient.';}
+  else if(score>=30){grade='⚠️ C DAY';color='var(--orange)';action='Poor conditions. 25% size maximum. Strong bias toward sitting out.';}
+  else{grade='🚫 SIT OUT';color='var(--red)';action='Market not favorable. Cash is a position. Protect your capital today.';}
+
+  const scoreEl=document.getElementById('aplus-score');
+  const gradeEl=document.getElementById('aplus-grade');
+  const actionEl=document.getElementById('aplus-action');
+  const circleEl=document.getElementById('aplus-circle');
+  const factorsEl=document.getElementById('aplus-factors');
+
+  if(scoreEl){scoreEl.textContent=score;scoreEl.style.color=color;}
+  if(gradeEl){gradeEl.textContent=grade;gradeEl.style.color=color;}
+  if(actionEl) actionEl.textContent=action;
+  if(circleEl) circleEl.style.borderColor=color;
+  if(factorsEl) factorsEl.innerHTML=factors.map(f=>`<span style="font-size:10px;padding:2px 8px;border-radius:12px;background:${f.p?'rgba(0,230,118,0.1)':'rgba(255,23,68,0.1)'};color:${f.p?'var(--green)':'var(--red)'};border:1px solid ${f.p?'rgba(0,230,118,0.3)':'rgba(255,23,68,0.3)'}">${f.t}</span>`).join('');
+}
+
+// ==================== EVENT PROBABILITY ENGINE ====================
+const EVENT_PLAYBOOKS = {
+  fomc: { name:'FOMC Decision Day', icon:'🏦', color:'var(--blue)',
+    history:'Based on last 20 FOMC days: SPY averages ±1.2% move. 60% show "sell the news" after initial pop. Whipsaw in first 30 min is common.',
+    playbook:['Stay flat until 30 min AFTER announcement','Follow confirmed direction only — not the first move','Use wider targets (+$0.50) if trading','Expect elevated VIX all day','Session 2 often cleaner than Session 1 on FOMC days'],
+    bias:'NEUTRAL — wait for direction confirmation' },
+  cpi_hot: { name:'HOT CPI Print', icon:'📈', color:'var(--red)',
+    history:'Hot CPI (above expectations): SPY drops 0.5–1.5% on open, reverses ~40% of move by close historically. Initial reaction is bearish.',
+    playbook:['PUTS favored in first 30 min','Watch for reversal after 10:30 AM','Do NOT chase the gap down','VIX likely elevated — use wider stops','Best setup: PUTS on first bounce rejection'],
+    bias:'🔴 BEARISH LEAN — first hour' },
+  cpi_cool: { name:'COOL CPI Print', icon:'❄️', color:'var(--green)',
+    history:'Cool CPI (below expectations): SPY gaps up 0.5–1.5%, often fades into midday. Strong open then choppy afternoon is typical pattern.',
+    playbook:['CALLS in first 30–45 min on momentum','Watch for fade after 11 AM','Sell into strength — do not hold through midday fade','Afternoon often chops — reduce activity after noon','Session 1 is the play, Session 2 is risky'],
+    bias:'🟢 BULLISH LEAN — first hour only' },
+  opex: { name:'Options Expiration Week', icon:'⏰', color:'var(--orange)',
+    history:'OpEx week (3rd Friday): SPY historically pinned near max pain. Unusual gamma effects create sudden moves Thu/Fri. Smaller intraday ranges Mon–Wed.',
+    playbook:['Smaller size Mon–Wed (pinning effect)','Be ready for larger moves Thu–Fri','Avoid holding positions overnight during OpEx','Watch put/call ratio — extreme readings signal reversals','Premium decay accelerates — do not overpay for options'],
+    bias:'⚡ MIXED — gamma effects active' },
+  monday: { name:'Monday Open', icon:'📅', color:'var(--accent)',
+    history:'Mondays gap and trap 45% of the time. Weekend news causes overreaction. First 15–30 min often sets a false direction that reverses.',
+    playbook:['Wait until 9:45 AM before any trade','Do NOT trust the Monday open gap','Confirm direction with 15-min candle close','Lower size than normal','If gap fills within 30 min — that IS the signal'],
+    bias:'⚠️ CAUTION — gap and trap risk' },
+  friday: { name:'Friday Afternoon', icon:'📅', color:'var(--text2)',
+    history:'Friday afternoons see profit-taking and position squaring. Volume drops after 2:30 PM. SPY tends to pull back from weekly highs.',
+    playbook:['Use tighter targets in Session 2','Do not open new positions after 3:30 PM','Take profits earlier than normal','Close all positions by 3:55 PM strictly','Avoid holding into the weekend'],
+    bias:'⚠️ CAUTION — low volume afternoon' },
+};
+
+function runEventEngine() {
+  const el = document.getElementById('event-prob-content');
+  if(!el) return;
+
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const day = et.getDay();
+  const h = et.getHours();
+  const headlines = Array.from(document.querySelectorAll('#news-intel-grid a div')).map(d=>d.textContent.toLowerCase()).join(' ');
+
+  const events = [];
+
+  // Check headlines for events
+  if(headlines.includes('fomc')||headlines.includes('federal reserve')||headlines.includes('powell')) events.push('fomc');
+  if(headlines.includes('cpi')&&(headlines.includes('hot')||headlines.includes('above')||headlines.includes('surge'))) events.push('cpi_hot');
+  if(headlines.includes('cpi')&&(headlines.includes('cool')||headlines.includes('lower')||headlines.includes('below'))) events.push('cpi_cool');
+
+  // Day-based events
+  if(day===1) events.push('monday');
+  if(day===5&&h>=14) events.push('friday');
+
+  // Check for OpEx (3rd Friday of month)
+  const date=et.getDate();
+  if(day===5&&date>=15&&date<=21) events.push('opex');
+
+  if(!events.length) {
+    el.innerHTML=`<div style="text-align:center;color:var(--text2);font-size:12px;padding:8px">No major scheduled events detected today. Standard trading conditions apply.</div>`;
+    return;
+  }
+
+  el.innerHTML = events.map(key => {
+    const e = EVENT_PLAYBOOKS[key];
+    if(!e) return '';
+    return `<div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-left:3px solid ${e.color};border-radius:10px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:18px">${e.icon}</span>
+        <div style="font-family:Orbitron,sans-serif;font-size:11px;color:${e.color};letter-spacing:1px">${e.name}</div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px;line-height:1.5">${e.history}</div>
+      <div style="font-size:10px;font-weight:700;color:${e.color};margin-bottom:6px">${e.bias}</div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        ${e.playbook.map(p=>`<div style="font-size:11px;color:var(--text);display:flex;gap:6px"><span style="color:${e.color}">▸</span>${p}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ==================== MARKET REPLAY LIBRARY ====================
+const REPLAY_EVENTS = [
+  {date:'2024-08-05',type:'crash',icon:'📉',title:'Black Monday 2.0',spy:'-3.0%',qqq:'-3.7%',vix:'+65%',summary:'Yen carry trade unwind triggered global selloff. SPY gapped down hard at open, then recovered 60% of losses by close.',lesson:'Do not FOMO short a crash gap — the recovery was violent. Wait for structure.',playbook:'Cash or very small PUTS only. Watch for V-reversal after 10 AM.'},
+  {date:'2024-07-11',type:'cpi',icon:'📈',title:'Cool CPI — July 2024',spy:'+1.0%',qqq:'+1.8%',vix:'-8%',summary:'CPI came in below expectations. SPY and QQQ gapped up significantly. Tech led. Strong all day with minor midday dip.',lesson:'Cool CPI = CALLS at open. Do not fade the first 45 minutes.',playbook:'CALLS on any pullback in first hour. Target +$0.50. Exit by noon.'},
+  {date:'2023-03-22',type:'fomc',icon:'🏦',title:'FOMC Rate Hike 25bps — Mar 2023',spy:'+1.3%',qqq:'+1.9%',vix:'-12%',summary:'Fed hiked 25bps as expected. Powell sounded less hawkish than feared. SPY rallied hard post-announcement then pulled back 50% into close.',lesson:'Dovish surprise = buy the announcement, sell the close.',playbook:'CALLS post-announcement. Tighten stop by 2 PM. Do not hold overnight.'},
+  {date:'2022-06-10',type:'cpi',icon:'🔥',title:'Hot CPI — June 2022',spy:'-2.9%',qqq:'-3.5%',vix:'+15%',summary:'CPI printed 8.6% — hotter than expected. SPY and QQQ crashed at open, no recovery. Bears dominated all session.',lesson:'Hot CPI with no recovery = true bearish day. Do not buy dips.',playbook:'PUTS only. Take profits early (+$0.35). Do not hold through 11 AM reversal attempt.'},
+  {date:'2024-04-19',type:'crash',icon:'📉',title:'Middle East Escalation Selloff',spy:'-0.9%',qqq:'-1.1%',vix:'+16%',summary:'Iran-Israel tensions escalated. SPY sold off on open, choppy all day. No clean trends — lots of whipsaws.',lesson:'Geopolitical shock = no clean setups. Best play was staying flat.',playbook:'Reduce to 25% size or sit out. Wait for VIX to stabilize before trading.'},
+  {date:'2024-01-12',type:'cpi',icon:'📈',title:'Sticky CPI — Jan 2024',spy:'-0.7%',qqq:'-0.9%',vix:'+8%',summary:'CPI slightly above expectations. Initial selloff, then recovery attempt failed. Choppy all day with bearish lean.',lesson:'Slightly hot CPI = bearish but with noise. Wait for 9:45 before entry.',playbook:'PUTS on first bounce rejection after 9:45 AM. Small size. Quick profit-taking.'},
+  {date:'2023-11-01',type:'fomc',icon:'🏦',title:'FOMC Pause — Nov 2023',spy:'+1.9%',qqq:'+2.3%',vix:'-10%',summary:'Fed paused rate hikes. Powell flagged potential peak. SPY and QQQ surged. Clean bullish trend all session.',lesson:'Fed pause = strong CALLS day. Trend was clean — held all session.',playbook:'CALLS at open. Add on any dip. Target +$0.50. Hold through Session 2.'},
+  {date:'2022-03-08',type:'oil',icon:'🛢️',title:'Oil Spike — Russia Sanctions',spy:'-0.5%',qqq:'-0.7%',vix:'+5%',summary:'Oil hit $130 amid Russia sanctions. Energy surged, tech fell. SPY choppy with sector rotation.',lesson:'Oil shock = sector rotation day. SPY choppy — not a clean options day.',playbook:'Smaller size. Avoid tech options. Watch for reversal as oil stabilizes.'},
+];
+
+let replayFilter = 'all';
+
+function filterReplay(cat) {
+  replayFilter = cat;
+  document.querySelectorAll('[id^="replay-"]').forEach(b=>{b.style.background='';b.style.color='';});
+  const btn = document.getElementById('replay-'+cat) || document.getElementById('replay-all');
+  if(btn){btn.style.background='var(--blue)';btn.style.color='#000';}
+  renderReplayLibrary();
+}
+
+function renderReplayLibrary() {
+  const el = document.getElementById('replay-grid');
+  if(!el) return;
+  const data = replayFilter==='all' ? REPLAY_EVENTS : REPLAY_EVENTS.filter(e=>e.type===replayFilter);
+  if(!data.length){el.innerHTML='<div style="text-align:center;color:var(--text2);padding:20px;font-size:12px">No events in this category</div>';return;}
+  el.innerHTML = data.map(e=>`
+    <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:20px">${e.icon}</span>
+          <div>
+            <div style="font-weight:700;font-size:13px;color:var(--text)">${e.title}</div>
+            <div style="font-size:10px;color:var(--text3)">${e.date}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <span style="font-size:11px;font-weight:700;color:${e.spy.startsWith('-')?'var(--red)':'var(--green)'};background:${e.spy.startsWith('-')?'rgba(255,23,68,0.1)':'rgba(0,230,118,0.1)'};padding:2px 8px;border-radius:6px">SPY ${e.spy}</span>
+          <span style="font-size:11px;font-weight:700;color:${e.qqq.startsWith('-')?'var(--red)':'var(--green)'};background:${e.qqq.startsWith('-')?'rgba(255,23,68,0.1)':'rgba(0,230,118,0.1)'};padding:2px 8px;border-radius:6px">QQQ ${e.qqq}</span>
+          <span style="font-size:11px;color:var(--text2);padding:2px 8px;background:rgba(255,255,255,0.05);border-radius:6px">VIX ${e.vix}</span>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">${e.summary}</div>
+      <div style="font-size:11px;color:var(--accent);margin-bottom:4px">💡 Lesson: ${e.lesson}</div>
+      <div style="font-size:11px;color:var(--green)">▸ Playbook: ${e.playbook}</div>
     </div>`).join('');
 }
 
@@ -7262,7 +7811,7 @@ function renderCrypto() {
     </div>`;
   }).join('');
   grid.innerHTML=html||'<div style="color:var(--text2);grid-column:1/-1;text-align:center;padding:30px">No crypto holdings. Click + ADD HOLDING</div>';
-  setTimeout(()=>{ state.cryptoHoldings.forEach(h=>drawSparkline(h)); }, 50);
+  setTimeout(()=>{ state.cryptoHoldings.forEach(h=>drawSparkline(h)); if(figuresHidden) applyHideFiguresState(true); }, 50);
   document.getElementById('crypto-total').textContent='$'+totalVal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   const changes=state.cryptoHoldings.filter(h=>h.change);
   if(changes.length){
