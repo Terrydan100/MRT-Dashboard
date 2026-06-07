@@ -2756,26 +2756,26 @@ async function loadTrades() {
 
 // ==================== STATE MANAGEMENT ====================
 function saveState() {
-  // Save full state to localStorage (everything except trades which has its own key)
-  localStorage.setItem('mrt_v2_state', JSON.stringify(state));
-  // Save trades separately with dedicated function
-  saveTrades();
-  // Also save state blob to Firebase for settings/other data
-  fbSet('state', state).catch(e => console.warn('Firebase state save failed'));
+  // Save everything EXCEPT trades — trades have their own dedicated storage
+  const stateToSave = { ...state, trades: undefined };
+  delete stateToSave.trades;
+  localStorage.setItem('mrt_v2_state', JSON.stringify(stateToSave));
+  fbSet('state', stateToSave).catch(e => console.warn('Firebase state save failed'));
 }
 
 async function loadState() {
-  // Step 1: Load full state from localStorage
+  // Step 1: Load settings from localStorage (trades excluded — they have dedicated storage)
   const local = localStorage.getItem('mrt_v2_state');
   if (local) {
     try {
       const s = JSON.parse(local);
-      const PROTECTED = ['balance','startBalance','positions','cryptoHoldings',
+      const SETTINGS = ['balance','startBalance','positions','cryptoHoldings',
         'sneakers','pokemon','psaSubmissions','barbadosInvestments','barbadosEntries',
         'optionsWatch','sportsCards','ruleViolations','goal','netWorth','pin',
         'checklistState','tabColors','currentTheme','tvSymbol','weeklyReport',
         'calYear','calMonth','lightMode','soundOn'];
-      PROTECTED.forEach(k => { if (s[k] !== undefined && s[k] !== null) state[k] = s[k]; });
+      // NEVER load trades from state blob — only from dedicated trades storage
+      SETTINGS.forEach(k => { if (s[k] !== undefined && s[k] !== null) state[k] = s[k]; });
     } catch(e) {}
   }
 
@@ -2787,11 +2787,12 @@ async function loadState() {
         'tabColors','currentTheme','tvSymbol','pin','lightMode','soundOn',
         'barbadosInvestments','cryptoHoldings','sportsCards','sneakers','pokemon',
         'psaSubmissions','ruleViolations','positions','optionsWatch'];
+      // NEVER load trades from state blob
       SETTINGS.forEach(k => { if (remote[k] !== undefined && remote[k] !== null) state[k] = remote[k]; });
     }
   } catch(e) {}
 
-  // Step 3: Load trades separately (dedicated path — always wins)
+  // Step 3: Load trades from dedicated storage ONLY
   await loadTrades();
 
   if (!state.pin) state.pin = '';
