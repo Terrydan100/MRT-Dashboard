@@ -3288,33 +3288,47 @@ function updateCheckScore() {
 
 // ==================== MARKET DATA ====================
 async function fetchMarketData() {
-  // Fetch ES and NQ futures separately
-  try {
-    const esR = await fetch(`https://finnhub.io/api/v1/quote?symbol=ES%3ANMX&token=${FINNHUB_KEY}`);
-    if(esR.ok) {
-      const esD = await esR.json();
-      if(esD.c) {
-        document.getElementById('es-price').textContent = esD.c.toLocaleString(undefined,{maximumFractionDigits:2});
-        const esChg = esD.dp || 0;
-        const esEl = document.getElementById('es-chg');
-        esEl.textContent = (esChg>=0?'+':'')+esChg.toFixed(2)+'%';
-        esEl.style.color = esChg>=0?'var(--green)':'var(--red)';
-      }
+  // Fetch ES and NQ futures via Yahoo Finance (free, no key, Finnhub blocks futures on free plan)
+  async function fetchYahoo(symbol) {
+    try {
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
+      const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      const r = await fetch(proxy);
+      if (!r.ok) return null;
+      const d = await r.json();
+      const meta = d?.chart?.result?.[0]?.meta;
+      if (!meta) return null;
+      return { price: meta.regularMarketPrice, prevClose: meta.chartPreviousClose || meta.previousClose };
+    } catch(e) { return null; }
+  }
+
+  // ES Futures
+  const esData = await fetchYahoo('ES=F');
+  if (esData) {
+    const esEl = document.getElementById('es-price');
+    const esChgEl = document.getElementById('es-chg');
+    if (esEl) esEl.textContent = esData.price.toLocaleString(undefined,{maximumFractionDigits:2});
+    if (esChgEl && esData.prevClose) {
+      const chgPct = ((esData.price - esData.prevClose) / esData.prevClose * 100);
+      esChgEl.textContent = (chgPct>=0?'+':'')+chgPct.toFixed(2)+'%';
+      esChgEl.style.color = chgPct>=0?'var(--green)':'var(--red)';
     }
-  } catch(e) {}
-  try {
-    const nqR = await fetch(`https://finnhub.io/api/v1/quote?symbol=NQ%3ANMX&token=${FINNHUB_KEY}`);
-    if(nqR.ok) {
-      const nqD = await nqR.json();
-      if(nqD.c) {
-        document.getElementById('nq-price').textContent = nqD.c.toLocaleString(undefined,{maximumFractionDigits:2});
-        const nqChg = nqD.dp || 0;
-        const nqEl = document.getElementById('nq-chg');
-        nqEl.textContent = (nqChg>=0?'+':'')+nqChg.toFixed(2)+'%';
-        nqEl.style.color = nqChg>=0?'var(--green)':'var(--red)';
-      }
+  }
+
+  // NQ Futures
+  const nqData = await fetchYahoo('NQ=F');
+  if (nqData) {
+    const nqEl = document.getElementById('nq-price');
+    const nqChgEl = document.getElementById('nq-chg');
+    if (nqEl) nqEl.textContent = nqData.price.toLocaleString(undefined,{maximumFractionDigits:2});
+    if (nqChgEl && nqData.prevClose) {
+      const chgPct = ((nqData.price - nqData.prevClose) / nqData.prevClose * 100);
+      nqChgEl.textContent = (chgPct>=0?'+':'')+chgPct.toFixed(2)+'%';
+      nqChgEl.style.color = chgPct>=0?'var(--green)':'var(--red)';
     }
-  } catch(e) {}
+  }
+
+  // SPY, QQQ, NVDA, META, TSLA, VIX — try Finnhub first, Yahoo fallback
   const syms=['SPY','QQQ','NVDA','META','TSLA','VIX'];
   for(const sym of syms) {
     try {
@@ -3332,7 +3346,6 @@ async function fetchMarketData() {
           if(el){el.textContent='$'+d.c.toFixed(2);}
           if(ec){ec.textContent=' '+chgStr;ec.style.color=col;}
           if(el2){el2.textContent='$'+d.c.toFixed(2);}
-          // Research tab
           const ri=document.getElementById('research-sym-label');
           if(ri&&ri.textContent===sym){
             document.getElementById('res-price').textContent='$'+d.c.toFixed(2);
@@ -3340,9 +3353,25 @@ async function fetchMarketData() {
             rc.textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';
             rc.className='stat-val '+(chg>=0?'pos':'neg');
           }
+          continue; // Finnhub worked, skip Yahoo fallback
         }
       }
     } catch(e) {}
+    // Yahoo Finance fallback for this symbol
+    const yData = await fetchYahoo(sym);
+    if (yData) {
+      const k = sym.toLowerCase();
+      const el = document.getElementById('t-'+k);
+      const ec = document.getElementById('tc-'+k);
+      const el2 = document.getElementById('t-'+k+'2');
+      if (el) el.textContent = '$'+yData.price.toFixed(2);
+      if (el2) el2.textContent = '$'+yData.price.toFixed(2);
+      if (ec && yData.prevClose) {
+        const chg = ((yData.price - yData.prevClose) / yData.prevClose * 100);
+        ec.textContent = ' '+(chg>=0?'+':'')+chg.toFixed(2)+'%';
+        ec.style.color = chg>=0?'var(--green)':'var(--red)';
+      }
+    }
     await new Promise(r=>setTimeout(r,200));
   }
   // Crypto tickers
@@ -3367,26 +3396,8 @@ async function fetchMarketData() {
 
 // ==================== NEWS ====================
 async function fetchNews(query, targetEl='news-feed') {
-  const el=document.getElementById(targetEl);
-  if(el) el.innerHTML='<div style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Loading...</div>';
-  try {
-    const r=await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&pageSize=10&apiKey=${NEWS_KEY}`);
-    if(!r.ok) throw new Error();
-    const d=await r.json();
-    if(!d.articles||!d.articles.length){if(el)el.innerHTML='<div style="text-align:center;color:var(--text2);padding:20px;font-size:13px">No news found</div>';return;}
-    const html=d.articles.filter(a=>a.title&&a.url).map(a=>`
-      <a href="${a.url}" target="_blank" class="news-card" style="display:block;margin-bottom:8px;text-decoration:none">
-        <div class="news-headline">${a.title}</div>
-        <div class="news-meta">
-          <span class="news-source">${a.source?.name||'Unknown'}</span>
-          <span>${timeAgo(a.publishedAt)}</span>
-        </div>
-      </a>`).join('');
-    if(el) el.innerHTML=html;
-  } catch(e) {
-    // Don't show the Yahoo link - just fetch from Finnhub directly inline
-    fetchFinnhubNews(query, targetEl);
-  }
+  // NewsAPI is over plan limit — go directly to Finnhub news (free, no limit issues)
+  fetchFinnhubNews(query, targetEl);
 }
 
 async function fetchFinnhubNews(query, targetEl) {
@@ -3432,30 +3443,18 @@ async function showEmergencyNews() {
 async function fetchBreakingNews() {
   const el = document.getElementById('emergency-news-feed');
   if(el) el.innerHTML = '<div style="text-align:center;color:var(--text2);padding:30px;font-size:13px">🔍 Loading breaking news...</div>';
+  // Go directly to Finnhub (NewsAPI is over plan limit)
   try {
-    const r = await fetch(`https://newsapi.org/v2/top-headlines?country=us&pageSize=15&apiKey=${NEWS_KEY}`);
-    if(!r.ok) throw new Error();
-    const d = await r.json();
-    if(el && d.articles) {
-      el.innerHTML = d.articles.filter(a=>a.title&&a.url).map(a=>`
-        <a href="${a.url}" target="_blank" style="display:block;margin-bottom:10px;text-decoration:none;padding:12px;background:rgba(255,23,68,0.05);border:1px solid rgba(255,23,68,0.2);border-radius:8px;transition:all 0.2s" onmouseover="this.style.background='rgba(255,23,68,0.1)'" onmouseout="this.style.background='rgba(255,23,68,0.05)'">
-          <div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:4px">${a.title}</div>
-          <div style="font-size:11px;color:var(--text2)">${a.source?.name||'News'} · ${timeAgo(a.publishedAt)}</div>
+    const r2 = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
+    if(r2.ok) {
+      const d2 = await r2.json();
+      if(el && d2.length) el.innerHTML = d2.slice(0,12).map(a=>`
+        <a href="${a.url}" target="_blank" style="display:block;margin-bottom:10px;text-decoration:none;padding:12px;background:rgba(255,23,68,0.05);border:1px solid rgba(255,23,68,0.2);border-radius:8px">
+          <div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:4px">${a.headline}</div>
+          <div style="font-size:11px;color:var(--text2)">${a.source} · ${timeAgo(new Date(a.datetime*1000).toISOString())}</div>
         </a>`).join('');
-    }
-  } catch(e) {
-    try {
-      const r2 = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
-      if(r2.ok) {
-        const d2 = await r2.json();
-        if(el && d2.length) el.innerHTML = d2.slice(0,12).map(a=>`
-          <a href="${a.url}" target="_blank" style="display:block;margin-bottom:10px;text-decoration:none;padding:12px;background:rgba(255,23,68,0.05);border:1px solid rgba(255,23,68,0.2);border-radius:8px">
-            <div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:4px">${a.headline}</div>
-            <div style="font-size:11px;color:var(--text2)">${a.source} · ${timeAgo(new Date(a.datetime*1000).toISOString())}</div>
-          </a>`).join('');
-      }
-    } catch(e2) { if(el) el.innerHTML='<div style="text-align:center;color:var(--text2);padding:20px">Could not load news. Check internet connection.</div>'; }
-  }
+    } else throw new Error();
+  } catch(e) { if(el) el.innerHTML='<div style="text-align:center;color:var(--text2);padding:20px">Could not load news. Check internet connection.</div>'; }
 }
 
 // ==================== CRYPTO ====================
@@ -5083,13 +5082,7 @@ async function fetchMarketStatus() {
       else { vixEl.textContent = '🚨 FEAR MODE'; vixEl.style.color = 'var(--red)'; }
     }
   }
-  // Fear & Greed Index (CNN via alternative.me)
-  try {
-    const fgr = await fetch('https://fear-and-greed-index.p.rapidapi.com/v1/fgi', {
-      headers: {'x-rapidapi-host':'fear-and-greed-index.p.rapidapi.com','x-rapidapi-key':''}
-    });
-  } catch(e) {}
-  // Fear & Greed via alternative.me (free, no key)
+  // Fear & Greed Index via alternative.me (free, no key required)
   try {
     const fgRes = await fetch('https://api.alternative.me/fng/?limit=1');
     if(fgRes.ok) {
@@ -5202,9 +5195,10 @@ function renderNetWorth() {
   const barbados = state.barbadosInvestments ? state.barbadosInvestments.reduce((s,b)=>s+b.current,0) : (nwState.barbados || 0);
   const realestate = nwState.realestate || 0;
   const total = trading + crypto + business + barbados + realestate;
-  const fmt = v => '$' + v.toLocaleString(undefined,{maximumFractionDigits:0});
+  const fmt = v => '$' + v.toLocaleString('en-US',{maximumFractionDigits:0});
+  const fmtCents = v => '$' + v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   const el = id => document.getElementById(id);
-  if(el('nw-trading')) el('nw-trading').textContent = fmt(trading);
+  if(el('nw-trading')) el('nw-trading').textContent = fmtCents(trading);
   if(el('nw-crypto')) el('nw-crypto').textContent = fmt(crypto);
   if(el('nw-business')) el('nw-business').textContent = fmt(business);
   if(el('nw-barbados')) el('nw-barbados').textContent = fmt(barbados);
@@ -6113,26 +6107,7 @@ async function fetchBarbadosNews() {
     } catch(e) { return []; }
   });
 
-  // Also fetch from NewsAPI with Barbados query
-  try {
-    const newsR = await fetch(`https://newsapi.org/v2/everything?q=Barbados&language=en&sortBy=publishedAt&pageSize=6&apiKey=${NEWSAPI_KEY}`);
-    if(newsR.ok) {
-      const newsData = await newsR.json();
-      if(newsData.articles) {
-        const nationItems = newsData.articles.map(a => ({
-          source: 'nation',
-          sourceName: a.source?.name || 'Nation News',
-          color: '#f5c518',
-          icon: '🗞️',
-          title: a.title,
-          desc: a.description ? a.description.substring(0,120) + '...' : '',
-          url: a.url,
-          date: a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '',
-        }));
-        allBarbadosNews.push(...nationItems);
-      }
-    }
-  } catch(e) {}
+  // NewsAPI Barbados call removed (over plan limit) — RSS feeds above cover Barbados news
 
   const results = await Promise.all(fetchPromises);
   results.forEach(items => allBarbadosNews.push(...items));
