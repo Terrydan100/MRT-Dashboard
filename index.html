@@ -1541,6 +1541,14 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
   <!-- ===================== ANALYTICS TAB ===================== -->
   <div class="tab-content" id="content-analytics">
+    <!-- BACKUP EXPORT / IMPORT -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex-wrap:wrap">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);flex:1;min-width:160px">🔒 DATA BACKUP</div>
+      <button onclick="exportBackup()" class="btn btn-sm btn-green">⬇ EXPORT BACKUP</button>
+      <button onclick="document.getElementById('backup-import-input').click()" class="btn btn-sm" style="border-color:var(--blue);color:var(--blue)">⬆ IMPORT BACKUP</button>
+      <input type="file" id="backup-import-input" accept=".json" style="display:none" onchange="importBackup(this)">
+      <div style="font-size:11px;color:var(--text3)">Save weekly — restores all data in 60 seconds</div>
+    </div>
     <!-- 8 KEY STATS ROW -->
     <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-bottom:16px">
       <div class="stat-card"><div class="stat-label">WIN RATE</div><div class="stat-val neg" id="an-winrate">0%</div><div class="stat-sub" id="an-wl-detail">0W / 0L</div></div>
@@ -2501,7 +2509,7 @@ const NEWS_KEY = '7a15a3dd81504c52812abee6e5a91212';
 
 // ==================== STATE ====================
 let state = {
-  pin: btoa('1234'),
+  pin: '',
   pinEntry: '',
   trades: [],
   positions: [],
@@ -2543,18 +2551,43 @@ let state = {
   weeklyReport: null
 };
 
-// ==================== PIN SYSTEM ====================
+// ==================== PIN SYSTEM (SHA-256 HARDENED) ====================
+async function hashPin(pin) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode('MrTDashboard_' + pin + '_AWVentures');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+}
+// Master fallback hash for 1234 — pre-computed so PIN check works offline
+const MASTER_HASH = 'sha256:mrt'; // placeholder, computed async on init
+let _masterHash = '';
+async function getMasterHash() {
+  if (!_masterHash) _masterHash = await hashPin('1234');
+  return _masterHash;
+}
+
 let pinCurrent = '';
 function pinPress(d) {
   if(pinCurrent.length >= 4) return;
   pinCurrent += d;
   for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled', i < pinCurrent.length);
   if(pinCurrent.length === 4) {
-    setTimeout(()=>{
-      // Check against stored pin OR master default 1234
-      const masterPin = btoa('1234');
-      const savedPin = state.pin || masterPin;
-      if(btoa(pinCurrent) === savedPin || btoa(pinCurrent) === masterPin) {
+    setTimeout(async ()=>{
+      const enteredHash = await hashPin(pinCurrent);
+      const masterHash = await getMasterHash();
+      const savedPin = state.pin || masterHash;
+      // Support both old btoa format (migration) and new sha256 format
+      const isBtoa = savedPin.length < 20;
+      let match = false;
+      if (isBtoa) {
+        // Legacy btoa: migrate on successful login
+        match = (btoa(pinCurrent) === savedPin || btoa(pinCurrent) === btoa('1234'));
+        if (match) { state.pin = enteredHash; saveState(); }
+      } else {
+        match = (enteredHash === savedPin || enteredHash === masterHash);
+      }
+      if(match) {
         document.getElementById('pin-lock').style.display='none';
         document.getElementById('app').style.display='block';
         initDashboard();
@@ -2572,11 +2605,20 @@ function lockDashboard() { document.getElementById('pin-lock').style.display='fl
 function changePin() {
   const old=document.getElementById('old-pin').value, nw=document.getElementById('new-pin').value, cf=document.getElementById('confirm-pin').value;
   const err=document.getElementById('pin-change-error');
-  if(btoa(old) !== state.pin){err.textContent='Current PIN incorrect';return;}
   if(nw.length !== 4){err.textContent='New PIN must be 4 digits';return;}
   if(nw !== cf){err.textContent='PINs do not match';return;}
-  state.pin=btoa(nw); saveState(); closeModal('pin-modal');
-  showToast('success','PIN Updated','Your PIN has been changed successfully','🔑');
+  // Verify old pin async
+  hashPin(old).then(async oldHash => {
+    const masterHash = await getMasterHash();
+    const savedPin = state.pin || masterHash;
+    const isBtoa = savedPin.length < 20;
+    const valid = isBtoa ? (btoa(old) === savedPin || btoa(old) === btoa('1234')) : (oldHash === savedPin || oldHash === masterHash);
+    if(!valid){err.textContent='Current PIN incorrect';return;}
+    hashPin(nw).then(newHash => {
+      state.pin = newHash; saveState(); closeModal('pin-modal');
+      showToast('success','PIN Updated','Your PIN has been changed successfully','🔑');
+    });
+  });
 }
 
 // ==================== FIREBASE ====================
@@ -2584,6 +2626,50 @@ async function fbGet(path) { try{ const r=await fetch(`${FB_URL}/${path}.json`);
 async function fbSet(path, data) { try{ await fetch(`${FB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)}); }catch(e){} }
 async function fbPush(path, data) { try{ const r=await fetch(`${FB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)}); return r.ok?await r.json():null; }catch(e){return null;} }
 async function fbDelete(path) { try{ await fetch(`${FB_URL}/${path}.json`,{method:'DELETE'}); }catch(e){} }
+
+// ==================== BACKUP EXPORT / IMPORT ====================
+function exportBackup() {
+  const backup = {
+    version: 'MrTDashboard_V5',
+    exported: new Date().toISOString(),
+    state: state
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'MrTDashboard_Backup_' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('success','Backup Exported','Save this file somewhere safe. Use it to restore if data is lost.','💾', 6000);
+}
+
+function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const backup = JSON.parse(e.target.result);
+      if (!backup.state || !backup.version) { showToast('danger','Invalid Backup','This file is not a valid MrT Dashboard backup.','❌'); return; }
+      if (!confirm('⚠️ RESTORE BACKUP?\n\nThis will replace ALL current data with the backup from ' + (backup.exported ? backup.exported.split('T')[0] : 'unknown date') + '.\n\nCurrent data will be overwritten. Are you sure?')) return;
+      // Preserve current PIN — don't overwrite security with backup PIN
+      const currentPin = state.pin;
+      Object.assign(state, backup.state);
+      state.pin = currentPin || state.pin; // keep active PIN
+      saveState();
+      // Re-render everything
+      renderTrades(); updateStats(); renderPositions(); renderCrypto();
+      renderSneakers(); renderPokemon(); renderBarbados(); renderSportsCards();
+      renderViolations(); updateCEOScoreboard(); initCharts();
+      showToast('success','Backup Restored','All data has been restored successfully.','✅', 6000);
+    } catch(err) {
+      showToast('danger','Import Failed','Could not read backup file. Make sure it is a valid JSON backup.','❌');
+    }
+  };
+  reader.readAsText(file);
+  input.value = ''; // reset so same file can be imported again
+}
 
 // ==================== STATE MANAGEMENT ====================
 function saveState() { localStorage.setItem('mrt_v2_state', JSON.stringify(state)); fbSet('state', state); }
@@ -2593,8 +2679,8 @@ async function loadState() {
   if(local) { try{ const s=JSON.parse(local); Object.assign(state,s); }catch(e){} }
   const remote = await fbGet('state');
   if(remote) Object.assign(state, remote);
-  // PIN: use whatever was saved (could be user-changed), but fall back to default if missing
-  if(!state.pin) state.pin = btoa('1234');
+  // PIN: use whatever was saved (could be user-changed), fall back to empty so getMasterHash() handles it
+  if(!state.pin) state.pin = '';
 }
 
 // ==================== INIT ====================
@@ -4488,13 +4574,17 @@ function toggleHideFigures() {
     // Require PIN to unhide
     const entered = prompt('Enter PIN to show figures:');
     if(!entered) return;
-    const correct = btoa('1234');
-    const savedPin = state.pin || correct;
-    if(btoa(entered) === savedPin || btoa(entered) === correct) {
-      applyHideFiguresState(false);
-    } else {
-      showSignalToast('❌ Incorrect PIN — figures remain hidden', 3000);
-    }
+    hashPin(entered).then(async enteredHash => {
+      const masterHash = await getMasterHash();
+      const savedPin = state.pin || masterHash;
+      const isBtoa = savedPin.length < 20;
+      const valid = isBtoa ? (btoa(entered) === savedPin || btoa(entered) === btoa('1234')) : (enteredHash === savedPin || enteredHash === masterHash);
+      if(valid) {
+        applyHideFiguresState(false);
+      } else {
+        showSignalToast('❌ Incorrect PIN — figures remain hidden', 3000);
+      }
+    });
   } else {
     applyHideFiguresState(true);
   }
