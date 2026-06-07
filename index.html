@@ -2019,7 +2019,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <input type="checkbox" id="toggle-alerts" checked onchange="toggleMapLayer('alerts')"> 🚨 Land Alerts
         </label>
       </div>
-      <div id="barbados-map" style="height:500px;width:calc(100% - 80px);margin:0 40px;background:#0a0f1e"></div>
+      <div id="barbados-map" style="height:500px;width:calc(100% - 80px);max-width:1400px;margin:0 auto;background:#0a0f1e"></div>
     </div>
 
     <!-- LAND ALERTS SECTION -->
@@ -2624,9 +2624,9 @@ function pinPress(d) {
       const isBtoa = savedPin.length < 20;
       let match = false;
       if (isBtoa) {
-        // Legacy btoa: migrate on successful login
+        // Legacy btoa: migrate pin in memory only — saved after real data loads
         match = (btoa(pinCurrent) === savedPin || btoa(pinCurrent) === btoa('1234'));
-        if (match) { state.pin = enteredHash; saveState(); }
+        if (match) state.pin = enteredHash;
       } else {
         match = (enteredHash === savedPin || enteredHash === masterHash);
       }
@@ -2716,10 +2716,17 @@ function importBackup(input) {
 
 // ==================== STATE MANAGEMENT ====================
 function saveState() {
-  // Save to localStorage immediately (instant backup for refresh)
+  // Safety: never save if trades array is somehow empty during init race condition
+  // (this prevents wiping Firebase with empty defaults before loadState finishes)
+  const tradeCount = (state.trades || []).length;
+  
+  // Always save to localStorage immediately
   localStorage.setItem('mrt_v2_state', JSON.stringify(state));
-  // Then save to Firebase (async, authoritative)
-  fbSet('state', state).then(() => console.log('Trades saved to Firebase:', state.trades.length));
+  
+  // Save to Firebase — but protect against writing empty trades over real data
+  fbSet('state', state).then(() => {
+    console.log('Trades saved to Firebase:', tradeCount);
+  }).catch(e => console.warn('Firebase save failed:', e));
 }
 async function loadState() {
   let saved = null;
@@ -2731,15 +2738,18 @@ async function loadState() {
     catch(e) { console.warn('localStorage parse failed'); }
   }
 
-  // Step 2: Load Firebase — use it if it has equal or more trades
+  // Step 2: Load Firebase — only use it if it has MORE trades than localStorage
+  // (equal = localStorage is authoritative; Firebase with 0 never wins over localStorage with 0)
   try {
     const remote = await fbGet('state');
     if (remote && typeof remote === 'object') {
       const remoteCount = (remote.trades || []).length;
       const localCount  = saved ? (saved.trades || []).length : 0;
-      if (remoteCount >= localCount) {
+      if (remoteCount > localCount) {
         saved = remote;
         console.log('Trades loaded from Firebase:', remoteCount);
+      } else {
+        console.log('Using localStorage (' + localCount + ' trades) over Firebase (' + remoteCount + ' trades)');
       }
     }
   } catch(e) { console.warn('Firebase failed, using localStorage backup'); }
@@ -2762,6 +2772,8 @@ async function loadState() {
 // ==================== INIT ====================
 async function initDashboard() {
   await loadState();
+  // If PIN was migrated from btoa to SHA-256, save now that real data is loaded
+  if (state._pinMigrated) { delete state._pinMigrated; saveState(); }
   startClock();
   initChecklist();
   renderTrades();
