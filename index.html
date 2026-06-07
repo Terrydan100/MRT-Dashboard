@@ -5865,15 +5865,15 @@ function togglePlacesPanel() {
 function goToPlace(placeName) {
   const iframe = document.getElementById('barbados-map-iframe');
   if (!iframe) return;
-  const searchUrl = `https://www.google.com/maps/embed/v1/search?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=${encodeURIComponent(placeName)}&center=13.1939,-59.5432&zoom=13`;
-  iframe.src = searchUrl;
-  // Close panel and scroll to map
+  // Use Google Maps regular search embed — no API key required
+  const encoded = encodeURIComponent(placeName);
+  iframe.src = `https://maps.google.com/maps?q=${encoded}&output=embed&z=15`;
+  // Close panel
   placesPanelOpen = false;
   const panel = document.getElementById('places-panel');
   const btn = document.getElementById('places-panel-btn');
   if (panel) panel.style.maxHeight = '0';
   if (btn) btn.textContent = '📍 MY PLACES ▼';
-  // Scroll map into view
   setTimeout(() => { iframe.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
 }
 
@@ -5884,7 +5884,7 @@ function searchGoogleMap(query) {
   const iframe = document.getElementById('barbados-map-iframe');
   if (!iframe) return;
   // Use Google Maps embed search URL
-  const searchUrl = `https://www.google.com/maps/embed/v1/search?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=${encodeURIComponent(q + ' Barbados')}&center=13.1939,-59.5432&zoom=12`;
+  const searchUrl = `https://maps.google.com/maps?q=${encodeURIComponent(q + ' Barbados')}&output=embed&z=13`;
   iframe.src = searchUrl;
   if (input && !query) { /* keep typed value */ }
   else if (input && query) input.value = '';
