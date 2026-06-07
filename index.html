@@ -1971,15 +1971,28 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div id="route-info" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
       </div>
       <!-- SEARCH BAR -->
-      <div style="padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center">
-        <div style="flex:1;position:relative">
-          <input class="form-input" id="map-search-input" placeholder="🔍 Search Barbados — beaches, restaurants, turtles, malls, attractions..." 
-            style="width:100%;font-size:12px;padding:8px 12px;padding-right:80px"
-            oninput="handleMapSearch(this.value)" onkeydown="if(event.key==='Enter')searchMapPlace()">
-          <button onclick="searchMapPlace()" class="btn btn-sm btn-primary" 
-            style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:11px;padding:4px 10px">GO</button>
+      <div style="padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border)">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <div style="flex:1;position:relative">
+            <input class="form-input" id="map-search-input" placeholder="🔍 Search — beaches, car rental, restaurants, hotels, turtles..." 
+              style="width:100%;font-size:12px;padding:8px 12px;padding-right:80px"
+              oninput="handleMapSearch(this.value)" onkeydown="if(event.key==='Enter')searchMapPlace()">
+            <button onclick="searchMapPlace()" class="btn btn-sm btn-primary" 
+              style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:11px;padding:4px 10px">GO</button>
+          </div>
+          <button onclick="clearMapSearch()" class="btn btn-sm" style="font-size:11px;white-space:nowrap">✕ Clear</button>
         </div>
-        <button onclick="clearMapSearch()" class="btn btn-sm" style="font-size:11px;white-space:nowrap">✕ Clear</button>
+        <!-- CATEGORY QUICK FILTERS -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="quickMapFilter('beaches')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--blue);color:var(--blue)">🏖️ Beaches</button>
+          <button onclick="quickMapFilter('carrental')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--green);color:var(--green)">🚗 Car Rental</button>
+          <button onclick="quickMapFilter('hotels')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--accent);color:var(--accent)">🏨 Hotels</button>
+          <button onclick="quickMapFilter('restaurants')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--orange);color:var(--orange)">🍽️ Restaurants</button>
+          <button onclick="quickMapFilter('turtles')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--cyan);color:var(--cyan)">🐢 Turtles</button>
+          <button onclick="quickMapFilter('investments')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--purple);color:var(--purple)">💰 Investments</button>
+          <button onclick="quickMapFilter('local rental')" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:#ff6b9d;color:#ff6b9d">🏠 Local Renters</button>
+          <button onclick="clearMapSearch();barbadosMap.setView([13.1939,-59.5432],11)" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🗺️ Reset View</button>
+        </div>
       </div>
       <!-- SEARCH RESULTS DROPDOWN -->
       <div id="map-search-results" style="display:none;max-height:200px;overflow-y:auto;background:var(--card);border-bottom:1px solid var(--border)"></div>
@@ -5280,11 +5293,19 @@ const barbadosLocations = {
     { name: 'El Tigre Catamaran', lat: 13.1925, lng: -59.6350, icon: '⛵', desc: 'El Tigre — snorkeling tours, west coast, departures daily' },
   ],
   carrental: [
-    { name: 'Stoutes Car Rental', lat: 13.0784, lng: -59.6145, icon: '🚗', desc: 'Stoutes Car Rental — Bridgetown, one of Barbados most trusted, minis and sedans' },
-    { name: 'Courtesy Rent-A-Car', lat: 13.0742, lng: -59.4929, icon: '🚗', desc: 'Courtesy Rent-A-Car — Airport location, open 24hrs, wide selection' },
-    { name: 'Drive-A-Matic', lat: 13.0731, lng: -59.4935, icon: '🚗', desc: 'Drive-A-Matic — Airport and Bridgetown, automatic cars specialist' },
-    { name: 'P and S Car Rentals', lat: 13.1930, lng: -59.6350, icon: '🚗', desc: 'P and S Car Rentals — Holetown, St. James, convenient west coast pickup' },
-    { name: 'ABC Car Rental', lat: 13.0750, lng: -59.4940, icon: '🚗', desc: 'ABC Car Rentals — Near airport, competitive rates, free delivery' },
+    // === MAJOR / ESTABLISHED RENTERS ===
+    { name: 'Stoutes Car Rental', lat: 13.0784, lng: -59.6145, icon: '🚗', desc: '🏢 MAJOR — Stoutes Car Rental · Bridgetown · One of Barbados most trusted · Minis, sedans, SUVs · Tel: (246) 416-4456 · stoutescarrental.com', size: 'major' },
+    { name: 'Courtesy Rent-A-Car', lat: 13.0742, lng: -59.4929, icon: '🚗', desc: '🏢 MAJOR — Courtesy Rent-A-Car · Airport (24hrs) · Wide selection · Free shuttle · Tel: (246) 431-4160 · courtesyrentacar.com', size: 'major' },
+    { name: 'Drive-A-Matic', lat: 13.0731, lng: -59.4935, icon: '🚗', desc: '🏢 MAJOR — Drive-A-Matic · Airport & Bridgetown · Automatic cars specialist · Tel: (246) 422-3000 · driveamatic.com', size: 'major' },
+    { name: 'ABC Car Rental', lat: 13.0750, lng: -59.4940, icon: '🚗', desc: '🏢 MAJOR — ABC Car Rentals · Near airport · Competitive rates · Free delivery · Tel: (246) 422-0062', size: 'major' },
+    { name: 'Coconut Car Rentals', lat: 13.1050, lng: -59.6170, icon: '🚗', desc: '🏢 MAJOR — Coconut Car Rentals · Bridgetown area · Tourist favorite · Wide fleet · coconutcars.com', size: 'major' },
+    // === LOCAL / SMALL RENTERS (1–3 cars) ===
+    { name: 'P and S Car Rentals', lat: 13.1930, lng: -59.6350, icon: '🚙', desc: '🏠 LOCAL SMALL (1–3 cars) — P & S Car Rentals · Holetown, St. James · Personal service · West coast pickup · Tel: (246) 432-1456', size: 'local' },
+    { name: 'Bajan Wheels', lat: 13.1500, lng: -59.6300, icon: '🚙', desc: '🏠 LOCAL SMALL (2 cars) — Bajan Wheels · St. James · Family-run · Moke & mini rentals · Cash-friendly · Call ahead to reserve', size: 'local' },
+    { name: 'No Frills Car Rental', lat: 13.0850, lng: -59.5950, icon: '🚙', desc: '🏠 LOCAL SMALL (2–3 cars) — No Frills Car Rental · Christ Church · Budget-friendly · Older but reliable vehicles · Tel: (246) 228-6257', size: 'local' },
+    { name: 'C&M Car Rentals', lat: 13.0900, lng: -59.6100, icon: '🚙', desc: '🏠 LOCAL SMALL (1–2 cars) — C&M Car Rentals · Bridgetown area · Local owner-operated · Minis and small cars · Book directly', size: 'local' },
+    { name: 'Roy\'s Car Rental', lat: 13.2100, lng: -59.6400, icon: '🚙', desc: '🏠 LOCAL SMALL (2 cars) — Roy\'s Car Rental · Speightstown, St. Peter · North coast specialist · Very affordable · Personal service', size: 'local' },
+    { name: 'Island Cheap Car Rental', lat: 13.0680, lng: -59.5700, icon: '🚙', desc: '🏠 LOCAL SMALL (1–3 cars) — Island Cheap Car Rental · Oistins area · Budget option · Good for short trips · Cash or local payment', size: 'local' },
   ],
   malls: [
     { name: 'Sheraton Mall', lat: 13.0720, lng: -59.6020, icon: '🛍️', desc: 'Sheraton Mall — largest mall in Barbados, south coast, 100+ stores' },
@@ -5337,13 +5358,22 @@ function initBarbadosMap() {
   Object.keys(barbadosLocations).forEach(layerKey => {
     const markers = [];
     barbadosLocations[layerKey].forEach(loc => {
-      const marker = L.marker([loc.lat, loc.lng], { icon: createCustomIcon(loc.icon) })
+      // Local small car renters get a different icon
+      const icon = (layerKey === 'carrental' && loc.size === 'local')
+        ? createCustomIcon('🚙')
+        : createCustomIcon(loc.icon);
+      const localBadge = (layerKey === 'carrental' && loc.size === 'local')
+        ? '<span style="background:#ff6b9d22;color:#ff6b9d;border:1px solid #ff6b9d;border-radius:4px;font-size:10px;padding:1px 6px;margin-left:4px">LOCAL</span>'
+        : (layerKey === 'carrental' && loc.size === 'major')
+        ? '<span style="background:#00e67622;color:#00e676;border:1px solid #00e676;border-radius:4px;font-size:10px;padding:1px 6px;margin-left:4px">MAJOR</span>'
+        : '';
+      const marker = L.marker([loc.lat, loc.lng], { icon })
         .bindPopup(`
-          <div style="font-family:Rajdhani,sans-serif;min-width:180px">
-            <div style="font-weight:700;font-size:14px;color:#1a2235;margin-bottom:4px">${loc.icon} ${loc.name}</div>
+          <div style="font-family:Rajdhani,sans-serif;min-width:200px">
+            <div style="font-weight:700;font-size:14px;color:#1a2235;margin-bottom:4px">${loc.icon} ${loc.name}${localBadge}</div>
             <div style="font-size:12px;color:#444;line-height:1.5">${loc.desc}</div>
           </div>
-        `, { maxWidth: 220 });
+        `, { maxWidth: 250 });
       markers.push(marker);
     });
     mapLayers[layerKey] = L.layerGroup(markers).addTo(barbadosMap);
@@ -5459,34 +5489,84 @@ let searchTimeout = null;
 
 function handleMapSearch(val) {
   clearTimeout(searchTimeout);
-  if(val.length < 2) { document.getElementById('map-search-results').style.display='none'; return; }
-  searchTimeout = setTimeout(() => searchMapPlace(), 500);
+  const resultsEl = document.getElementById('map-search-results');
+  if(val.length < 2) { resultsEl.style.display='none'; return; }
+  // First show local marker matches instantly
+  showLocalMarkerMatches(val);
+  // Then debounce Nominatim search
+  searchTimeout = setTimeout(() => searchMapPlace(), 600);
+}
+
+function showLocalMarkerMatches(query) {
+  const q = query.toLowerCase();
+  const resultsEl = document.getElementById('map-search-results');
+  const matches = [];
+  // Search all local marker categories
+  Object.entries(barbadosLocations).forEach(([category, items]) => {
+    items.forEach(item => {
+      if(item.name.toLowerCase().includes(q) || (item.desc||'').toLowerCase().includes(q)) {
+        matches.push({ ...item, category });
+      }
+    });
+  });
+  if(matches.length) {
+    resultsEl.style.display = 'block';
+    resultsEl.innerHTML = matches.slice(0,6).map(item => {
+      const isLocal = item.size === 'local';
+      const badge = isLocal ? '<span style="background:rgba(255,107,157,0.2);color:#ff6b9d;border:1px solid #ff6b9d;border-radius:4px;font-size:9px;padding:1px 5px;margin-right:4px">LOCAL</span>' : '';
+      return `<div onclick="goToSearchResult(${item.lat},${item.lng},'${item.name.replace(/'/g,'')}')"
+        style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;font-size:12px;color:var(--text)"
+        onmouseover="this.style.background='var(--card2)'" onmouseout="this.style.background=''">
+        <div style="font-weight:600">${item.icon} ${badge}${item.name}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:2px">${item.category} · on map</div>
+      </div>`;
+    }).join('');
+  } else {
+    resultsEl.style.display = 'none';
+  }
+}
+
+function quickMapFilter(category) {
+  document.getElementById('map-search-input').value = category;
+  showLocalMarkerMatches(category);
+  // Also fly to relevant area
+  const catMap = {
+    'beaches': [13.1500, -59.6400, 12],
+    'carrental': [13.0742, -59.4929, 12],
+    'local rental': [13.1930, -59.6350, 12],
+    'hotels': [13.1900, -59.6360, 12],
+    'restaurants': [13.0720, -59.6020, 12],
+    'turtles': [13.1700, -59.6450, 13],
+    'investments': [13.1089, -59.6198, 12],
+  };
+  const fly = catMap[category.toLowerCase()];
+  if(fly && barbadosMap) barbadosMap.setView([fly[0], fly[1]], fly[2], {animate:true});
 }
 
 async function searchMapPlace() {
   const query = document.getElementById('map-search-input').value;
   if(!query || query.length < 2) return;
   const resultsEl = document.getElementById('map-search-results');
-  resultsEl.style.display = 'block';
-  resultsEl.innerHTML = '<div style="padding:10px;color:var(--text2);font-size:12px">Searching...</div>';
+  // Show local results first while Nominatim loads
+  showLocalMarkerMatches(query);
   try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' Barbados')}&format=json&limit=6&addressdetails=1`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' Barbados')}&format=json&limit=5&addressdetails=1`;
     const r = await fetch(url, { headers: { 'Accept-Language': 'en' } });
     const data = await r.json();
-    if(!data.length) {
-      resultsEl.innerHTML = '<div style="padding:10px;color:var(--text2);font-size:12px">No results found</div>';
-      return;
-    }
-    resultsEl.innerHTML = data.map((item, i) => `
+    if(!data.length) return; // keep local results showing
+    // Merge: local results on top, then Nominatim
+    const localHTML = showLocalMarkerMatches(query) || '';
+    resultsEl.style.display = 'block';
+    const nomHTML = data.map(item => `
       <div onclick="goToSearchResult(${item.lat},${item.lon},'${item.display_name.replace(/'/g,'').substring(0,60)}')"
-        style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;font-size:12px;color:var(--text)"
+        style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;font-size:12px;color:var(--text2)"
         onmouseover="this.style.background='var(--card2)'" onmouseout="this.style.background=''">
-        <div style="font-weight:600">📍 ${item.display_name.substring(0,70)}${item.display_name.length>70?'...':''}</div>
-        <div style="font-size:10px;color:var(--text2);margin-top:2px">${item.type} · ${item.lat.substring(0,8)}, ${item.lon.substring(0,9)}</div>
+        <div style="font-weight:600">📍 ${item.display_name.substring(0,65)}${item.display_name.length>65?'...':''}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">OpenStreetMap · ${item.type}</div>
       </div>`).join('');
-  } catch(e) {
-    resultsEl.innerHTML = '<div style="padding:10px;color:var(--red);font-size:12px">Search error — check connection</div>';
-  }
+    // Append Nominatim results below local ones
+    resultsEl.innerHTML += nomHTML;
+  } catch(e) {}
 }
 
 function goToSearchResult(lat, lng, name) {
