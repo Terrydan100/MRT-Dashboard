@@ -810,7 +810,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div style="flex:1">
           <div class="card-title">ACCOUNT BALANCE</div>
           <div style="display:flex;gap:12px;align-items:center">
-            <input class="form-input" type="number" id="balance-input" value="2009.69" style="max-width:200px">
+            <input class="form-input" type="number" id="balance-input" value="" style="max-width:200px">
             <button class="btn btn-primary" onclick="updateBalance()">UPDATE BALANCE</button>
           </div>
         </div>
@@ -2019,7 +2019,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <input type="checkbox" id="toggle-alerts" checked onchange="toggleMapLayer('alerts')"> 🚨 Land Alerts
         </label>
       </div>
-      <div id="barbados-map" style="height:500px;width:calc(100% - 80px);margin:0 40px;background:#0a0f1e"></div>
+      <div id="barbados-map" style="height:500px;width:calc(100% - 80px);max-width:1400px;margin:0 auto;background:#0a0f1e"></div>
     </div>
 
     <!-- LAND ALERTS SECTION -->
@@ -2717,43 +2717,34 @@ function importBackup(input) {
 function saveState() { localStorage.setItem('mrt_v2_state', JSON.stringify(state)); fbSet('state', state); }
 
 async function loadState() {
-  // Step 1: Try localStorage first (fastest)
   let saved = null;
+
+  // Try localStorage first
   const local = localStorage.getItem('mrt_v2_state');
   if (local) { try { saved = JSON.parse(local); } catch(e) {} }
 
-  // Step 2: Try Firebase (authoritative — may have newer data)
+  // Try Firebase — wins if it has equal or more trades than localStorage
   try {
     const remote = await fbGet('state');
     if (remote && typeof remote === 'object') {
-      // Firebase wins over localStorage if it has trades or a newer balance
-      if (!saved || (remote.trades && remote.trades.length >= (saved.trades||[]).length)) {
-        saved = remote;
-      }
+      const remoteTradeCount = (remote.trades || []).length;
+      const localTradeCount = saved ? (saved.trades || []).length : 0;
+      if (remoteTradeCount >= localTradeCount) saved = remote;
     }
   } catch(e) {}
 
-  // Step 3: Merge saved data into state — saved data ALWAYS wins over defaults
-  // Only copy keys that exist in saved, never let defaults overwrite real data
+  // Merge: saved data ALWAYS wins over hardcoded defaults
   if (saved) {
-    const protectedKeys = ['trades','balance','startBalance','positions','cryptoHoldings',
+    const keys = ['trades','balance','startBalance','positions','cryptoHoldings',
       'sneakers','pokemon','psaSubmissions','barbadosInvestments','barbadosEntries',
       'optionsWatch','sportsCards','ruleViolations','goal','netWorth','pin',
-      'checklistState','tabColors','currentTheme','tvSymbol','weeklyReport'];
-    protectedKeys.forEach(key => {
-      if (saved[key] !== undefined && saved[key] !== null) {
-        state[key] = saved[key];
-      }
-    });
-    // Also copy any other keys from saved
-    Object.keys(saved).forEach(key => {
-      if (!protectedKeys.includes(key) && saved[key] !== undefined) {
-        state[key] = saved[key];
-      }
-    });
+      'checklistState','tabColors','currentTheme','tvSymbol','weeklyReport',
+      'calYear','calMonth','lightMode','soundOn'];
+    keys.forEach(k => { if (saved[k] !== undefined && saved[k] !== null) state[k] = saved[k]; });
+    // Copy any other keys not in the list
+    Object.keys(saved).forEach(k => { if (!keys.includes(k) && saved[k] !== undefined) state[k] = saved[k]; });
   }
 
-  // Step 4: PIN fallback
   if (!state.pin) state.pin = '';
 }
 
@@ -4631,7 +4622,7 @@ let figuresHidden = false;
 function applyHideFiguresState(hidden) {
   figuresHidden = hidden;
   const btn = document.getElementById('hide-figures-btn');
-  const moneyEls = document.querySelectorAll('.stat-val, .card-value, #stat-pnl, #stat-balance, #stat-best, #stat-worst, #progress-text, .crypto-value, .crypto-price, .invest-val');
+  const moneyEls = document.querySelectorAll('.stat-val, .card-value, .crypto-money, #stat-pnl, #stat-balance, #stat-best, #stat-worst, #progress-text, .crypto-value, .crypto-price, .invest-val, #nw-trading, #nw-crypto, #nw-barbados, #nw-realestate, #nw-business, #nw-total, #crypto-total, #ceo-trading-pnl, #ceo-crypto-val, #ceo-barb-val, #ceo-cards-val, #ceo-networth, #port-value');
   moneyEls.forEach(el => {
     if(hidden) {
       el.dataset.orig = el.textContent;
@@ -5915,7 +5906,7 @@ function buildPLCalendar() {
       const d = new Date(t.date);
       if(d.getFullYear() === plCalYear && d.getMonth() === plCalMonth) {
         const key = d.getDate();
-        dailyPL[key] = (dailyPL[key] || 0) + (parseFloat(t.pl) || 0);
+        dailyPL[key] = (dailyPL[key] || 0) + (parseFloat(t.pnl) || 0);
       }
     });
   }
@@ -6839,11 +6830,11 @@ function renderCrypto() {
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-size:10px;color:var(--text2)">VALUE</div>
-          <div style="font-size:14px;font-weight:700;color:var(--accent)">$${val>0?val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'--'}</div>
+          <div class="crypto-money" style="font-size:14px;font-weight:700;color:var(--accent)">$${val>0?val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'--'}</div>
         </div>
         <div style="text-align:right">
           ${h.buyPrice>0?`<div style="font-size:10px;color:var(--text2)">P&L</div>
-          <div style="font-size:13px;font-weight:700;color:${gainLoss>=0?'var(--green)':'var(--red)'}">${gainLoss>=0?'+':''}$${gainLoss.toFixed(2)}</div>`
+          <div class="crypto-money" style="font-size:13px;font-weight:700;color:${gainLoss>=0?'var(--green)':'var(--red)'}">${gainLoss>=0?'+':''}$${gainLoss.toFixed(2)}</div>`
           :`<div style="font-size:10px;color:var(--text3)">↗ View chart</div>`}
         </div>
       </div>
