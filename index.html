@@ -2571,15 +2571,14 @@ let state = {
   ],
   psaSubmissions: [],
   barbadosInvestments: [
-    {id:1,name:'Barbados Tourism',amount:5000,current:5500,type:'Tourism',note:'Active'},
-    {id:2,name:'3 Stars',amount:3000,current:3200,type:'Business',note:'Active'}
+    {id:2,name:'3 Stars',amount:10000,current:10000,type:'Business',note:'Active'}
   ],
   barbadosEntries: [],
   optionsWatch: [],
   goal: 50000,
   balance: 2009.69,
   startBalance: 2009.69,
-  netWorth: { business: 0, barbados: 8700, realestate: 0 },
+  netWorth: { business: 0, barbados: 10000, realestate: 0 },
   checklistState: {},
   currentTheme: '',
   calYear: new Date().getFullYear(),
@@ -2732,6 +2731,7 @@ async function initDashboard() {
   initChecklist();
   renderTrades();
   updateStats();
+  renderNetWorth();
   initCharts();
   renderPositions();
   renderCrypto();
@@ -2901,8 +2901,7 @@ function logTrade() {
   if(!date||!ticker) return showToast('danger','Missing Info','Please fill all required fields','❌');
   const trade={id:Date.now(),date,ticker:ticker.toUpperCase(),type,pnl,note};
   state.trades.unshift(trade);
-  saveState(); renderTrades(); updateStats(); updateCharts();
-  closeModal('trade-modal');
+  saveState(); renderTrades(); updateStats(); renderNetWorth(); updateCharts();
   document.getElementById('t-pnl').value=''; document.getElementById('t-note').value='';
   showToast('success','Trade Logged',`${ticker.toUpperCase()} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`,'📝');
   checkDailyGoal();
@@ -2919,7 +2918,7 @@ function logTradeInline() {
   if(!date||!ticker){if(msgEl){msgEl.textContent='⚠️ Date and ticker required';msgEl.style.color='var(--red)';}return;}
   const trade={id:Date.now(),date,ticker,type,pnl,note,strategy};
   state.trades.unshift(trade);
-  saveState(); renderTrades(); updateStats(); updateCharts();
+  saveState(); renderTrades(); updateStats(); renderNetWorth(); updateCharts();
   // Clear fields
   document.getElementById('t-pnl-inline').value='';
   document.getElementById('t-note-inline').value='';
@@ -2932,7 +2931,7 @@ function logTradeInline() {
 function deleteTrade(id) {
   if(!confirm('Delete this trade?')) return;
   state.trades=state.trades.filter(t=>t.id!==id);
-  saveState(); renderTrades(); updateStats(); updateCharts();
+  saveState(); renderTrades(); updateStats(); renderNetWorth(); updateCharts();
 }
 
 function renderTrades() {
@@ -3947,6 +3946,9 @@ function updateCharts() {
   [...tradingTrades].reverse().forEach(t=>{running+=t.pnl;labels.push(t.date);data.push(parseFloat(running.toFixed(2)));});
   equityChartInst.data.labels=labels;
   equityChartInst.data.datasets[0].data=data;
+  equityChartInst.data.datasets[0].borderColor='#00e5ff';
+  equityChartInst.data.datasets[0].backgroundColor='rgba(0,229,255,0.08)';
+  equityChartInst.data.datasets[0].pointBackgroundColor='#00e5ff';
   equityChartInst.update();
   // Drawdown
   try {
@@ -5050,7 +5052,8 @@ function renderNetWorth() {
   const cryptoEl = document.getElementById('crypto-total');
   const crypto = cryptoEl ? parseFloat(cryptoEl.textContent.replace('$','').replace(',','')) || 0 : 0;
   const business = nwState.business || 0;
-  const barbados = nwState.barbados || 0;
+  // Barbados: always pull from investments (source of truth)
+  const barbados = state.barbadosInvestments ? state.barbadosInvestments.reduce((s,b)=>s+b.current,0) : (nwState.barbados || 0);
   const realestate = nwState.realestate || 0;
   const total = trading + crypto + business + barbados + realestate;
   const fmt = v => '$' + v.toLocaleString(undefined,{maximumFractionDigits:0});
