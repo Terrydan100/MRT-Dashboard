@@ -135,6 +135,10 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 .wr-label { font-size:9px;color:var(--text2);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase; }
 .wr-val { font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--text); }
 .wr-chg { font-size:10px;font-weight:600;margin-top:2px; }
+.places-item { width:100%;text-align:left;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);cursor:pointer;transition:all 0.15s;font-family:Rajdhani,sans-serif;font-weight:600; }
+.places-item:hover { background:rgba(245,197,24,0.1);border-color:var(--accent);color:var(--accent); }
+.places-item.major { border-left:3px solid var(--green); }
+.places-item.local { border-left:3px solid #ff6b9d; }
 .stat-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text2); margin-bottom:8px; }
 .stat-val { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:700; }
 .stat-sub { font-size:11px; color:var(--text2); margin-top:4px; }
@@ -2148,6 +2152,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
             <button onclick="searchGoogleMap()" class="btn btn-sm btn-primary" 
               style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:11px;padding:4px 10px">GO</button>
           </div>
+          <button onclick="togglePlacesPanel()" id="places-panel-btn" class="btn btn-sm" style="font-size:11px;white-space:nowrap;border-color:var(--accent);color:var(--accent);font-weight:700">📍 MY PLACES ▼</button>
           <a href="https://www.google.com/maps/place/Barbados" target="_blank" class="btn btn-sm" style="font-size:11px;white-space:nowrap;border-color:var(--blue);color:var(--blue)">🗺️ Full Screen</a>
         </div>
         <!-- QUICK FILTERS -->
@@ -2162,8 +2167,82 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <button onclick="resetGoogleMap()" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🗺️ Reset</button>
         </div>
       </div>
+
+      <!-- MY PLACES ANIMATED PANEL -->
+      <div id="places-panel" style="max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1);background:var(--bg2);border-bottom:1px solid var(--border)">
+        <div style="padding:14px 16px">
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px;margin-bottom:12px">📍 MY SAVED PLACES — Click to open on map</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+
+            <!-- CAR RENTALS -->
+            <div>
+              <div style="font-size:10px;color:var(--green);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase">🚗 Car Rentals</div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <button onclick="goToPlace('Stoutes Car Rental Kirtons St Philip Barbados')" class="places-item major">🏢 Stoutes Car Rental <span style="font-size:9px;color:var(--text3)">(246) 416-4456 · Major</span></button>
+                <button onclick="goToPlace('Courtesy Rent-A-Car Wildey St Michael Barbados')" class="places-item major">🏢 Courtesy Rent-A-Car <span style="font-size:9px;color:var(--text3)">(246) 431-4160 · Major</span></button>
+                <button onclick="goToPlace('Drive-A-Matic Car Rentals Lower Estate St Michael Barbados')" class="places-item major">🏢 Drive-A-Matic <span style="font-size:9px;color:var(--text3)">(246) 434-8440 · Major</span></button>
+                <button onclick="goToPlace('ABC Car Rentals Grantley Adams Airport Barbados')" class="places-item major">🏢 ABC Car Rental <span style="font-size:9px;color:var(--text3)">Airport · Major</span></button>
+                <button onclick="goToPlace('Coconut Car Rentals Bridgetown Barbados')" class="places-item major">🏢 Coconut Car Rentals <span style="font-size:9px;color:var(--text3)">Bridgetown · Major</span></button>
+                <button onclick="goToPlace('Jones Car Rental Passage Road Barbados')" class="places-item major">🏢 Jones Car Rental <span style="font-size:9px;color:var(--text3)">(246) 429-6363 · Major</span></button>
+                <button onclick="goToPlace('P and S Car Rentals Holetown St James Barbados')" class="places-item local">🏠 P & S Car Rentals <span style="font-size:9px;color:var(--text3)">Holetown · Local</span></button>
+                <button onclick="goToPlace('No Frills Car Rental Christ Church Barbados')" class="places-item local">🏠 No Frills Car Rental <span style="font-size:9px;color:var(--text3)">Christ Church · Local</span></button>
+                <button onclick="goToPlace('Blessed Rentals Clapham St Michael Barbados')" class="places-item local">🏠 Blessed Rentals <span style="font-size:9px;color:var(--text3)">Clapham · Local</span></button>
+                <button onclick="goToPlace('Speightstown St Peter Barbados car rental')" class="places-item local">🏠 Roy's Car Rental <span style="font-size:9px;color:var(--text3)">Speightstown · Local</span></button>
+              </div>
+            </div>
+
+            <!-- BEACHES & WATER -->
+            <div>
+              <div style="font-size:10px;color:var(--blue);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase">🏖️ Beaches & Water</div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <button onclick="goToPlace('Crane Beach Barbados')" class="places-item">🏖️ Crane Beach <span style="font-size:9px;color:var(--text3)">Pink coral sand · East</span></button>
+                <button onclick="goToPlace('Accra Beach Rockley Barbados')" class="places-item">🏖️ Accra Beach <span style="font-size:9px;color:var(--text3)">South coast · Calm</span></button>
+                <button onclick="goToPlace('Bathsheba Beach Barbados')" class="places-item">🏖️ Bathsheba <span style="font-size:9px;color:var(--text3)">Surfing · Rock formations</span></button>
+                <button onclick="goToPlace('Carlisle Bay Barbados')" class="places-item">🏖️ Carlisle Bay <span style="font-size:9px;color:var(--text3)">Bridgetown · Snorkeling</span></button>
+                <button onclick="goToPlace('Bottom Bay Barbados')" class="places-item">🏖️ Bottom Bay <span style="font-size:9px;color:var(--text3)">Secluded · East coast</span></button>
+                <button onclick="goToPlace('Mullins Bay St Peter Barbados')" class="places-item">🏖️ Mullins Bay <span style="font-size:9px;color:var(--text3)">North coast · Water sports</span></button>
+                <button onclick="goToPlace('Paynes Bay St James Barbados')" class="places-item">🏖️ Paynes Bay <span style="font-size:9px;color:var(--text3)">West coast · Turtles</span></button>
+              </div>
+              <div style="font-size:10px;color:var(--cyan);font-weight:700;letter-spacing:1px;margin:8px 0 6px;text-transform:uppercase">🐢 Turtles</div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <button onclick="goToPlace('Folkestone Marine Reserve Barbados turtle snorkeling')" class="places-item">🐢 Folkestone Marine Reserve <span style="font-size:9px;color:var(--text3)">Best 9-11am</span></button>
+                <button onclick="goToPlace('Carlisle Bay turtles snorkeling Barbados')" class="places-item">🐢 Carlisle Bay Turtles <span style="font-size:9px;color:var(--text3)">Wrecks · Hawksbill</span></button>
+                <button onclick="goToPlace('Paynes Bay swimming with turtles Barbados')" class="places-item">🐢 Paynes Bay Turtles <span style="font-size:9px;color:var(--text3)">Popular spot</span></button>
+              </div>
+            </div>
+
+            <!-- HOTELS, RESTAURANTS & MORE -->
+            <div>
+              <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase">🏨 Hotels</div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <button onclick="goToPlace('Sandy Lane Hotel Barbados')" class="places-item">🏨 Sandy Lane Hotel <span style="font-size:9px;color:var(--text3)">Ultra-luxury · West</span></button>
+                <button onclick="goToPlace('Hilton Barbados Resort Needhams Point')" class="places-item">🏨 Hilton Barbados <span style="font-size:9px;color:var(--text3)">Needhams Point</span></button>
+                <button onclick="goToPlace('Turtle Beach Resort Barbados')" class="places-item">🏨 Turtle Beach Resort <span style="font-size:9px;color:var(--text3)">South coast · Family</span></button>
+                <button onclick="goToPlace('The Crane Resort Barbados')" class="places-item">🏨 The Crane Resort <span style="font-size:9px;color:var(--text3)">Historic · East</span></button>
+              </div>
+              <div style="font-size:10px;color:var(--orange);font-weight:700;letter-spacing:1px;margin:8px 0 6px;text-transform:uppercase">🍽️ Restaurants</div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <button onclick="goToPlace('Oistins Fish Fry Barbados')" class="places-item">🍽️ Oistins Fish Fry <span style="font-size:9px;color:var(--text3)">Friday night · Legend</span></button>
+                <button onclick="goToPlace('The Cliff Restaurant Barbados')" class="places-item">🍽️ The Cliff <span style="font-size:9px;color:var(--text3)">Fine dining · Cliff-side</span></button>
+                <button onclick="goToPlace('Champers Restaurant Barbados')" class="places-item">🍽️ Champers <span style="font-size:9px;color:var(--text3)">Seafood · South coast</span></button>
+                <button onclick="goToPlace('Naniki Restaurant Lush Life Barbados')" class="places-item">🍽️ Naniki <span style="font-size:9px;color:var(--text3)">Local Bajan · Lush Life</span></button>
+                <button onclick="goToPlace('Waterfront Cafe Bridgetown Barbados')" class="places-item">🍽️ Waterfront Cafe <span style="font-size:9px;color:var(--text3)">Careenage · Live music</span></button>
+              </div>
+              <div style="font-size:10px;color:var(--purple);font-weight:700;letter-spacing:1px;margin:8px 0 6px;text-transform:uppercase">⛵ Catamarans & 🛍️ Malls</div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <button onclick="goToPlace('Cool Runnings Catamaran Barbados Carlisle Bay')" class="places-item">⛵ Cool Runnings <span style="font-size:9px;color:var(--text3)">Day trips · Carlisle Bay</span></button>
+                <button onclick="goToPlace('Silver Moon Catamaran Holetown Barbados')" class="places-item">⛵ Silver Moon <span style="font-size:9px;color:var(--text3)">Sunset cruises · Holetown</span></button>
+                <button onclick="goToPlace('Sheraton Mall Barbados')" class="places-item">🛍️ Sheraton Mall <span style="font-size:9px;color:var(--text3)">Largest · South coast</span></button>
+                <button onclick="goToPlace('Limegrove Lifestyle Centre Holetown Barbados')" class="places-item">🛍️ Limegrove <span style="font-size:9px;color:var(--text3)">Luxury · Holetown</span></button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
       <!-- GOOGLE MAPS EMBED -->
-      <div style="width:calc(100% - 80px);max-width:1400px;margin:0 auto;border-radius:0 0 10px 10px;overflow:hidden">
+      <div style="width:calc(100% - 80px);max-width:1400px;margin:0 auto;border-radius:0 0 10px 10px;overflow:hidden;position:relative">
         <iframe id="barbados-map-iframe"
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d241879!2d-59.5432!3d13.1939!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8c43e83c1df1ef55%3A0x4fd5c87bee6be3b0!2sBarbados!5e0!3m2!1sen!2sbb!4v1"
           style="width:100%;height:500px;border:none;display:block"
@@ -5773,6 +5852,31 @@ function resetMapView() {
 }
 
 // ==================== GOOGLE MAPS CONTROLS ====================
+let placesPanelOpen = false;
+
+function togglePlacesPanel() {
+  placesPanelOpen = !placesPanelOpen;
+  const panel = document.getElementById('places-panel');
+  const btn = document.getElementById('places-panel-btn');
+  if (panel) panel.style.maxHeight = placesPanelOpen ? '600px' : '0';
+  if (btn) btn.textContent = placesPanelOpen ? '📍 MY PLACES ▲' : '📍 MY PLACES ▼';
+}
+
+function goToPlace(placeName) {
+  const iframe = document.getElementById('barbados-map-iframe');
+  if (!iframe) return;
+  const searchUrl = `https://www.google.com/maps/embed/v1/search?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=${encodeURIComponent(placeName)}&center=13.1939,-59.5432&zoom=13`;
+  iframe.src = searchUrl;
+  // Close panel and scroll to map
+  placesPanelOpen = false;
+  const panel = document.getElementById('places-panel');
+  const btn = document.getElementById('places-panel-btn');
+  if (panel) panel.style.maxHeight = '0';
+  if (btn) btn.textContent = '📍 MY PLACES ▼';
+  // Scroll map into view
+  setTimeout(() => { iframe.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
+}
+
 function searchGoogleMap(query) {
   const input = document.getElementById('map-search-input');
   const q = query || (input ? input.value.trim() : '');
