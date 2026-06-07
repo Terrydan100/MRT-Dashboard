@@ -2099,6 +2099,30 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- BARBADOS TELEPHONE DIRECTORY -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.2)">
+      <div class="section-title" style="margin-bottom:12px">📞 BARBADOS TELEPHONE DIRECTORY</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+        <input class="form-input" id="barb-dir-input" placeholder="Search businesses, services, people..." 
+          style="flex:1;min-width:200px;font-size:13px" 
+          onkeydown="if(event.key==='Enter')searchBarbadosDirectory()">
+        <button class="btn btn-primary" onclick="searchBarbadosDirectory()" style="font-size:12px;white-space:nowrap">🔍 SEARCH</button>
+        <a href="https://www.barbados.net/yellow_pages/" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--accent);color:var(--accent);white-space:nowrap">🌐 Yellow Pages</a>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <button onclick="quickDirSearch('car rental')" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🚗 Car Rental</button>
+        <button onclick="quickDirSearch('restaurant')" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🍽️ Restaurants</button>
+        <button onclick="quickDirSearch('hotel')" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🏨 Hotels</button>
+        <button onclick="quickDirSearch('real estate')" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🏠 Real Estate</button>
+        <button onclick="quickDirSearch('bank')" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🏦 Banks</button>
+        <button onclick="quickDirSearch('supermarket')" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🛒 Supermarkets</button>
+        <button onclick="quickDirSearch('doctor')" class="btn btn-sm" style="font-size:10px;padding:3px 10px">👨‍⚕️ Medical</button>
+      </div>
+      <div id="barb-dir-results" style="min-height:40px">
+        <div style="font-size:12px;color:var(--text2)">Search above or use the quick filters. Results open from barbados.net yellow pages.</div>
+      </div>
+    </div>
+
     <!-- BARBADOS NEWS FEED -->
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -4756,7 +4780,20 @@ let figuresHidden = false;
 function applyHideFiguresState(hidden) {
   figuresHidden = hidden;
   const btn = document.getElementById('hide-figures-btn');
-  const moneyEls = document.querySelectorAll('.stat-val, .card-value, #stat-pnl, #stat-balance, #stat-best, #stat-worst, #progress-text, .crypto-value, .crypto-price, .invest-val');
+
+  // All static money elements via class + specific IDs
+  const moneyEls = document.querySelectorAll(
+    '.stat-val, .card-value, .crypto-money, ' +
+    '#stat-pnl, #stat-balance, #stat-best, #stat-worst, #progress-text, ' +
+    '#crypto-total, #crypto-change, #crypto-best, ' +
+    '#nw-trading, #nw-crypto, #nw-barbados, #nw-realestate, #nw-business, #nw-total, ' +
+    '#ceo-trading-pnl, #ceo-crypto-val, #ceo-barb-val, #ceo-cards-val, #ceo-networth, ' +
+    '#port-value, #port-upnl, #port-ret, ' +
+    '#snkr-invested, #snkr-profit, #snkr-best, ' +
+    '#poke-value, #poke-profit, #poke-best, ' +
+    '#bdb-invested, #an-winrate, #an-pf, #an-expect, #an-maxdd, #an-avgwin, #an-avgloss'
+  );
+
   moneyEls.forEach(el => {
     if(hidden) {
       el.dataset.orig = el.textContent;
@@ -4765,6 +4802,13 @@ function applyHideFiguresState(hidden) {
       el.textContent = el.dataset.orig;
     }
   });
+
+  // Also hide/show running balance in trade logger
+  document.querySelectorAll('#trade-tbody td:nth-child(5)').forEach(el => {
+    if(hidden) { el.dataset.orig = el.textContent; el.textContent = '••••••'; }
+    else if(el.dataset.orig) el.textContent = el.dataset.orig;
+  });
+
   if(btn) {
     btn.textContent = hidden ? '👁 SHOW FIGURES' : '👁 HIDE FIGURES';
     btn.style.background = hidden ? 'rgba(255,23,68,0.1)' : 'rgba(0,180,255,0.1)';
@@ -5245,15 +5289,15 @@ const barbadosLocations = {
   ],
   hotels: [
     { name: 'Sandy Lane Hotel', lat: 13.1767, lng: -59.6425, icon: '🏨', desc: 'Sandy Lane — Ultra-luxury resort, west coast' },
-    { name: 'Hilton Barbados', lat: 13.0791, lng: -59.6187, icon: '🏨', desc: 'Hilton Barbados Resort — Needhams Point' },
+    { name: 'Hilton Barbados', lat: 13.0806, lng: -59.6152, icon: '🏨', desc: 'Hilton Barbados Resort — Needhams Point, St. Michael · Tel: (246) 426-0200' },
     { name: 'Turtle Beach Resort', lat: 13.0653, lng: -59.5908, icon: '🏨', desc: 'Turtle Beach — Family resort, south coast' },
     { name: 'Crystal Cove Hotel', lat: 13.1621, lng: -59.6402, icon: '🏨', desc: 'Crystal Cove — Boutique hotel, west coast' },
     { name: 'The Crane Resort', lat: 13.0775, lng: -59.4502, icon: '🏨', desc: 'The Crane — Historic luxury resort, east coast' },
   ],
   jetski: [
-    { name: 'Jet Ski HQ - Carlisle Bay', lat: 13.0852, lng: -59.6170, icon: '🚤', desc: 'Jet Ski & Water Sports — Carlisle Bay' },
-    { name: 'Water Sports - Accra', lat: 13.0615, lng: -59.5865, icon: '🚤', desc: 'Jet Ski Rentals — Accra Beach' },
-    { name: 'North Coast Water Sports', lat: 13.2290, lng: -59.6380, icon: '🚤', desc: 'Jet Ski & Kayak — North Coast' },
+    { name: 'Jet Ski HQ - Carlisle Bay', lat: 13.0855, lng: -59.6148, icon: '🚤', desc: 'Jet Ski & Water Sports — Carlisle Bay, Bridgetown' },
+    { name: 'Water Sports - Accra', lat: 13.0622, lng: -59.5848, icon: '🚤', desc: 'Jet Ski Rentals — Accra Beach, Rockley' },
+    { name: 'North Coast Water Sports', lat: 13.2292, lng: -59.6358, icon: '🚤', desc: 'Jet Ski & Kayak — North Coast, St. Peter' },
   ],
   realestate: [
     { name: 'Prospect Land Parcel', lat: 13.1089, lng: -59.6198, icon: '🏠', desc: 'Land opportunity — Prospect, St. James', price: 'BDS$185,000', sqft: '6,200', parish: 'St. James' },
@@ -5271,7 +5315,7 @@ const barbadosLocations = {
   turtles: [
     { name: 'Turtle Snorkel — Folkestone', lat: 13.1920, lng: -59.6348, icon: '🐢', desc: 'Folkestone Marine Reserve — hawksbill turtles year-round, best 9-11am' },
     { name: 'Turtle Beach', lat: 13.0650, lng: -59.5900, icon: '🐢', desc: 'Turtle Beach — nesting site, turtles often seen May-October' },
-    { name: 'Carlisle Bay Turtles', lat: 13.0852, lng: -59.6168, icon: '🐢', desc: 'Carlisle Bay — green and hawksbill turtles near wrecks' },
+    { name: 'Carlisle Bay Turtles', lat: 13.0855, lng: -59.6148, icon: '🐢', desc: 'Carlisle Bay — green and hawksbill turtles near wrecks, enter from beach' },
     { name: 'Paynes Bay Turtles', lat: 13.1610, lng: -59.6415, icon: '🐢', desc: 'Paynes Bay — popular swimming-with-turtles spot, west coast' },
     { name: 'Holetown Turtles', lat: 13.1936, lng: -59.6370, icon: '🐢', desc: 'Holetown Bay — frequent turtle sightings, shallow water' },
   ],
@@ -5286,26 +5330,26 @@ const barbadosLocations = {
     { name: 'Bubbas Sports Bar', lat: 13.0695, lng: -59.5805, icon: '🍽️', desc: 'Bubbas — south coast, sports bar, burgers, casual' },
   ],
   catamarans: [
-    { name: 'Cool Runnings Catamaran', lat: 13.0860, lng: -59.6180, icon: '⛵', desc: 'Cool Runnings — day trips, turtle snorkeling, Carlisle Bay departure' },
-    { name: 'Silver Moon Catamaran', lat: 13.1930, lng: -59.6355, icon: '⛵', desc: 'Silver Moon — sunset cruises, Holetown departure, champagne included' },
+    { name: 'Cool Runnings Catamaran', lat: 13.0858, lng: -59.6142, icon: '⛵', desc: 'Cool Runnings — day trips, turtle snorkeling, departs Carlisle Bay · Tel: (246) 436-0911' },
+    { name: 'Silver Moon Catamaran', lat: 13.1934, lng: -59.6342, icon: '⛵', desc: 'Silver Moon — sunset cruises, departs Holetown, champagne included · Tel: (246) 438-2088' },
     { name: 'Tiami Catamaran', lat: 13.0855, lng: -59.6175, icon: '⛵', desc: 'Tiami — full-day catamaran, swim with turtles, lunch included' },
     { name: 'Jolly Roger Pirate Ship', lat: 13.1005, lng: -59.6170, icon: '⛵', desc: 'Jolly Roger — pirate cruise, rope swings, party atmosphere' },
     { name: 'El Tigre Catamaran', lat: 13.1925, lng: -59.6350, icon: '⛵', desc: 'El Tigre — snorkeling tours, west coast, departures daily' },
   ],
   carrental: [
     // === MAJOR / ESTABLISHED RENTERS ===
-    { name: 'Stoutes Car Rental', lat: 13.0784, lng: -59.6145, icon: '🚗', desc: '🏢 MAJOR — Stoutes Car Rental · Bridgetown · One of Barbados most trusted · Minis, sedans, SUVs · Tel: (246) 416-4456 · stoutescarrental.com', size: 'major' },
-    { name: 'Courtesy Rent-A-Car', lat: 13.0742, lng: -59.4929, icon: '🚗', desc: '🏢 MAJOR — Courtesy Rent-A-Car · Airport (24hrs) · Wide selection · Free shuttle · Tel: (246) 431-4160 · courtesyrentacar.com', size: 'major' },
-    { name: 'Drive-A-Matic', lat: 13.0731, lng: -59.4935, icon: '🚗', desc: '🏢 MAJOR — Drive-A-Matic · Airport & Bridgetown · Automatic cars specialist · Tel: (246) 422-3000 · driveamatic.com', size: 'major' },
-    { name: 'ABC Car Rental', lat: 13.0750, lng: -59.4940, icon: '🚗', desc: '🏢 MAJOR — ABC Car Rentals · Near airport · Competitive rates · Free delivery · Tel: (246) 422-0062', size: 'major' },
-    { name: 'Coconut Car Rentals', lat: 13.1050, lng: -59.6170, icon: '🚗', desc: '🏢 MAJOR — Coconut Car Rentals · Bridgetown area · Tourist favorite · Wide fleet · coconutcars.com', size: 'major' },
+    { name: 'Stoutes Car Rental', lat: 13.0612, lng: -59.4932, icon: '🚗', desc: '🏢 MAJOR — Stoutes Car Rental Ltd · Kirtons, St. Philip BB18054 · Airport Arrivals Hall + island delivery · Jeeps, mokes, vans, sedans · 24hr roadside assistance · Tel: (246) 416-4456 · stoutescar.com', size: 'major' },
+    { name: 'Courtesy Rent-A-Car', lat: 13.0967, lng: -59.5956, icon: '🚗', desc: '🏢 MAJOR — Courtesy Rent-A-Car (Hertz Member) · Wildey, St. Michael · Since 1975 · Nissan, Hyundai, SUVs, minivans · Airport + 4 locations · Tel: (246) 431-4160 · courtesyrentacar.com', size: 'major' },
+    { name: 'Drive-A-Matic Car Rentals', lat: 13.0790, lng: -59.5850, icon: '🚗', desc: '🏢 MAJOR — Drive-A-Matic (SunCars) · CWTS Complex, Lower Estate, St. Michael BB19025 · Largest fleet on island (500+ vehicles) · Since 1974 · Airport + Lower Estate offices · Tel: (246) 434-8440 · Toll Free: 1-800-581-8773 · carhire.tv', size: 'major' },
+    { name: 'ABC Car Rental', lat: 13.0730, lng: -59.4950, icon: '🚗', desc: '🏢 MAJOR — ABC Car Rentals · Near Grantley Adams Airport, Christ Church · Competitive rates · Free delivery island-wide · Tel: (246) 422-0062', size: 'major' },
+    { name: 'Coconut Car Rentals', lat: 13.0880, lng: -59.6080, icon: '🚗', desc: '🏢 MAJOR — Coconut Car Rentals · Bridgetown, St. Michael · Popular tourist choice · Wide fleet including mokes · Free delivery · Tel: (246) 437-0297 · coconutcars.com', size: 'major' },
+    { name: 'Jones Car Rental', lat: 13.0960, lng: -59.6120, icon: '🚗', desc: '🏢 MAJOR — Jones Car Rental · Passage Road, St. Michael · Manual & automatic, air-conditioned cars, executive vehicles, soft-top cars · Tel: (246) 429-6363', size: 'major' },
     // === LOCAL / SMALL RENTERS (1–3 cars) ===
-    { name: 'P and S Car Rentals', lat: 13.1930, lng: -59.6350, icon: '🚙', desc: '🏠 LOCAL SMALL (1–3 cars) — P & S Car Rentals · Holetown, St. James · Personal service · West coast pickup · Tel: (246) 432-1456', size: 'local' },
-    { name: 'Bajan Wheels', lat: 13.1500, lng: -59.6300, icon: '🚙', desc: '🏠 LOCAL SMALL (2 cars) — Bajan Wheels · St. James · Family-run · Moke & mini rentals · Cash-friendly · Call ahead to reserve', size: 'local' },
-    { name: 'No Frills Car Rental', lat: 13.0850, lng: -59.5950, icon: '🚙', desc: '🏠 LOCAL SMALL (2–3 cars) — No Frills Car Rental · Christ Church · Budget-friendly · Older but reliable vehicles · Tel: (246) 228-6257', size: 'local' },
-    { name: 'C&M Car Rentals', lat: 13.0900, lng: -59.6100, icon: '🚙', desc: '🏠 LOCAL SMALL (1–2 cars) — C&M Car Rentals · Bridgetown area · Local owner-operated · Minis and small cars · Book directly', size: 'local' },
-    { name: 'Roy\'s Car Rental', lat: 13.2100, lng: -59.6400, icon: '🚙', desc: '🏠 LOCAL SMALL (2 cars) — Roy\'s Car Rental · Speightstown, St. Peter · North coast specialist · Very affordable · Personal service', size: 'local' },
-    { name: 'Island Cheap Car Rental', lat: 13.0680, lng: -59.5700, icon: '🚙', desc: '🏠 LOCAL SMALL (1–3 cars) — Island Cheap Car Rental · Oistins area · Budget option · Good for short trips · Cash or local payment', size: 'local' },
+    { name: 'P and S Car Rentals', lat: 13.1935, lng: -59.6345, icon: '🚙', desc: '🏠 LOCAL SMALL (1–3 cars) — P & S Car Rentals · Holetown, St. James · West coast pickup · Personal owner service · Cash-friendly · Tel: (246) 432-1456', size: 'local' },
+    { name: 'No Frills Car Rental', lat: 13.0843, lng: -59.5932, icon: '🚙', desc: '🏠 LOCAL SMALL (2–3 cars) — No Frills Car Rental · Christ Church · Budget-friendly · Older reliable vehicles · Good for short trips · Tel: (246) 228-6257', size: 'local' },
+    { name: 'Blessed Rentals Inc.', lat: 13.0820, lng: -59.6040, icon: '🚙', desc: '🏠 LOCAL SMALL (2 cars) — Blessed Rentals Inc. · Clapham, St. Michael · Founded 2007 by Michael Holder · Faith-driven, inclusive service · Reliable local option · Tel: (246) 256-2234', size: 'local' },
+    { name: 'Roy\'s Car Rental', lat: 13.2380, lng: -59.6490, icon: '🚙', desc: '🏠 LOCAL SMALL (2 cars) — Roy\'s Car Rental · Speightstown, St. Peter · North coast specialist · Very affordable · Personal service · Call ahead to reserve', size: 'local' },
+    { name: 'Island Cheap Car Rental', lat: 13.0670, lng: -59.5530, icon: '🚙', desc: '🏠 LOCAL SMALL (1–3 cars) — Island Cheap Car Rental · Oistins, Christ Church · Budget option · Good for short trips · Cash or local payment preferred', size: 'local' },
   ],
   malls: [
     { name: 'Sheraton Mall', lat: 13.0720, lng: -59.6020, icon: '🛍️', desc: 'Sheraton Mall — largest mall in Barbados, south coast, 100+ stores' },
@@ -5584,7 +5628,27 @@ function clearMapSearch() {
   document.getElementById('map-search-results').style.display = 'none';
 }
 
-// ==================== LAND ALERTS & REAL ESTATE ====================
+// ==================== BARBADOS TELEPHONE DIRECTORY ====================
+function searchBarbadosDirectory() {
+  const query = document.getElementById('barb-dir-input').value.trim();
+  if (!query) return;
+  const el = document.getElementById('barb-dir-results');
+  // Open barbados.net yellow pages search in new tab
+  const url = `https://www.barbados.net/yellow_pages/search.php?q=${encodeURIComponent(query)}`;
+  window.open(url, '_blank');
+  // Also show local results inline
+  el.innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <div style="font-size:12px;color:var(--text2)">Searching "<strong style="color:var(--accent)">${query}</strong>" — results opened in new tab</div>
+      <a href="${url}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--blue);color:var(--blue)">Open Results ↗</a>
+      <a href="https://www.findyello.com/barbados/?q=${encodeURIComponent(query)}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--green);color:var(--green)">FindYello ↗</a>
+    </div>`;
+}
+
+function quickDirSearch(term) {
+  document.getElementById('barb-dir-input').value = term;
+  searchBarbadosDirectory();
+}
 const realEstateListings = [
   { name: 'Prospect Land — St. James', price: 'BDS$185,000', sqft: '6,200', parish: 'St. James', type: 'land', alert: true, desc: 'Flat lot, ideal for residential build', contact: 'Terra Caribbean', url: 'https://www.terracaribbean.com', lat: 13.1089, lng: -59.6198 },
   { name: 'Ealing Park — Christ Church', price: 'BDS$175,000', sqft: '5,400', parish: 'Christ Church', type: 'land', alert: true, desc: 'Near south coast beaches, ready to build', contact: 'Coral Stone Realty', url: 'https://www.coralstonerealty.com', lat: 13.0742, lng: -59.5612 },
@@ -6961,11 +7025,12 @@ async function fetchCryptoPrices() {
       }
     }
     renderCrypto();
+    renderNetWorth(); // update net worth tracker with fresh crypto values
     updateCEOScoreboard();
     fetchCryptoMarket();
     fetchTopMovers();
     fetchNews('cryptocurrency bitcoin','crypto-news');
-  } catch(e) { renderCrypto(); }
+  } catch(e) { renderCrypto(); renderNetWorth(); }
 }
 
 // ==================== CLICKABLE CRYPTO HOLDINGS ====================
