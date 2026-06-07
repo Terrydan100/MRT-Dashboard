@@ -2457,14 +2457,15 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 <!-- CRYPTO MODAL -->
 <div class="modal-overlay" id="crypto-modal">
   <div class="modal">
-    <div class="modal-title">₿ ADD CRYPTO HOLDING <button class="modal-close" onclick="closeModal('crypto-modal')">✕</button></div>
+    <div class="modal-title" id="crypto-modal-title">₿ ADD CRYPTO HOLDING <button class="modal-close" onclick="closeModal('crypto-modal')">✕</button></div>
+    <input type="hidden" id="cr-edit-id" value="">
     <div class="form-group"><label class="form-label">Coin ID (e.g. bitcoin, ethereum, dogecoin)</label><input class="form-input" type="text" id="cr-id" placeholder="dogecoin"></div>
     <div class="form-group"><label class="form-label">Symbol (e.g. DOGE)</label><input class="form-input" type="text" id="cr-sym" placeholder="DOGE"></div>
-    <div class="form-group"><label class="form-label">Amount Held</label><input class="form-input" type="number" id="cr-amt"></div>
-    <div class="form-group"><label class="form-label">Avg Buy Price ($)</label><input class="form-input" type="number" id="cr-buy"></div>
+    <div class="form-group"><label class="form-label">Amount Held</label><input class="form-input" type="number" id="cr-amt" placeholder="0.00"></div>
+    <div class="form-group"><label class="form-label">Avg Buy Price ($)</label><input class="form-input" type="number" id="cr-buy" placeholder="0.00"></div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="btn" onclick="closeModal('crypto-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="addCryptoHolding()">ADD</button>
+      <button class="btn btn-primary" id="cr-save-btn" onclick="saveCryptoHolding()">ADD</button>
     </div>
   </div>
 </div>
@@ -2999,6 +3000,15 @@ function openModal(id) {
     document.getElementById('t-note').value = '';
     document.getElementById('trade-modal-title').innerHTML = '📝 LOG TRADE <button class="modal-close" onclick="closeModal(\'trade-modal\')">✕</button>';
     document.getElementById('trade-modal-save-btn').textContent = 'LOG TRADE';
+  }
+  if (id === 'crypto-modal') {
+    document.getElementById('cr-edit-id').value = '';
+    document.getElementById('cr-id').value = '';
+    document.getElementById('cr-sym').value = '';
+    document.getElementById('cr-amt').value = '';
+    document.getElementById('cr-buy').value = '';
+    document.getElementById('crypto-modal-title').innerHTML = '₿ ADD CRYPTO HOLDING <button class="modal-close" onclick="closeModal(\'crypto-modal\')">✕</button>';
+    document.getElementById('cr-save-btn').textContent = 'ADD';
   }
   if (id === 'bdb-entry-modal') document.getElementById('be-date').value = new Date().toISOString().split('T')[0];
   if (id === 'psa-modal') document.getElementById('psa-date').value = new Date().toISOString().split('T')[0];
@@ -3640,15 +3650,50 @@ async function fetchTopMovers() {
   } catch(e) { el.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px">Could not load movers data</div>'; }
 }
 
-function addCryptoHolding() {
-  const id=document.getElementById('cr-id').value.trim().toLowerCase();
-  const sym=document.getElementById('cr-sym').value.trim().toUpperCase();
-  const amt=parseFloat(document.getElementById('cr-amt').value)||0;
-  const buy=parseFloat(document.getElementById('cr-buy').value)||0;
-  if(!id||!sym) return showToast('danger','Missing Info','Fill all fields','❌');
-  state.cryptoHoldings.push({id,sym,amount:amt,buyPrice:buy,price:0,change:0});
-  saveState(); fetchCryptoPrices(); closeModal('crypto-modal');
-  showToast('success','Holding Added',`${sym} added to portfolio`,'₿');
+function saveCryptoHolding() {
+  const editId = document.getElementById('cr-edit-id').value;
+  const id = document.getElementById('cr-id').value.trim().toLowerCase();
+  const sym = document.getElementById('cr-sym').value.trim().toUpperCase();
+  const amt = parseFloat(document.getElementById('cr-amt').value) || 0;
+  const buy = parseFloat(document.getElementById('cr-buy').value) || 0;
+  if (!id || !sym) return showToast('danger','Missing Info','Fill coin ID and symbol','❌');
+
+  if (editId) {
+    // EDIT existing holding
+    const idx = state.cryptoHoldings.findIndex(h => h.id === editId);
+    if (idx > -1) {
+      const existing = state.cryptoHoldings[idx];
+      state.cryptoHoldings[idx] = { ...existing, id, sym, amount: amt, buyPrice: buy };
+      showToast('success','Holding Updated', `${sym} updated — ${amt} coins @ $${buy} avg`, '₿');
+    }
+  } else {
+    // ADD new holding
+    state.cryptoHoldings.push({ id, sym, amount: amt, buyPrice: buy, price: 0, change: 0 });
+    showToast('success','Holding Added', `${sym} added to portfolio`, '₿');
+  }
+
+  saveState();
+  fetchCryptoPrices();
+  closeModal('crypto-modal');
+  document.getElementById('cr-edit-id').value = '';
+  document.getElementById('crypto-modal-title').innerHTML = '₿ ADD CRYPTO HOLDING <button class="modal-close" onclick="closeModal(\'crypto-modal\')">✕</button>';
+  document.getElementById('cr-save-btn').textContent = 'ADD';
+}
+
+// Keep old name as alias
+function addCryptoHolding() { saveCryptoHolding(); }
+
+function editCryptoHolding(id) {
+  const h = state.cryptoHoldings.find(h => h.id === id);
+  if (!h) return;
+  document.getElementById('cr-edit-id').value = h.id;
+  document.getElementById('cr-id').value = h.id;
+  document.getElementById('cr-sym').value = h.sym;
+  document.getElementById('cr-amt').value = h.amount;
+  document.getElementById('cr-buy').value = h.buyPrice || 0;
+  document.getElementById('crypto-modal-title').innerHTML = `✏️ EDIT ${h.sym} HOLDING <button class="modal-close" onclick="closeModal('crypto-modal')">✕</button>`;
+  document.getElementById('cr-save-btn').textContent = 'SAVE CHANGES';
+  document.getElementById('crypto-modal').classList.add('open');
 }
 
 function removeCrypto(id) {
@@ -7056,7 +7101,10 @@ function renderCrypto() {
             <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px">${h.id.replace(/-/g,' ')}</div>
           </div>
         </div>
-        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removeCrypto('${h.id}')" style="font-size:10px;padding:3px 8px">✕</button>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm" onclick="event.stopPropagation();editCryptoHolding('${h.id}')" style="font-size:10px;padding:3px 8px;border-color:var(--accent);color:var(--accent)">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removeCrypto('${h.id}')" style="font-size:10px;padding:3px 8px">✕</button>
+        </div>
       </div>
       <canvas id="${sparkId}" height="40" style="width:100%;margin-bottom:8px;opacity:0.8"></canvas>
       <div style="display:flex;justify-content:space-between;align-items:flex-end">
