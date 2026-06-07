@@ -131,6 +131,10 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 /* STATS CARDS */
 .stat-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; text-align:center; transition:all 0.2s; cursor:default; }
 .stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px var(--glow); border-color:var(--accent); }
+.warroom-cell { background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center; }
+.wr-label { font-size:9px;color:var(--text2);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase; }
+.wr-val { font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--text); }
+.wr-chg { font-size:10px;font-weight:600;margin-top:2px; }
 .stat-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text2); margin-bottom:8px; }
 .stat-val { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:700; }
 .stat-sub { font-size:11px; color:var(--text2); margin-top:4px; }
@@ -761,6 +765,109 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div id="sig-factors" style="display:flex;flex-direction:column;gap:4px"></div>
       </div>
       <div id="sig-playbook" style="background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.6;display:none"></div>
+    </div>
+
+    <!-- PRE-MARKET WAR ROOM -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(245,197,24,0.25);background:linear-gradient(135deg,rgba(245,197,24,0.04),rgba(0,0,0,0))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">🎯</span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">PRE-MARKET WAR ROOM</div>
+          <div id="warroom-time" style="font-size:10px;color:var(--text3)"></div>
+        </div>
+        <button onclick="fetchWarRoom()" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+      </div>
+      <!-- Bias Banner -->
+      <div id="warroom-bias" style="border-radius:10px;padding:10px 16px;margin-bottom:12px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid var(--border)">
+        <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">TODAY'S MARKET BIAS</div>
+        <div id="warroom-bias-text" style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:var(--text2)">LOADING...</div>
+        <div id="warroom-bias-reason" style="font-size:11px;color:var(--text3);margin-top:4px">Fetching pre-market data</div>
+      </div>
+      <!-- Data Grid -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px" id="warroom-grid">
+        <div class="warroom-cell" id="wr-es"><div class="wr-label">ES FUTURES</div><div class="wr-val" id="wr-es-val">--</div><div class="wr-chg" id="wr-es-chg">--</div></div>
+        <div class="warroom-cell" id="wr-nq"><div class="wr-label">NQ FUTURES</div><div class="wr-val" id="wr-nq-val">--</div><div class="wr-chg" id="wr-nq-chg">--</div></div>
+        <div class="warroom-cell"><div class="wr-label">VIX</div><div class="wr-val" id="wr-vix-val">--</div><div class="wr-chg" id="wr-vix-chg">--</div></div>
+        <div class="warroom-cell"><div class="wr-label">10Y YIELD</div><div class="wr-val" id="wr-yield-val">--</div><div class="wr-chg" id="wr-yield-chg">--</div></div>
+        <div class="warroom-cell"><div class="wr-label">DXY</div><div class="wr-val" id="wr-dxy-val">--</div><div class="wr-chg" id="wr-dxy-chg">--</div></div>
+        <div class="warroom-cell"><div class="wr-label">GOLD</div><div class="wr-val" id="wr-gold-val">--</div><div class="wr-chg" id="wr-gold-chg">--</div></div>
+        <div class="warroom-cell"><div class="wr-label">OIL (WTI)</div><div class="wr-val" id="wr-oil-val">--</div><div class="wr-chg" id="wr-oil-chg">--</div></div>
+        <div class="warroom-cell"><div class="wr-label">FEAR & GREED</div><div class="wr-val" id="wr-fg-val">--</div><div class="wr-chg" id="wr-fg-chg">--</div></div>
+      </div>
+    </div>
+
+    <!-- PREVIOUS DAY LEVELS -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.2)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">📐</span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--blue);letter-spacing:2px">PREVIOUS DAY LEVELS</div>
+          <div style="font-size:10px;color:var(--text3)" id="levels-updated">--</div>
+        </div>
+        <button onclick="fetchPrevDayLevels()" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <!-- SPY -->
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div style="font-family:Orbitron,sans-serif;font-size:13px;color:var(--accent);font-weight:700;margin-bottom:10px;letter-spacing:2px">SPY</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">PREV HIGH</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--green)" id="spy-ph">--</div></div>
+            <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">PREV LOW</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--red)" id="spy-pl">--</div></div>
+            <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">PREV CLOSE</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--text)" id="spy-pc">--</div></div>
+            <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">CURR PRICE</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--accent)" id="spy-curr">--</div></div>
+          </div>
+        </div>
+        <!-- QQQ -->
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div style="font-family:Orbitron,sans-serif;font-size:13px;color:var(--blue);font-weight:700;margin-bottom:10px;letter-spacing:2px">QQQ</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">PREV HIGH</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--green)" id="qqq-ph">--</div></div>
+            <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">PREV LOW</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--red)" id="qqq-pl">--</div></div>
+            <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">PREV CLOSE</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--text)" id="qqq-pc">--</div></div>
+            <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">CURR PRICE</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--blue)" id="qqq-curr">--</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Key Level Guidance -->
+      <div id="level-guidance" style="margin-top:10px;background:rgba(0,180,255,0.05);border:1px solid rgba(0,180,255,0.15);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);display:none"></div>
+    </div>
+
+    <!-- NEWS INTELLIGENCE PANEL -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,230,118,0.2)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">📡</span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--green);letter-spacing:2px">NEWS INTELLIGENCE</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="filterNewsIntel('all')" id="ni-all" class="btn btn-sm" style="font-size:10px;background:var(--green);color:#000;border-color:var(--green)">All</button>
+          <button onclick="filterNewsIntel('fed')" id="ni-fed" class="btn btn-sm" style="font-size:10px">🏦 Fed</button>
+          <button onclick="filterNewsIntel('inflation')" id="ni-infl" class="btn btn-sm" style="font-size:10px">📈 CPI</button>
+          <button onclick="filterNewsIntel('oil')" id="ni-oil" class="btn btn-sm" style="font-size:10px">🛢️ Oil</button>
+          <button onclick="filterNewsIntel('tech')" id="ni-tech" class="btn btn-sm" style="font-size:10px">💻 Tech</button>
+          <button onclick="filterNewsIntel('geo')" id="ni-geo" class="btn btn-sm" style="font-size:10px">🌍 Geo</button>
+          <button onclick="fetchNewsIntel()" class="btn btn-sm" style="font-size:10px;border-color:var(--green);color:var(--green)">🔄</button>
+        </div>
+      </div>
+      <div id="news-intel-grid" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto">
+        <div style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Loading intelligence feed...</div>
+      </div>
+    </div>
+
+    <!-- FINVIZ SECTOR HEATMAP -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(245,197,24,0.15)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:16px">🔥</span>
+        <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">SECTOR HEATMAP</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text2)">Powered by Finviz · Updates every refresh</div>
+      </div>
+      <div style="border-radius:8px;overflow:hidden;background:#000">
+        <iframe src="https://finviz.com/map.ashx?t=sec&type=daily_perf" 
+          style="width:100%;height:500px;border:none;display:block" 
+          scrolling="no" frameborder="0" title="Finviz Sector Heatmap">
+        </iframe>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text3)">Green = outperforming · Red = underperforming · Size = market cap weight · <a href="https://finviz.com/map.ashx?t=sec" target="_blank" style="color:var(--blue)">Open full screen ↗</a></div>
     </div>
 
     <!-- HISTORICAL PATTERN BRIEF -->
@@ -2899,8 +3006,14 @@ async function initDashboard() {
   setInterval(checkMarketShock, 90000);
   setInterval(updateCEOScoreboard, 120000);
   setTimeout(checkMarketShock, 8000);
-  setTimeout(runSignalCheck, 5000); // initial signal check after data loads
-  setInterval(runSignalCheck, 120000); // refresh every 2 minutes
+  setTimeout(runSignalCheck, 5000);
+  setInterval(runSignalCheck, 120000);
+  setTimeout(fetchWarRoom, 3000);
+  setTimeout(fetchPrevDayLevels, 4000);
+  setTimeout(fetchNewsIntel, 6000);
+  setInterval(fetchWarRoom, 300000); // refresh every 5 min
+  setInterval(fetchPrevDayLevels, 300000);
+  setInterval(fetchNewsIntel, 300000);
   // Auto weekly report on Fridays
   if (new Date().getDay() === 5) setTimeout(generateWeeklyReport, 5000);
   // Restore light mode if saved
@@ -6644,32 +6757,39 @@ function updateCEOScoreboard() {
   } catch(e) {}
 }
 
-// ==================== MARKET SHOCK ALERT ====================
+// ==================== MARKET SHOCK ALERT (UPGRADED) ====================
 let lastShockCheck = 0;
 async function checkMarketShock() {
-  if (Date.now() - lastShockCheck < 60000) return; // check every 60s
+  if (Date.now() - lastShockCheck < 60000) return;
   lastShockCheck = Date.now();
   try {
-    const vixEl = document.getElementById('t-vix');
-    const spyEl = document.getElementById('t-spy');
-    const qqqEl = document.getElementById('t-qqq');
-    if (!vixEl || !spyEl) return;
+    const spyPct  = parseFloat(document.getElementById('tc-spy')?.textContent?.replace('%','')) || 0;
+    const qqqPct  = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
+    const vixTxt  = document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'');
+    const vix     = parseFloat(vixTxt) || 0;
+    const vixChg  = parseFloat(document.getElementById('tc-vix')?.textContent?.replace('%','')) || 0;
 
-    const vixTxt = vixEl.textContent.replace(/[^0-9.]/g,'');
-    const vix = parseFloat(vixTxt);
-
-    // Get SPY % change from ticker
-    const spyChg = document.getElementById('tc-spy')?.textContent || '';
-    const qqqChg = document.getElementById('tc-qqq')?.textContent || '';
-    const spyPct = parseFloat(spyChg.replace('%',''));
-    const qqqPct = parseFloat(qqqChg.replace('%',''));
-    const vixChg = parseFloat(document.getElementById('tc-vix')?.textContent?.replace('%','') || '0');
+    // Fetch oil and yield for shock detection
+    let oilChg = 0, yieldChg = 0;
+    try {
+      const oilR = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/CL=F?interval=1d&range=2d')}`);
+      if (oilR.ok) { const od = await oilR.json(); const m = od?.chart?.result?.[0]?.meta; if(m) oilChg = (m.regularMarketPrice - m.chartPreviousClose) / m.chartPreviousClose * 100; }
+    } catch(e) {}
+    try {
+      const tnxR = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d&range=2d')}`);
+      if (tnxR.ok) { const td = await tnxR.json(); const m = td?.chart?.result?.[0]?.meta; if(m) yieldChg = (m.regularMarketPrice - m.chartPreviousClose) / m.chartPreviousClose * 100; }
+    } catch(e) {}
 
     const shocks = [];
-    if (!isNaN(spyPct) && spyPct <= -1) shocks.push(`SPY ${spyPct.toFixed(2)}%`);
-    if (!isNaN(qqqPct) && qqqPct <= -1.5) shocks.push(`QQQ ${qqqPct.toFixed(2)}%`);
-    if (!isNaN(vix) && vix > 25) shocks.push(`VIX at ${vix.toFixed(1)}`);
-    if (!isNaN(vixChg) && vixChg >= 10) shocks.push(`VIX spiked +${vixChg.toFixed(1)}%`);
+    let severity = 'normal'; // normal | elevated | shock
+
+    if (spyPct <= -1)    { shocks.push(`SPY ${spyPct.toFixed(2)}%`); severity = 'elevated'; }
+    if (spyPct <= -2)    { severity = 'shock'; }
+    if (qqqPct <= -1.5)  { shocks.push(`QQQ ${qqqPct.toFixed(2)}%`); severity = severity==='shock'?'shock':'elevated'; }
+    if (vix > 25)        { shocks.push(`VIX ${vix.toFixed(1)}`); severity = vix>35?'shock':'elevated'; }
+    if (vixChg >= 10)    { shocks.push(`VIX spike +${vixChg.toFixed(1)}%`); severity = 'shock'; }
+    if (Math.abs(oilChg) >= 3) { shocks.push(`Oil ${oilChg>=0?'+':''}${oilChg.toFixed(1)}%`); severity = severity==='shock'?'shock':'elevated'; }
+    if (yieldChg >= 5)   { shocks.push(`10Y yield spike +${yieldChg.toFixed(1)}%`); severity = severity==='shock'?'shock':'elevated'; }
 
     const banner = document.getElementById('shock-alert-banner');
     const detail = document.getElementById('shock-detail');
@@ -6677,14 +6797,25 @@ async function checkMarketShock() {
     if (!banner) return;
 
     if (shocks.length > 0) {
+      // Set color based on severity
+      banner.style.borderColor = severity==='shock' ? 'var(--red)' : 'var(--orange)';
+      banner.style.background = severity==='shock'
+        ? 'linear-gradient(135deg,rgba(255,23,68,0.15),rgba(255,109,0,0.1))'
+        : 'linear-gradient(135deg,rgba(255,109,0,0.12),rgba(0,0,0,0))';
+
       if (detail) detail.textContent = shocks.join(' · ');
       if (actions) {
-        const rec = vix > 30 ? 'Use +$0.50 targets · Reduce size · Expect whipsaws' : 'Trade smaller · Widen targets · Confirm before entry';
-        actions.textContent = '⚡ Recommend: ' + rec;
+        let rec = '';
+        if (severity === 'shock') rec = '🔴 SHOCK MODE: Reduce to 25% size · Wait for structure · No chasing · Exit open positions';
+        else if (severity === 'elevated') rec = '🟡 ELEVATED: Reduce size · Widen targets · Confirm tape before entry';
+        else rec = '⚡ Monitor · Standard size · Wait for confluence';
+        actions.textContent = rec;
       }
       banner.style.display = 'block';
-      showToast('danger','🚨 MARKET SHOCK', shocks.join(' · '), '🚨', 10000);
-      showAlertStrip('SHOCK', '🚨 MARKET SHOCK: ' + shocks.join(' · ') + ' — Reduce size, widen targets');
+      if (severity === 'shock') {
+        showToast('danger','🚨 MARKET SHOCK', shocks.join(' · ') + ' — REDUCE SIZE NOW', '🚨', 12000);
+        showAlertStrip('SHOCK', '🚨 MARKET SHOCK: ' + shocks.join(' · ') + ' — Reduce size, widen targets');
+      }
     } else {
       banner.style.display = 'none';
     }
