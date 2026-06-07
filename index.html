@@ -3327,8 +3327,8 @@ function renderTrades() {
       <td>${t.date}</td>
       <td style="font-weight:700;color:var(--accent)">${t.ticker}</td>
       <td><span class="badge ${typeBadge}">${t.type}</span></td>
-      <td class="${pnlCls}" style="font-weight:700">${t.pnl>0?'+':''}$${t.pnl.toFixed(2)}</td>
-      <td style="color:var(--text2)">$${running.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="hide-money ${pnlCls}" style="font-weight:700">${t.pnl>0?'+':''}$${t.pnl.toFixed(2)}</td>
+      <td class="hide-money" style="color:var(--text2)">$${running.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
       <td style="color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.note||'—'}</td>
       <td style="display:flex;gap:6px">
         <button class="btn btn-sm" onclick="editTrade(${t.id})" style="border-color:var(--accent);color:var(--accent)">EDIT</button>
@@ -3337,6 +3337,7 @@ function renderTrades() {
     </tr>`;
   }).reverse().join('');
   tbody.innerHTML = html;
+  if(figuresHidden) applyHideFiguresState(true);
 }
 
 // ==================== STATS ====================
@@ -5013,9 +5014,9 @@ function applyHideFiguresState(hidden) {
   figuresHidden = hidden;
   const btn = document.getElementById('hide-figures-btn');
 
-  // All static money elements via class + specific IDs
+  // All money elements — static IDs + dynamic classes
   const moneyEls = document.querySelectorAll(
-    '.stat-val, .card-value, .crypto-money, ' +
+    '.stat-val, .card-value, .crypto-money, .hide-money, ' +
     '#stat-pnl, #stat-balance, #stat-best, #stat-worst, #progress-text, ' +
     '#crypto-total, #crypto-change, #crypto-best, ' +
     '#nw-trading, #nw-crypto, #nw-barbados, #nw-realestate, #nw-business, #nw-total, ' +
@@ -5023,22 +5024,18 @@ function applyHideFiguresState(hidden) {
     '#port-value, #port-upnl, #port-ret, ' +
     '#snkr-invested, #snkr-profit, #snkr-best, ' +
     '#poke-value, #poke-profit, #poke-best, ' +
-    '#bdb-invested, #an-winrate, #an-pf, #an-expect, #an-maxdd, #an-avgwin, #an-avgloss'
+    '#bdb-invested, #an-winrate, #an-pf, #an-expect, #an-maxdd, #an-avgwin, #an-avgloss, ' +
+    '#aplus-score, #wr-es-val, #wr-nq-val'
   );
 
   moneyEls.forEach(el => {
     if(hidden) {
-      el.dataset.orig = el.textContent;
+      if(!el.dataset.orig) el.dataset.orig = el.textContent;
       el.textContent = '••••••';
     } else if(el.dataset.orig) {
       el.textContent = el.dataset.orig;
+      delete el.dataset.orig;
     }
-  });
-
-  // Also hide/show running balance in trade logger
-  document.querySelectorAll('#trade-tbody td:nth-child(5)').forEach(el => {
-    if(hidden) { el.dataset.orig = el.textContent; el.textContent = '••••••'; }
-    else if(el.dataset.orig) el.textContent = el.dataset.orig;
   });
 
   if(btn) {
@@ -5865,15 +5862,18 @@ function searchBarbadosDirectory() {
   const query = document.getElementById('barb-dir-input').value.trim();
   if (!query) return;
   const el = document.getElementById('barb-dir-results');
-  // Open barbados.net yellow pages search in new tab
-  const url = `https://www.barbados.net/yellow_pages/search.php?q=${encodeURIComponent(query)}`;
-  window.open(url, '_blank');
-  // Also show local results inline
+  // FindYello has the best working search for Barbados businesses
+  const findyelloUrl = `https://www.findyello.com/barbados/?q=${encodeURIComponent(query)}`;
+  const barbadosNetUrl = `https://www.barbados.net/yellow_pages/`;
+  const barbadosOrgUrl = `https://barbados.org/business/top.htm`;
+  window.open(findyelloUrl, '_blank');
   el.innerHTML = `
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <div style="font-size:12px;color:var(--text2)">Searching "<strong style="color:var(--accent)">${query}</strong>" — results opened in new tab</div>
-      <a href="${url}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--blue);color:var(--blue)">Open Results ↗</a>
-      <a href="https://www.findyello.com/barbados/?q=${encodeURIComponent(query)}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--green);color:var(--green)">FindYello ↗</a>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Searching "<strong style="color:var(--accent)">${query}</strong>" — opened in new tab</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a href="${findyelloUrl}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--green);color:var(--green)">🔍 FindYello ↗</a>
+      <a href="https://www.barbadosindex.com/search/?q=${encodeURIComponent(query)}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--blue);color:var(--blue)">📋 BarbadosIndex ↗</a>
+      <a href="${barbadosNetUrl}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--accent);color:var(--accent)">🌐 Barbados.net ↗</a>
+      <a href="${barbadosOrgUrl}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--text2);color:var(--text2)">📂 Barbados.org ↗</a>
     </div>`;
 }
 
@@ -6451,51 +6451,74 @@ let allBarbadosNews = [];
 let barbNewsFilter = 'all';
 
 const barbNewsFeeds = [
-  { id: 'today', name: 'Barbados Today', url: 'https://barbadostoday.bb/feed/', color: '#00b4ff', icon: '📱' },
-  { id: 'cbc', name: 'CBC Barbados', url: 'https://cbc.bb/feed/', color: '#00e676', icon: '📺' },
+  { id: 'today', name: 'Barbados Today', url: 'https://barbadostoday.bb/feed/', color: '#00b4ff', icon: '📱', directUrl: 'https://barbadostoday.bb' },
+  { id: 'cbc', name: 'CBC Barbados', url: 'https://cbc.bb/feed/', color: '#00e676', icon: '📺', directUrl: 'https://cbc.bb' },
+  { id: 'nation', name: 'Nation News', url: 'https://www.nationnews.com/feed/', color: '#f5c518', icon: '🗞️', directUrl: 'https://www.nationnews.com' },
 ];
 
-// Nation News doesnt have public RSS - use NewsAPI with barbados query
 async function fetchBarbadosNews() {
   const grid = document.getElementById('barbados-news-grid');
   if(!grid) return;
   grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">Loading Barbados news...</div>';
   allBarbadosNews = [];
 
-  // Fetch from RSS feeds via rss2json proxy (free)
+  // Try rss2json (free tier) with each feed
   const rssProxy = 'https://api.rss2json.com/v1/api.json?rss_url=';
-  const fetchPromises = barbNewsFeeds.map(async feed => {
+
+  for(const feed of barbNewsFeeds) {
     try {
-      const r = await fetch(rssProxy + encodeURIComponent(feed.url) + '&count=6');
-      if(!r.ok) return [];
+      const r = await fetch(rssProxy + encodeURIComponent(feed.url) + '&count=8');
+      if(!r.ok) continue;
       const data = await r.json();
-      if(data.status !== 'ok' || !data.items) return [];
-      return data.items.map(item => ({
-        source: feed.id,
-        sourceName: feed.name,
-        color: feed.color,
-        icon: feed.icon,
+      if(data.status !== 'ok' || !data.items || !data.items.length) continue;
+      const items = data.items.map(item => ({
+        source: feed.id, sourceName: feed.name, color: feed.color, icon: feed.icon,
         title: item.title,
-        desc: item.description ? item.description.replace(/<[^>]*>/g,'').substring(0,120) + '...' : '',
+        desc: item.description ? item.description.replace(/<[^>]*>/g,'').substring(0,120)+'...' : '',
         url: item.link,
         date: item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '',
       }));
-    } catch(e) { return []; }
-  });
+      allBarbadosNews.push(...items);
+    } catch(e) { continue; }
+  }
 
-  // NewsAPI Barbados call removed (over plan limit) — RSS feeds above cover Barbados news
+  // If rss2json failed, try Google News RSS for Barbados via allorigins
+  if(!allBarbadosNews.length) {
+    try {
+      const gnUrl = 'https://news.google.com/rss/search?q=Barbados&hl=en-BB&gl=BB&ceid=BB:en';
+      const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(gnUrl)}`);
+      if(r.ok) {
+        const xml = await r.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xml, 'text/xml');
+        const items = Array.from(doc.querySelectorAll('item')).slice(0,10);
+        items.forEach(item => {
+          allBarbadosNews.push({
+            source: 'google', sourceName: 'Google News', color: '#4285f4', icon: '🌐',
+            title: item.querySelector('title')?.textContent || '',
+            desc: item.querySelector('description')?.textContent?.replace(/<[^>]*>/g,'').substring(0,120)||'',
+            url: item.querySelector('link')?.textContent || '#',
+            date: item.querySelector('pubDate')?.textContent ? new Date(item.querySelector('pubDate').textContent).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '',
+          });
+        });
+      }
+    } catch(e) {}
+  }
 
-  const results = await Promise.all(fetchPromises);
-  results.forEach(items => allBarbadosNews.push(...items));
-
-  // Sort by date (newest first)
-  allBarbadosNews.sort((a,b) => new Date(b.date) - new Date(a.date));
+  allBarbadosNews.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
 
   if(!allBarbadosNews.length) {
-    // Fallback: show links to sources
-    grid.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">
-      Could not load live feeds. Click the links below to visit each source directly.
-    </div>`;
+    // Show direct links as clickable cards
+    grid.innerHTML = `
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;text-align:center">Live feeds blocked by CORS. Visit sources directly:</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        ${barbNewsFeeds.map(f=>`<a href="${f.directUrl}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(0,0,0,0.2);border:1px solid ${f.color};border-radius:10px;text-decoration:none">
+          <span style="font-size:18px">${f.icon}</span><span style="font-weight:700;color:${f.color};font-size:13px">${f.name} ↗</span>
+        </a>`).join('')}
+        <a href="https://barbadostoday.bb" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(0,0,0,0.2);border:1px solid var(--text2);border-radius:10px;text-decoration:none">
+          <span style="font-size:18px">📰</span><span style="font-weight:700;color:var(--text2);font-size:13px">Barbados Today ↗</span>
+        </a>
+      </div>`;
     return;
   }
 
@@ -7800,11 +7823,11 @@ function renderCrypto() {
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-size:10px;color:var(--text2)">VALUE</div>
-          <div style="font-size:14px;font-weight:700;color:var(--accent)">$${val>0?val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'--'}</div>
+          <div class="crypto-money" style="font-size:14px;font-weight:700;color:var(--accent)">$${val>0?val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'--'}</div>
         </div>
         <div style="text-align:right">
           ${h.buyPrice>0?`<div style="font-size:10px;color:var(--text2)">P&L</div>
-          <div style="font-size:13px;font-weight:700;color:${gainLoss>=0?'var(--green)':'var(--red)'}">${gainLoss>=0?'+':''}$${gainLoss.toFixed(2)}</div>`
+          <div class="crypto-money" style="font-size:13px;font-weight:700;color:${gainLoss>=0?'var(--green)':'var(--red)'}">${gainLoss>=0?'+':''}$${gainLoss.toFixed(2)}</div>`
           :`<div style="font-size:10px;color:var(--text3)">↗ View chart</div>`}
         </div>
       </div>
