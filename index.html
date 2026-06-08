@@ -712,6 +712,14 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- MARKET SHOCK CHECK BAR — always visible -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;background:rgba(255,23,68,0.06);border:1px solid rgba(255,23,68,0.2);border-radius:10px;padding:8px 14px">
+      <div style="font-size:13px">🚨</div>
+      <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--red);letter-spacing:1px;flex:1">MARKET SHOCK DETECTOR</div>
+      <div id="shock-status-text" style="font-size:11px;color:var(--text2)">Click to check current conditions</div>
+      <button onclick="checkMarketShock(true)" style="background:rgba(255,23,68,0.15);border:1px solid var(--red);color:var(--red);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-family:Rajdhani,sans-serif;font-weight:700;white-space:nowrap">⚡ CHECK NOW</button>
+    </div>
+
     <!-- MARKET SHOCK ALERT BANNER (hidden by default) -->
     <div id="shock-alert-banner" style="display:none;background:linear-gradient(135deg,rgba(255,23,68,0.15),rgba(255,109,0,0.1));border:2px solid var(--red);border-radius:14px;padding:14px 18px;margin-bottom:16px;animation:pulse-border 1s infinite">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
@@ -7236,17 +7244,34 @@ function renderNewsIntel(){
 
 // ==================== MARKET SHOCK ALERT (UPGRADED) ====================
 let lastShockCheck = 0;
-async function checkMarketShock() {
-  if (Date.now() - lastShockCheck < 60000) return;
+async function checkMarketShock(manual = false) {
+  if (!manual && Date.now() - lastShockCheck < 60000) return;
   lastShockCheck = Date.now();
+  const statusEl = document.getElementById('shock-status-text');
+  if (statusEl) statusEl.textContent = 'Checking...';
   try {
-    const spyPct  = parseFloat(document.getElementById('tc-spy')?.textContent?.replace('%','')) || 0;
-    const qqqPct  = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
-    const vixTxt  = document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'');
-    const vix     = parseFloat(vixTxt) || 0;
-    const vixChg  = parseFloat(document.getElementById('tc-vix')?.textContent?.replace('%','')) || 0;
+    // Fetch fresh SPY, QQQ, VIX directly from Finnhub — don't rely on ticker elements
+    async function getFinnhubQuote(sym) {
+      try {
+        const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FINNHUB_KEY}`);
+        if (!r.ok) return null;
+        const d = await r.json();
+        return d.c ? { price: d.c, change: d.dp || 0, prevClose: d.pc } : null;
+      } catch(e) { return null; }
+    }
 
-    // Fetch oil and yield for shock detection
+    const [spyQ, qqqQ, vixQ] = await Promise.all([
+      getFinnhubQuote('SPY'),
+      getFinnhubQuote('QQQ'),
+      getFinnhubQuote('VIX')
+    ]);
+
+    const spyPct = spyQ?.change || parseFloat(document.getElementById('tc-spy')?.textContent?.replace('%','')) || 0;
+    const qqqPct = qqqQ?.change || parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
+    const vix    = vixQ?.price  || parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+    const vixChg = vixQ?.change || parseFloat(document.getElementById('tc-vix')?.textContent?.replace('%','')) || 0;
+
+    // Fetch oil and yield
     let oilChg = 0, yieldChg = 0;
     try {
       const oilR = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/CL=F?interval=1d&range=2d')}`);
@@ -7258,45 +7283,51 @@ async function checkMarketShock() {
     } catch(e) {}
 
     const shocks = [];
-    let severity = 'normal'; // normal | elevated | shock
+    let severity = 'normal';
 
-    if (spyPct <= -1)    { shocks.push(`SPY ${spyPct.toFixed(2)}%`); severity = 'elevated'; }
-    if (spyPct <= -2)    { severity = 'shock'; }
-    if (qqqPct <= -1.5)  { shocks.push(`QQQ ${qqqPct.toFixed(2)}%`); severity = severity==='shock'?'shock':'elevated'; }
-    if (vix > 25)        { shocks.push(`VIX ${vix.toFixed(1)}`); severity = vix>35?'shock':'elevated'; }
-    if (vixChg >= 10)    { shocks.push(`VIX spike +${vixChg.toFixed(1)}%`); severity = 'shock'; }
-    if (Math.abs(oilChg) >= 3) { shocks.push(`Oil ${oilChg>=0?'+':''}${oilChg.toFixed(1)}%`); severity = severity==='shock'?'shock':'elevated'; }
-    if (yieldChg >= 5)   { shocks.push(`10Y yield spike +${yieldChg.toFixed(1)}%`); severity = severity==='shock'?'shock':'elevated'; }
+    if (spyPct <= -1)         { shocks.push(`SPY ${spyPct.toFixed(2)}%`); severity = 'elevated'; }
+    if (spyPct <= -2)         { severity = 'shock'; }
+    if (qqqPct <= -1.5)       { shocks.push(`QQQ ${qqqPct.toFixed(2)}%`); severity = severity==='shock'?'shock':'elevated'; }
+    if (vix > 20)             { shocks.push(`VIX ${vix.toFixed(1)}`); severity = vix>30?'shock':'elevated'; }
+    if (vixChg >= 10)         { shocks.push(`VIX spike +${vixChg.toFixed(1)}%`); severity = 'shock'; }
+    if (Math.abs(oilChg) >= 3){ shocks.push(`Oil ${oilChg>=0?'+':''}${oilChg.toFixed(1)}%`); severity = severity==='shock'?'shock':'elevated'; }
+    if (yieldChg >= 5)        { shocks.push(`10Y yield spike +${yieldChg.toFixed(1)}%`); severity = severity==='shock'?'shock':'elevated'; }
 
-    const banner = document.getElementById('shock-alert-banner');
-    const detail = document.getElementById('shock-detail');
+    const banner  = document.getElementById('shock-alert-banner');
+    const detail  = document.getElementById('shock-detail');
     const actions = document.getElementById('shock-actions');
     if (!banner) return;
 
     if (shocks.length > 0) {
-      // Set color based on severity
       banner.style.borderColor = severity==='shock' ? 'var(--red)' : 'var(--orange)';
-      banner.style.background = severity==='shock'
-        ? 'linear-gradient(135deg,rgba(255,23,68,0.15),rgba(255,109,0,0.1))'
+      banner.style.background  = severity==='shock'
+        ? 'linear-gradient(135deg,rgba(255,23,68,0.18),rgba(255,109,0,0.1))'
         : 'linear-gradient(135deg,rgba(255,109,0,0.12),rgba(0,0,0,0))';
-
-      if (detail) detail.textContent = shocks.join(' · ');
+      if (detail)  detail.textContent = shocks.join(' · ');
       if (actions) {
-        let rec = '';
-        if (severity === 'shock') rec = '🔴 SHOCK MODE: Reduce to 25% size · Wait for structure · No chasing · Exit open positions';
-        else if (severity === 'elevated') rec = '🟡 ELEVATED: Reduce size · Widen targets · Confirm tape before entry';
-        else rec = '⚡ Monitor · Standard size · Wait for confluence';
-        actions.textContent = rec;
+        actions.textContent = severity==='shock'
+          ? '🔴 SHOCK MODE: Reduce to 25% size · Wait for structure · No chasing · Exit open positions'
+          : '🟡 ELEVATED: Reduce size · Widen targets · Confirm tape before entry';
       }
       banner.style.display = 'block';
+      if (statusEl) statusEl.textContent = `${severity==='shock'?'🚨 SHOCK':'⚠️ ELEVATED'} — ${shocks.join(' · ')} — ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}`;
+      if (statusEl) statusEl.style.color = severity==='shock'?'var(--red)':'var(--orange)';
       if (severity === 'shock') {
         showToast('danger','🚨 MARKET SHOCK', shocks.join(' · ') + ' — REDUCE SIZE NOW', '🚨', 12000);
         showAlertStrip('SHOCK', '🚨 MARKET SHOCK: ' + shocks.join(' · ') + ' — Reduce size, widen targets');
+      } else {
+        showToast('warning','⚠️ ELEVATED CONDITIONS', shocks.join(' · '), '⚠️', 8000);
+        showAlertStrip('SHOCK', '⚠️ ELEVATED: ' + shocks.join(' · ') + ' — Reduce size, widen targets');
       }
     } else {
       banner.style.display = 'none';
+      if (manual) showToast('success','✅ Market Normal', `SPY ${spyPct>=0?'+':''}${spyPct.toFixed(2)}% · QQQ ${qqqPct>=0?'+':''}${qqqPct.toFixed(2)}% · VIX ${vix.toFixed(1)} — No shock conditions`, '✅', 5000);
+      if (statusEl) statusEl.textContent = `✅ Normal — SPY ${spyPct>=0?'+':''}${spyPct.toFixed(2)}% VIX ${vix.toFixed(1)} — ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}`;
     }
-  } catch(e) {}
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Check failed — retry';
+    console.warn('checkMarketShock error:', e);
+  }
 }
 
 // ==================== HISTORICAL PATTERN BRIEF ====================
