@@ -777,6 +777,11 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div id="sig-factors" style="display:flex;flex-direction:column;gap:4px"></div>
       </div>
       <div id="sig-playbook" style="background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.15);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.6;display:none"></div>
+      <!-- CONSOLIDATION EXIT ALERTS -->
+      <div id="consolidation-alerts" style="margin-top:10px;display:none">
+        <div style="font-size:10px;color:var(--red);letter-spacing:1px;font-weight:700;margin-bottom:6px">⚠️ CONSOLIDATION EXIT SIGNALS DETECTED</div>
+        <div id="consolidation-list" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
     </div>
 
     <!-- PRE-MARKET WAR ROOM -->
@@ -1131,10 +1136,10 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           </div>
           <div class="rule-card">
             <div class="rule-title">💰 RISK RULES</div>
-            <div class="rule-item">Max risk: $40-60/trade</div>
-            <div class="rule-item">Max contracts: 1-2</div>
-            <div class="rule-item">Daily loss limit: -$120</div>
-            <div class="rule-item">Stop: -$0.20</div>
+            <div class="rule-item">Max risk: $20/trade (1 contract × $0.20 stop)</div>
+            <div class="rule-item">Max contracts: 1 standard · 2 on A+ setup only ($40 risk)</div>
+            <div class="rule-item">Daily loss limit: -$120 (= 6 × $20 losses → STOP ALL TRADING)</div>
+            <div class="rule-item">Stop: -$0.20 · Move to breakeven at +$0.20</div>
           </div>
         </div>
         <div class="grid-2">
@@ -1473,7 +1478,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <input class="form-input" type="number" id="ps-premium" placeholder="e.g. 1.50" oninput="calcPosition()">
         </div>
         <div class="form-group">
-          <label class="form-label">Risk Amount ($40-60)</label>
+          <label class="form-label">Risk Amount ($20 standard / $40 on A+)</label>
           <input class="form-input" type="number" id="ps-risk" value="50" oninput="calcPosition()">
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:14px;font-size:13px">
@@ -2331,6 +2336,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
         <input class="form-input" id="barb-dir-input" placeholder="Search businesses, services, people..." 
           style="flex:1;min-width:200px;font-size:13px" 
+          oninput="searchBarbadosDirectory()"
           onkeydown="if(event.key==='Enter')searchBarbadosDirectory()">
         <button class="btn btn-primary" onclick="searchBarbadosDirectory()" style="font-size:12px;white-space:nowrap">🔍 SEARCH</button>
         <a href="https://www.barbados.net/yellow_pages/" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--accent);color:var(--accent);white-space:nowrap">🌐 Yellow Pages</a>
@@ -2345,7 +2351,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <button onclick="quickDirSearch('doctor')" class="btn btn-sm" style="font-size:10px;padding:3px 10px">👨‍⚕️ Medical</button>
       </div>
       <div id="barb-dir-results" style="min-height:40px">
-        <div style="font-size:12px;color:var(--text2)">Search above or use the quick filters. Results open from barbados.net yellow pages.</div>
+        <div style="font-size:12px;color:var(--text2)">Start typing to search — Car Rental, Restaurants, Hotels, Banks, Medical and more.</div>
       </div>
     </div>
 
@@ -3554,13 +3560,13 @@ function showDailyPlanReminder() {
       ? '🔥 JUNE 1 AND BEYOND — STRICT PLAN ONLY. No exceptions. Your future is built today.'
       : 'Before you open ThinkorSwim, commit to your plan. Review your rules and trade with discipline.';
     setTimeout(()=>showPlanPopup('🎯','MORNING TRADING PLAN',strictMsg,
-      ['Wait until 9:45 AM — no early entries','Max risk per trade: $40-60','Daily goal: $30-60','Daily loss limit: -$120','Never average down','Move stop to BE at +$0.20','At goal hit — CLOSE ThinkorSwim IMMEDIATELY']),3000);
+      ['Wait until 9:45 AM — no early entries','Max risk: $20/trade (1 contract × $0.20 stop)','Daily goal: $30-60','Daily loss limit: -$120 (= 6 × $20 losses → STOP)','Never average down','Move stop to BE at +$0.20','At goal hit — CLOSE ThinkorSwim IMMEDIATELY']),3000);
   }
 }
 
 function showPlanReminder() {
   showPlanPopup('📋','TRADING RULES REMINDER — JUNE 1 STRICT MODE','Your rules are your edge. No exceptions, no excuses.',
-    ['⏰ Sessions: 9:45-11:30 AM and 2:30-3:55 PM ONLY','🛑 Stop: -$0.20 | Standard Target: +$0.35 | A+: +$0.50','💰 At +$0.20 profit → move stop to BREAKEVEN immediately','📊 Max 1-2 contracts | Max $40-60 risk per trade','🚫 Daily loss limit: -$120 → CLOSE platform, walk away','🎯 Daily goal: $30-60 → when hit, CLOSE ThinkorSwim NOW','❌ NEVER average down — not once, not ever','🧠 Tape Truth Rule: ignore your bias, trade what you see']);
+    ['⏰ Sessions: 9:45-11:30 AM and 2:30-3:55 PM ONLY','🛑 Stop: -$0.20 | Standard Target: +$0.35 | A+: +$0.50','💰 At +$0.20 profit → move stop to BREAKEVEN immediately','📊 1 contract standard · 2 on A+ setup only · Max risk $20/trade ($40 on A+)','🚫 Daily loss limit: -$120 = 6 × $20 losses → CLOSE platform, walk away','🎯 Daily goal: $30-60 → when hit, CLOSE ThinkorSwim NOW','❌ NEVER average down — not once, not ever','🧠 Tape Truth Rule: ignore your bias, trade what you see']);
 }
 
 function showPreTradeChecklist() {
@@ -6082,7 +6088,7 @@ function searchBarbadosDirectory() {
             </div>
             <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
               ${b.url?`<a href="${b.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:3px 8px">Web ↗</a>`:''}
-              <button onclick="searchGoogleMap('${b.name} ${b.parish} Barbados')" class="btn btn-sm" style="font-size:10px;padding:3px 8px;border-color:var(--blue);color:var(--blue)">Map 📍</button>
+              <button onclick="showTab('barbados');setTimeout(()=>searchGoogleMap('${b.name.replace(/'/g,'')} ${b.parish} Barbados'),400)" class="btn btn-sm" style="font-size:10px;padding:3px 8px;border-color:var(--blue);color:var(--blue)">Map 📍</button>
             </div>
           </div>
         </div>`).join('');
@@ -6605,6 +6611,39 @@ async function runSignalCheck() {
       sigPlaybook.style.display = 'block';
     } else {
       sigPlaybook.style.display = 'none';
+    }
+  }
+
+  // ---- CONSOLIDATION EXIT ALERTS (from Learning Report June 8 2026) ----
+  // These fire when you are IN a trade and need to EXIT
+  const consolidationAlerts = [];
+
+  // 1. RSI flattening above 70 for 2+ candles
+  if(fg > 70) consolidationAlerts.push({ text:'⚠️ F&G above 70 — RSI likely extended. Watch for flattening. Prepare exit.', color:'var(--orange)' });
+
+  // 2. Momentum dying — VIX dropping while price stalls (proxy for volume dying)
+  if(score >= 7 && vix < 17) consolidationAlerts.push({ text:'⚠️ VIX low & falling — premium collapsing, momentum dying. Take profits.', color:'var(--orange)' });
+
+  // 3. SPY/QQQ alignment breaking (chop/distribution signal)
+  if(!aligned && score >= 5) consolidationAlerts.push({ text:'⚠️ SPY & QQQ diverging — chop/distribution forming. Exit or tighten stop.', color:'var(--red)' });
+
+  // 4. Strong move but F&G reversing fast (RSI crash signal)
+  if(Math.abs(spyChg) >= 0.5 && fg < 40 && spyChg > 0) consolidationAlerts.push({ text:'🚨 Strong SPY move but sentiment bearish — potential fast reversal. EXIT NOW.', color:'var(--red)' });
+  if(Math.abs(spyChg) >= 0.5 && fg > 60 && spyChg < 0) consolidationAlerts.push({ text:'🚨 Strong SPY drop but sentiment still greedy — potential reversal spike. EXIT NOW.', color:'var(--red)' });
+
+  const consolidationEl = document.getElementById('consolidation-alerts');
+  const consolidationList = document.getElementById('consolidation-list');
+  if(consolidationEl && consolidationList) {
+    if(consolidationAlerts.length && inSession) {
+      consolidationList.innerHTML = consolidationAlerts.map(a =>
+        `<div style="font-size:11px;color:${a.color};padding:4px 8px;background:rgba(255,23,68,0.07);border-radius:6px;border-left:3px solid ${a.color}">${a.text}</div>`
+      ).join('');
+      consolidationEl.style.display = 'block';
+      if(consolidationAlerts.some(a=>a.color==='var(--red)')) {
+        showToast('danger','⚠️ EXIT SIGNAL', consolidationAlerts[0].text, '⚠️', 8000);
+      }
+    } else {
+      consolidationEl.style.display = 'none';
     }
   }
 
@@ -8106,7 +8145,7 @@ function renderCrypto() {
         </div>
         <div style="text-align:right">
           <div style="font-size:12px;color:var(--text2)">Holdings</div>
-          <div style="font-size:11px;color:var(--text)">${h.amount < 0.0001 ? h.amount.toFixed(8) : h.amount < 0.01 ? h.amount.toFixed(6) : h.amount < 1 ? h.amount.toFixed(4) : h.amount.toLocaleString(undefined,{maximumFractionDigits:4})}</div>
+          <div class="crypto-money" style="font-size:11px;color:var(--text)">${h.amount < 0.0001 ? h.amount.toFixed(8) : h.amount < 0.01 ? h.amount.toFixed(6) : h.amount < 1 ? h.amount.toFixed(4) : h.amount.toLocaleString(undefined,{maximumFractionDigits:4})}</div>
         </div>
       </div>
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
