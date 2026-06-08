@@ -1136,10 +1136,10 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           </div>
           <div class="rule-card">
             <div class="rule-title">💰 RISK RULES</div>
-            <div class="rule-item">Max risk: $20/trade (1 contract × $0.20 stop)</div>
-            <div class="rule-item">Max contracts: 1 standard · 2 on A+ setup only ($40 risk)</div>
-            <div class="rule-item">Daily loss limit: -$120 (= 6 × $20 losses → STOP ALL TRADING)</div>
-            <div class="rule-item">Stop: -$0.20 · Move to breakeven at +$0.20</div>
+            <div class="rule-item">Max risk: $30/trade (1 contract × $0.30 stop)</div>
+            <div class="rule-item">Max contracts: 1 standard · 2 on A+ setup only ($60 risk)</div>
+            <div class="rule-item">Daily loss limit: -$120 (= 4 × $30 losses → STOP ALL TRADING)</div>
+            <div class="rule-item">Stop: -$0.30 · Move to breakeven at +$0.20</div>
           </div>
         </div>
         <div class="grid-2">
@@ -3560,13 +3560,13 @@ function showDailyPlanReminder() {
       ? '🔥 JUNE 1 AND BEYOND — STRICT PLAN ONLY. No exceptions. Your future is built today.'
       : 'Before you open ThinkorSwim, commit to your plan. Review your rules and trade with discipline.';
     setTimeout(()=>showPlanPopup('🎯','MORNING TRADING PLAN',strictMsg,
-      ['Wait until 9:45 AM — no early entries','Max risk: $20/trade (1 contract × $0.20 stop)','Daily goal: $30-60','Daily loss limit: -$120 (= 6 × $20 losses → STOP)','Never average down','Move stop to BE at +$0.20','At goal hit — CLOSE ThinkorSwim IMMEDIATELY']),3000);
+      ['Wait until 9:45 AM — no early entries','Max risk: $30/trade (1 contract × $0.30 stop)','Daily goal: $30-60','Daily loss limit: -$120 (= 4 × $30 losses → STOP)','Never average down','Move stop to BE at +$0.20','At goal hit — CLOSE ThinkorSwim IMMEDIATELY']),3000);
   }
 }
 
 function showPlanReminder() {
   showPlanPopup('📋','TRADING RULES REMINDER — JUNE 1 STRICT MODE','Your rules are your edge. No exceptions, no excuses.',
-    ['⏰ Sessions: 9:45-11:30 AM and 2:30-3:55 PM ONLY','🛑 Stop: -$0.20 | Standard Target: +$0.35 | A+: +$0.50','💰 At +$0.20 profit → move stop to BREAKEVEN immediately','📊 1 contract standard · 2 on A+ setup only · Max risk $20/trade ($40 on A+)','🚫 Daily loss limit: -$120 = 6 × $20 losses → CLOSE platform, walk away','🎯 Daily goal: $30-60 → when hit, CLOSE ThinkorSwim NOW','❌ NEVER average down — not once, not ever','🧠 Tape Truth Rule: ignore your bias, trade what you see']);
+    ['⏰ Sessions: 9:45-11:30 AM and 2:30-3:55 PM ONLY','🛑 Stop: -$0.30 | Standard Target: +$0.35 | A+: +$0.50','💰 At +$0.20 profit → move stop to BREAKEVEN immediately','📊 1 contract standard · 2 on A+ setup only · Max risk $30/trade ($60 on A+)','🚫 Daily loss limit: -$120 = 4 × $30 losses → CLOSE platform, walk away','🎯 Daily goal: $30-60 → when hit, CLOSE ThinkorSwim NOW','❌ NEVER average down — not once, not ever','🧠 Tape Truth Rule: ignore your bias, trade what you see']);
 }
 
 function showPreTradeChecklist() {
@@ -4186,10 +4186,10 @@ function renderBarbados() {
           <button class="btn btn-sm btn-danger" onclick="deleteBarbados(${b.id})">DEL</button>
         </div>
       </div>
-      <div class="invest-row"><span class="invest-label">Invested:</span><span class="invest-val">$${b.amount.toLocaleString()}</span></div>
-      <div class="invest-row"><span class="invest-label">Current Value:</span><span class="invest-val" style="color:var(--accent)">$${b.current.toLocaleString()}</span></div>
-      <div class="invest-row"><span class="invest-label">Return:</span><span class="invest-val ${b.current>=b.amount?'pos':'neg'}">${b.current>=b.amount?'+':''}$${(b.current-b.amount).toLocaleString()}</span></div>
-      <div class="invest-row"><span class="invest-label">ROI:</span><span class="invest-val ${roi>=0?'pos':'neg'}">${roi.toFixed(1)}%</span></div>
+      <div class="invest-row"><span class="invest-label">Invested:</span><span class="invest-val hide-money">$${b.amount.toLocaleString()}</span></div>
+      <div class="invest-row"><span class="invest-label">Current Value:</span><span class="invest-val hide-money" style="color:var(--accent)">$${b.current.toLocaleString()}</span></div>
+      <div class="invest-row"><span class="invest-label">Return:</span><span class="invest-val hide-money ${b.current>=b.amount?'pos':'neg'}">${b.current>=b.amount?'+':''}$${(b.current-b.amount).toLocaleString()}</span></div>
+      <div class="invest-row"><span class="invest-label">ROI:</span><span class="invest-val hide-money ${roi>=0?'pos':'neg'}">${roi.toFixed(1)}%</span></div>
       ${b.note?`<div style="font-size:12px;color:var(--text3);margin-top:6px">${b.note}</div>`:''}
     </div>`;
   }).join('');
@@ -4199,6 +4199,7 @@ function renderBarbados() {
   document.getElementById('bdb-returns').textContent=(ret>=0?'+':'')+'$'+ret.toLocaleString();
   document.getElementById('bdb-roi').textContent=totalInvested>0?((ret/totalInvested)*100).toFixed(1)+'%':'0%';
   renderBDBTable(); renderBarbadosSummary();
+  if(figuresHidden) applyHideFiguresState(true);
 }
 
 function renderBarbadosSummary() {
@@ -5167,7 +5168,7 @@ function applyHideFiguresState(hidden) {
     '#port-value, #port-upnl, #port-ret, ' +
     '#snkr-invested, #snkr-profit, #snkr-best, ' +
     '#poke-value, #poke-profit, #poke-best, ' +
-    '#bdb-invested, #an-winrate, #an-pf, #an-expect, #an-maxdd, #an-avgwin, #an-avgloss, ' +
+    '#bdb-invested, #bdb-value, #bdb-returns, #bdb-roi, #an-winrate, #an-pf, #an-expect, #an-maxdd, #an-avgwin, #an-avgloss, ' +
     '#aplus-score, #wr-es-val, #wr-nq-val'
   );
 
@@ -6563,7 +6564,7 @@ async function runSignalCheck() {
   // ---- ENTRY / TARGET / STOP ----
   const entryPrice = spyLive > 0 ? `$${spyLive.toFixed(2)}` : '--';
   const targetPrice = spyLive > 0 ? `+$0.${score >= 7 ? '50' : '35'}` : '--';
-  const stopPrice = '-$0.20';
+  const stopPrice = '-$0.30';
 
   // ---- GRADE ----
   let grade = 'NO SIGNAL';
