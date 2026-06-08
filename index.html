@@ -5157,7 +5157,7 @@ function applyHideFiguresState(hidden) {
     '#stat-pnl, #stat-balance, #stat-best, #stat-worst, #progress-text, ' +
     '#crypto-total, #crypto-change, #crypto-best, ' +
     '#nw-trading, #nw-crypto, #nw-barbados, #nw-realestate, #nw-business, #nw-total, ' +
-    '#ceo-trading-pnl, #ceo-crypto-val, #ceo-barb-val, #ceo-cards-val, #ceo-networth, ' +
+    '#ceo-trading-pnl, #ceo-crypto-val, #ceo-barb-val, #ceo-barb-sub, #ceo-cards-val, #ceo-networth, ' +
     '#port-value, #port-upnl, #port-ret, ' +
     '#snkr-invested, #snkr-profit, #snkr-best, ' +
     '#poke-value, #poke-profit, #poke-best, ' +
@@ -6057,23 +6057,86 @@ function clearMapSearch() {
 
 // ==================== BARBADOS TELEPHONE DIRECTORY ====================
 function searchBarbadosDirectory() {
-  const query = document.getElementById('barb-dir-input').value.trim();
+  const query = document.getElementById('barb-dir-input').value.trim().toLowerCase();
   if (!query) return;
   const el = document.getElementById('barb-dir-results');
-  // FindYello has the best working search for Barbados businesses
-  const findyelloUrl = `https://www.findyello.com/barbados/?q=${encodeURIComponent(query)}`;
-  const barbadosNetUrl = `https://www.barbados.net/yellow_pages/`;
-  const barbadosOrgUrl = `https://barbados.org/business/top.htm`;
-  window.open(findyelloUrl, '_blank');
-  el.innerHTML = `
-    <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Searching "<strong style="color:var(--accent)">${query}</strong>" — opened in new tab</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <a href="${findyelloUrl}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--green);color:var(--green)">🔍 FindYello ↗</a>
-      <a href="https://www.barbadosindex.com/search/?q=${encodeURIComponent(query)}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--blue);color:var(--blue)">📋 BarbadosIndex ↗</a>
-      <a href="${barbadosNetUrl}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--accent);color:var(--accent)">🌐 Barbados.net ↗</a>
-      <a href="${barbadosOrgUrl}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--text2);color:var(--text2)">📂 Barbados.org ↗</a>
-    </div>`;
+
+  // Search our built-in business database first
+  const results = BARBADOS_DIRECTORY.filter(b =>
+    b.name.toLowerCase().includes(query) ||
+    b.category.toLowerCase().includes(query) ||
+    b.parish.toLowerCase().includes(query) ||
+    (b.tags||[]).some(t => t.includes(query))
+  );
+
+  if (results.length) {
+    el.innerHTML = `<div style="font-size:11px;color:var(--text2);margin-bottom:8px">Found ${results.length} result${results.length>1?'s':''} for "<strong style="color:var(--accent)">${query}</strong>"</div>` +
+      results.map(b => `
+        <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:var(--text)">${b.icon} ${b.name}</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">📍 ${b.parish} · ${b.category}</div>
+              ${b.phone?`<div style="font-size:11px;color:var(--green);margin-top:2px">📞 ${b.phone}</div>`:''}
+              ${b.desc?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${b.desc}</div>`:''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+              ${b.url?`<a href="${b.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:3px 8px">Web ↗</a>`:''}
+              <button onclick="searchGoogleMap('${b.name} ${b.parish} Barbados')" class="btn btn-sm" style="font-size:10px;padding:3px 8px;border-color:var(--blue);color:var(--blue)">Map 📍</button>
+            </div>
+          </div>
+        </div>`).join('');
+  } else {
+    // No local results — offer external search links
+    el.innerHTML = `
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">No local results for "<strong style="color:var(--accent)">${query}</strong>" — search online:</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="https://www.findyello.com/barbados/?q=${encodeURIComponent(query)}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--green);color:var(--green)">🔍 FindYello ↗</a>
+        <a href="https://www.barbadosindex.com/search/?q=${encodeURIComponent(query)}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--blue);color:var(--blue)">📋 BarbadosIndex ↗</a>
+        <button onclick="searchGoogleMap('${query} Barbados')" class="btn btn-sm" style="font-size:11px;border-color:var(--accent);color:var(--accent)">🗺️ Google Maps</button>
+      </div>`;
+  }
 }
+
+// ==================== BARBADOS BUSINESS DIRECTORY ====================
+const BARBADOS_DIRECTORY = [
+  // Car Rentals
+  {name:'Stoutes Car Rental',icon:'🚗',category:'Car Rental',parish:'St. Philip',phone:'(246) 416-4456',url:'https://stoutescar.com',tags:['car','rental','hire'],desc:'Major rental — Kirtons, airport delivery'},
+  {name:'Courtesy Rent-A-Car',icon:'🚗',category:'Car Rental',parish:'St. Michael',phone:'(246) 431-4160',url:'https://courtesyrentacar.com',tags:['car','rental','hire','hertz'],desc:'Wildey — Hertz member, multiple locations'},
+  {name:'Drive-A-Matic',icon:'🚗',category:'Car Rental',parish:'St. Michael',phone:'(246) 434-8440',url:'https://carhire.tv',tags:['car','rental','hire','automatic'],desc:'Lower Estate — largest fleet on island'},
+  {name:'ABC Car Rentals',icon:'🚗',category:'Car Rental',parish:'Christ Church',phone:'(246) 422-0062',url:'',tags:['car','rental','hire'],desc:'Near Grantley Adams Airport'},
+  {name:'Coconut Car Rentals',icon:'🚗',category:'Car Rental',parish:'St. Michael',phone:'(246) 437-0297',url:'https://coconutcars.com',tags:['car','rental','hire'],desc:'Bridgetown — tourist favorite'},
+  {name:'Jones Car Rental',icon:'🚗',category:'Car Rental',parish:'St. Michael',phone:'(246) 429-6363',url:'',tags:['car','rental','hire'],desc:'Passage Road — manual & automatic'},
+  // Hotels
+  {name:'Sandy Lane Hotel',icon:'🏨',category:'Hotel',parish:'St. James',phone:'(246) 444-2000',url:'https://sandylane.com',tags:['hotel','luxury','accommodation','stay'],desc:'Ultra-luxury — Platinum West Coast'},
+  {name:'Hilton Barbados Resort',icon:'🏨',category:'Hotel',parish:'St. Michael',phone:'(246) 426-0200',url:'https://hilton.com',tags:['hotel','accommodation','stay'],desc:'Needhams Point, Bridgetown'},
+  {name:'Turtle Beach Resort',icon:'🏨',category:'Hotel',parish:'Christ Church',phone:'(246) 428-7131',url:'https://turtlebeachresort.net',tags:['hotel','family','accommodation','stay'],desc:'South coast — family resort'},
+  // Restaurants
+  {name:'Oistins Fish Fry',icon:'🍽️',category:'Restaurant',parish:'Christ Church',phone:'',url:'',tags:['food','restaurant','fish','local','eat'],desc:'Friday nights — legendary local institution'},
+  {name:'The Cliff Restaurant',icon:'🍽️',category:'Restaurant',parish:'St. James',phone:'(246) 432-1922',url:'https://thecliffbarbados.com',tags:['food','restaurant','fine dining','eat'],desc:'Fine dining on the cliff, West Coast'},
+  {name:'Champers',icon:'🍽️',category:'Restaurant',parish:'Christ Church',phone:'(246) 434-3463',url:'https://champersbarbados.com',tags:['food','restaurant','seafood','eat'],desc:'South coast seafood — local favorite'},
+  {name:'Waterfront Cafe',icon:'🍽️',category:'Restaurant',parish:'St. Michael',phone:'(246) 427-0093',url:'',tags:['food','restaurant','bridgetown','eat'],desc:'Careenage, Bridgetown — live music'},
+  // Banks
+  {name:'First Citizens Bank',icon:'🏦',category:'Bank',parish:'St. Michael',phone:'(246) 431-5000',url:'https://firstcitizensbb.com',tags:['bank','money','finance'],desc:'Bridgetown — full banking services'},
+  {name:'Scotiabank Barbados',icon:'🏦',category:'Bank',parish:'St. Michael',phone:'(246) 431-3000',url:'https://scotiabank.com',tags:['bank','money','finance'],desc:'Multiple branches island-wide'},
+  {name:'Republic Bank',icon:'🏦',category:'Bank',parish:'St. Michael',phone:'(246) 431-5757',url:'https://republicbarbados.com',tags:['bank','money','finance'],desc:'Broad Street, Bridgetown'},
+  // Supermarkets
+  {name:'Massy Stores',icon:'🛒',category:'Supermarket',parish:'Multiple',phone:'',url:'https://massystores.com',tags:['supermarket','grocery','food','shop'],desc:'Largest chain — multiple locations'},
+  {name:'Super Centre',icon:'🛒',category:'Supermarket',parish:'St. Michael',phone:'(246) 435-8048',url:'',tags:['supermarket','grocery','food','shop'],desc:'Warrens — large modern supermarket'},
+  {name:'Jordan\'s Supermarket',icon:'🛒',category:'Supermarket',parish:'St. James',phone:'(246) 432-5564',url:'',tags:['supermarket','grocery','food','shop'],desc:'Holetown — convenient west coast'},
+  // Medical
+  {name:'Queen Elizabeth Hospital',icon:'🏥',category:'Hospital',parish:'St. Michael',phone:'(246) 436-6450',url:'https://qehbarbados.com',tags:['hospital','medical','doctor','emergency','health'],desc:'Main public hospital — 24hr emergency'},
+  {name:'Bayview Hospital',icon:'🏥',category:'Hospital',parish:'St. Michael',phone:'(246) 436-5446',url:'https://bayviewhospital.com.bb',tags:['hospital','medical','doctor','health','private'],desc:'Private hospital — Bridgetown'},
+  {name:'FMH Medical Centre',icon:'👨‍⚕️',category:'Medical',parish:'Christ Church',phone:'(246) 435-7850',url:'',tags:['medical','doctor','health','clinic'],desc:'South coast medical centre'},
+  // Real Estate
+  {name:'Terra Caribbean',icon:'🏠',category:'Real Estate',parish:'St. Michael',phone:'(246) 431-0200',url:'https://terracaribbean.com',tags:['real estate','property','land','house'],desc:'Premier real estate — island-wide'},
+  {name:'Coral Stone Realty',icon:'🏠',category:'Real Estate',parish:'St. James',phone:'',url:'https://coralstonerealty.com',tags:['real estate','property','land','house'],desc:'West coast specialists'},
+  {name:'Barbados Property Search',icon:'🏠',category:'Real Estate',parish:'St. James',phone:'',url:'https://barbadospropertysearch.com',tags:['real estate','property','land','house'],desc:'Online listings portal'},
+  // Turtles & Tours
+  {name:'Folkestone Marine Reserve',icon:'🐢',category:'Attraction',parish:'St. James',phone:'',url:'',tags:['turtle','snorkeling','beach','swim','ocean'],desc:'Best turtle snorkeling — 9-11am'},
+  {name:'Cool Runnings Catamaran',icon:'⛵',category:'Tour',parish:'St. Michael',phone:'(246) 436-0911',url:'',tags:['catamaran','tour','boat','cruise','turtle'],desc:'Day trips from Carlisle Bay'},
+  {name:'Tiami Catamaran Cruises',icon:'⛵',category:'Tour',parish:'St. James',phone:'(246) 430-0900',url:'https://tiami.com',tags:['catamaran','tour','boat','cruise'],desc:'Luxury catamaran tours, Holetown'},
+];
 
 function quickDirSearch(term) {
   document.getElementById('barb-dir-input').value = term;
@@ -6140,15 +6203,12 @@ function filterRE(type) {
 function refreshLandAlerts() { renderRealEstate(); }
 
 function flyToListing(lat, lng, name) {
-  if(!barbadosMap) { showTab('barbados'); setTimeout(()=>flyToListing(lat,lng,name), 500); return; }
+  // Google Maps replace — open on map via goToPlace
   showTab('barbados');
   setTimeout(() => {
-    barbadosMap.flyTo([lat, lng], 16, { animate: true, duration: 1.5 });
-    L.marker([lat, lng], { icon: createCustomIcon('🏠') })
-      .addTo(barbadosMap).bindPopup(`<strong>${name}</strong>`).openPopup();
+    goToPlace(name + ' Barbados');
   }, 300);
 }
-
 // ==================== FESTIVAL CALENDAR ====================
 const barbadosFestivals = [
   { name: 'Crop Over Festival Opens', date: 'Jul 3, 2026', category: 'cropover', icon: '🌾', desc: 'Official start of the 6-week Crop Over season. Soca and calypso competitions begin island-wide.', color: '#f5c518', url: 'https://barbados.org/cropclnd.htm' },
@@ -7109,17 +7169,18 @@ async function fetchWarRoom() {
   const nq = await fetchYahooFallback('NQ=F');
   setCell('nq', nq);
 
-  // VIX from existing ticker
-  const vixVal = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,''))||0;
+  // VIX — fetch directly, don't rely on ticker
+  const vixData = await fetchYahooFallback('%5EVIX');
+  const vixVal = vixData?.price || parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,''))||0;
   if(vixVal) {
     const vixEl = document.getElementById('wr-vix-val');
     const vixChgEl = document.getElementById('wr-vix-chg');
     if(vixEl) vixEl.textContent = vixVal.toFixed(2);
     if(vixChgEl) {
-      const vc = parseFloat(document.getElementById('tc-vix')?.textContent?.replace('%',''))||0;
+      const vc = vixData?.change || parseFloat(document.getElementById('tc-vix')?.textContent?.replace('%',''))||0;
       vixChgEl.textContent = (vc>=0?'+':'')+vc.toFixed(2)+'%';
-      vixChgEl.style.color = vc>=0?'var(--red)':'var(--green)'; // VIX up = bearish
-      if(vixVal>30) { bearish++; signals.push('VIX elevated '+vixVal.toFixed(0)); }
+      vixChgEl.style.color = vc>=0?'var(--red)':'var(--green)';
+      if(vixVal>20) { bearish++; signals.push('VIX '+vixVal.toFixed(1)); }
     }
   }
 
@@ -7158,18 +7219,25 @@ async function fetchPrevDayLevels() {
   if(updEl) updEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 
   async function getOHLC(symbol) {
+    // Try Yahoo Finance via allorigins — gives full OHLC
     try {
-      // Finnhub daily candle — primary source
-      const to = Math.floor(Date.now()/1000);
-      const from = to - (7*86400);
-      const r = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${FINNHUB_KEY}`);
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=5d`;
+      const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
       if(!r.ok) throw new Error();
       const d = await r.json();
-      if(!d || d.s==='no_data' || !d.c || d.c.length<2) throw new Error();
-      const len = d.c.length;
-      return { prev:{high:d.h[len-2],low:d.l[len-2],close:d.c[len-2]}, current:d.c[len-1] };
+      const res = d?.chart?.result?.[0];
+      if(!res) throw new Error();
+      const q = res.indicators.quote[0];
+      const len = q.close.length;
+      // Filter nulls
+      const prevClose = q.close[len-2];
+      const prevHigh  = q.high[len-2];
+      const prevLow   = q.low[len-2];
+      const current   = res.meta.regularMarketPrice || q.close[len-1];
+      if(!prevClose) throw new Error();
+      return { prev:{high:prevHigh,low:prevLow,close:prevClose}, current };
     } catch(e) {
-      // Fallback: Finnhub quote — gives prevClose + current
+      // Fallback: Finnhub quote — prevClose + current only (no high/low)
       try {
         const r2 = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`);
         if(!r2.ok) return null;
@@ -8038,7 +8106,7 @@ function renderCrypto() {
         </div>
         <div style="text-align:right">
           <div style="font-size:12px;color:var(--text2)">Holdings</div>
-          <div style="font-size:11px;color:var(--text)">${h.amount.toLocaleString(undefined,{maximumFractionDigits:4})}</div>
+          <div style="font-size:11px;color:var(--text)">${h.amount < 0.0001 ? h.amount.toFixed(8) : h.amount < 0.01 ? h.amount.toFixed(6) : h.amount < 1 ? h.amount.toFixed(4) : h.amount.toLocaleString(undefined,{maximumFractionDigits:4})}</div>
         </div>
       </div>
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
