@@ -2829,14 +2829,7 @@ let state = {
   pinEntry: '',
   trades: [],
   positions: [],
-  cryptoHoldings: [
-    {id:'dogecoin',sym:'DOGE',amount:30.951,buyPrice:0,price:0,change:0},
-    {id:'ethereum',sym:'ETH',amount:1.00051,buyPrice:0,price:0,change:0},
-    {id:'shiba-inu',sym:'SHIB',amount:35219490,buyPrice:0,price:0,change:0},
-    {id:'cardano',sym:'ADA',amount:283.356,buyPrice:0,price:0,change:0},
-    {id:'bitcoin',sym:'BTC',amount:0.00061444,buyPrice:0,price:0,change:0},
-    {id:'solana',sym:'SOL',amount:2,buyPrice:0,price:0,change:0}
-  ],
+  cryptoHoldings: [],
   sneakers: [
     {id:Date.now(),name:'Air Jordan 1 Retro High OG (Example)',size:'10',cost:180,resell:350,status:'HELD',note:'Delete me - example only'}
   ],
@@ -3027,11 +3020,39 @@ async function loadTrades() {
   }
 }
 
-// ==================== STATE MANAGEMENT ====================
+// ==================== CRYPTO HOLDINGS STORAGE (dedicated, separate from state blob) ====================
+const CRYPTO_LS_KEY = 'mrt_crypto_v2';
+
+function saveCryptoHoldings() {
+  localStorage.setItem(CRYPTO_LS_KEY, JSON.stringify(state.cryptoHoldings));
+  fbSet('crypto_v2', state.cryptoHoldings).then(() => {
+    console.log('Crypto holdings saved:', state.cryptoHoldings.length);
+  }).catch(e => console.warn('Firebase crypto save failed:', e));
+}
+
+async function loadCryptoHoldings() {
+  let holdings = null;
+  // Try localStorage first
+  const local = localStorage.getItem(CRYPTO_LS_KEY);
+  if (local) {
+    try { holdings = JSON.parse(local); console.log('Crypto loaded from localStorage:', holdings.length); }
+    catch(e) {}
+  }
+  // Try Firebase — only use if more holdings
+  try {
+    const remote = await fbGet('crypto_v2');
+    if (Array.isArray(remote) && remote.length > (holdings || []).length) {
+      holdings = remote;
+      console.log('Crypto loaded from Firebase:', holdings.length);
+    }
+  } catch(e) {}
+  if (Array.isArray(holdings)) state.cryptoHoldings = holdings;
+}
 function saveState() {
-  // Save everything EXCEPT trades — trades have their own dedicated storage
-  const stateToSave = { ...state, trades: undefined };
+  // Save everything EXCEPT trades and cryptoHoldings — they have dedicated storage
+  const stateToSave = { ...state, trades: undefined, cryptoHoldings: undefined };
   delete stateToSave.trades;
+  delete stateToSave.cryptoHoldings;
   localStorage.setItem('mrt_v2_state', JSON.stringify(stateToSave));
   fbSet('state', stateToSave).catch(e => console.warn('Firebase state save failed'));
 }
@@ -3067,6 +3088,9 @@ async function loadState() {
 
   // Step 3: Load trades from dedicated storage ONLY
   await loadTrades();
+
+  // Step 4: Load crypto holdings from dedicated storage
+  await loadCryptoHoldings();
 
   if (!state.pin) state.pin = '';
 }
@@ -3965,6 +3989,7 @@ function saveCryptoHolding() {
     showToast('success','Holding Added', `${sym} added to portfolio`, '₿');
   }
 
+  saveCryptoHoldings(); // dedicated storage — never lost on refresh
   saveState();
   fetchCryptoPrices();
   closeModal('crypto-modal');
@@ -3996,7 +4021,9 @@ function editCryptoHolding(id) {
 
 function removeCrypto(id) {
   state.cryptoHoldings=state.cryptoHoldings.filter(h=>h.id!==id);
-  saveState(); renderCrypto();
+  saveCryptoHoldings();
+  saveState();
+  renderCrypto();
 }
 
 // ==================== SNEAKERS ====================
