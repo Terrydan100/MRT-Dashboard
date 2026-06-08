@@ -3942,11 +3942,13 @@ function selectCoin(id, sym) {
 
 // ==================== CRYPTO HOLDINGS ====================
 function saveCryptoHolding() {
-  const id = document.getElementById('cr-id').value.trim().toLowerCase();
+  const editId = document.getElementById('cr-edit-id').value.trim();
+  const id  = document.getElementById('cr-id').value.trim().toLowerCase();
   const sym = document.getElementById('cr-sym').value.trim().toUpperCase();
   const amt = parseFloat(document.getElementById('cr-amt').value) || 0;
   const buy = parseFloat(document.getElementById('cr-buy').value) || 0;
   if (!id || !sym) return showToast('danger','Missing Info','Fill coin ID and symbol','❌');
+  if (amt <= 0)    return showToast('danger','Missing Info','Amount must be greater than 0','❌');
 
   if (editId) {
     // EDIT existing holding
@@ -3958,6 +3960,7 @@ function saveCryptoHolding() {
     }
   } else {
     // ADD new holding
+    if (!Array.isArray(state.cryptoHoldings)) state.cryptoHoldings = [];
     state.cryptoHoldings.push({ id, sym, amount: amt, buyPrice: buy, price: 0, change: 0 });
     showToast('success','Holding Added', `${sym} added to portfolio`, '₿');
   }
@@ -3966,6 +3969,11 @@ function saveCryptoHolding() {
   fetchCryptoPrices();
   closeModal('crypto-modal');
   document.getElementById('cr-edit-id').value = '';
+  document.getElementById('cr-search').value = '';
+  document.getElementById('cr-id').value = '';
+  document.getElementById('cr-sym').value = '';
+  document.getElementById('cr-amt').value = '';
+  document.getElementById('cr-buy').value = '';
   document.getElementById('crypto-modal-title').innerHTML = '₿ ADD CRYPTO HOLDING <button class="modal-close" onclick="closeModal(\'crypto-modal\')">✕</button>';
   document.getElementById('cr-save-btn').textContent = 'ADD';
 }
