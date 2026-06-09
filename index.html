@@ -7887,9 +7887,22 @@ const EVENT_PLAYBOOKS = {
 
 // Economic calendar — upcoming events (updated manually or fetched)
 const ECON_CALENDAR = [
-  { date:'2026-06-10', time:'8:30 AM ET', event:'CPI Report', type:'cpi', importance:'HIGH', forecast:'4.2% YoY', prior:'3.4% YoY', note:'Most important number of the week. Hot print expected above 4.2% would be highest since April 2023.' },
+  // ── JUNE 2026 ──
+  { date:'2026-06-10', time:'8:30 AM ET', event:'CPI Report', type:'cpi', importance:'HIGH', forecast:'4.2% YoY', prior:'3.4% YoY', note:'Most important number of the week. Hot print above 4.2% would be highest since April 2023. Rate hike odds above 70%.' },
   { date:'2026-06-11', time:'8:30 AM ET', event:'Core CPI', type:'cpi', importance:'HIGH', forecast:'2.9% YoY', prior:'2.8% YoY', note:'Core CPI excludes food and energy. Watch for sticky services inflation.' },
-  { date:'2026-06-18', time:'2:00 PM ET', event:'FOMC Decision', type:'fomc', importance:'HIGH', forecast:'Hold at current rate', prior:'Hold', note:'Fed decision + Powell press conference. No hike expected but language matters.' },
+  { date:'2026-06-12', time:'8:30 AM ET', event:'PPI Report', type:'cpi', importance:'MEDIUM', forecast:'+0.2% MoM', prior:'+0.4% MoM', note:'Producer Price Index — leading indicator for future CPI. Hot PPI = inflation not cooling.' },
+  { date:'2026-06-18', time:'2:00 PM ET', event:'FOMC Decision + Press Conference', type:'fomc', importance:'HIGH', forecast:'Hold at current rate', prior:'Hold', note:'Fed decision + Powell press conference. Language around future hikes matters more than the decision.' },
+  { date:'2026-06-25', time:'8:30 AM ET', event:'GDP Revision Q1 2026', type:'jobs', importance:'MEDIUM', forecast:'+1.8% QoQ', prior:'+1.6% QoQ', note:'Q1 GDP second revision. Weak GDP = dovish Fed expectations = bullish for stocks.' },
+  { date:'2026-06-27', time:'10:00 AM ET', event:'PCE Inflation (Fed Favorite)', type:'cpi', importance:'HIGH', forecast:'+2.6% YoY', prior:'+2.4% YoY', note:'PCE is the Fed preferred inflation gauge. Hotter than expected = more hawkish Fed stance.' },
+  // ── JULY 2026 ──
+  { date:'2026-07-02', time:'8:30 AM ET', event:'Jobs Report (NFP)', type:'jobs', importance:'HIGH', forecast:'+185K jobs', prior:'+210K jobs', note:'Non-Farm Payrolls. Strong jobs = bearish (rate fears). Weak jobs = bullish (rate cut hopes). Opposite logic.' },
+  { date:'2026-07-10', time:'8:30 AM ET', event:'CPI Report', type:'cpi', importance:'HIGH', forecast:'TBD', prior:'4.2% YoY', note:'July CPI — key data point before July FOMC. Will determine rate hike probability for rest of 2026.' },
+  { date:'2026-07-15', time:'8:30 AM ET', event:'PPI Report', type:'cpi', importance:'MEDIUM', forecast:'TBD', prior:'+0.2% MoM', note:'July PPI — leading indicator for August CPI.' },
+  { date:'2026-07-29', time:'2:00 PM ET', event:'FOMC Decision', type:'fomc', importance:'HIGH', forecast:'TBD', prior:'Hold', note:'July FOMC — if June CPI hot, hike probability rises significantly. Watch rate odds going in.' },
+  { date:'2026-07-30', time:'8:30 AM ET', event:'Q2 GDP Advance Estimate', type:'jobs', importance:'HIGH', forecast:'TBD', prior:'+1.8%', note:'First look at Q2 growth. Big market mover. Surprise either way = large SPY/QQQ move.' },
+  // ── AUGUST 2026 ──
+  { date:'2026-08-07', time:'8:30 AM ET', event:'Jobs Report (NFP)', type:'jobs', importance:'HIGH', forecast:'TBD', prior:'+185K', note:'August NFP — key data before Jackson Hole and September FOMC.' },
+  { date:'2026-08-12', time:'8:30 AM ET', event:'CPI Report', type:'cpi', importance:'HIGH', forecast:'TBD', prior:'TBD', note:'August CPI — critical for September FOMC hike or cut decision.' },
 ];
 
 async function runEventEngine() {
