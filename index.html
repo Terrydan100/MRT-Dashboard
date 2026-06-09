@@ -843,8 +843,9 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--orange);letter-spacing:2px">EVENT PROBABILITY ENGINE</div>
       </div>
       <div id="event-prob-content">
-        <div style="font-size:12px;color:var(--text2);text-align:center;padding:12px">Scanning for major market events today...</div>
+        <div style="font-size:12px;color:var(--text2);text-align:center;padding:12px">Scanning for major market events...</div>
       </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--text3);text-align:center">Calendar auto-checks today + tomorrow · Tell Claude to update ECON_CALENDAR for new events</div>
     </div>
 
     <!-- PREVIOUS DAY LEVELS -->
@@ -7824,35 +7825,74 @@ function runAPlusDetector() {
   if(factorsEl) factorsEl.innerHTML=factors.map(f=>`<span style="font-size:10px;padding:2px 8px;border-radius:12px;background:${f.p?'rgba(0,230,118,0.1)':'rgba(255,23,68,0.1)'};color:${f.p?'var(--green)':'var(--red)'};border:1px solid ${f.p?'rgba(0,230,118,0.3)':'rgba(255,23,68,0.3)'}">${f.t}</span>`).join('');
 }
 
-// ==================== EVENT PROBABILITY ENGINE ====================
+// ==================== EVENT PROBABILITY ENGINE (UPGRADED) ====================
 const EVENT_PLAYBOOKS = {
   fomc: { name:'FOMC Decision Day', icon:'🏦', color:'var(--blue)',
-    history:'Based on last 20 FOMC days: SPY averages ±1.2% move. 60% show "sell the news" after initial pop. Whipsaw in first 30 min is common.',
-    playbook:['Stay flat until 30 min AFTER announcement','Follow confirmed direction only — not the first move','Use wider targets (+$0.50) if trading','Expect elevated VIX all day','Session 2 often cleaner than Session 1 on FOMC days'],
-    bias:'NEUTRAL — wait for direction confirmation' },
-  cpi_hot: { name:'HOT CPI Print', icon:'📈', color:'var(--red)',
-    history:'Hot CPI (above expectations): SPY drops 0.5–1.5% on open, reverses ~40% of move by close historically. Initial reaction is bearish.',
-    playbook:['PUTS favored in first 30 min','Watch for reversal after 10:30 AM','Do NOT chase the gap down','VIX likely elevated — use wider stops','Best setup: PUTS on first bounce rejection'],
-    bias:'🔴 BEARISH LEAN — first hour' },
-  cpi_cool: { name:'COOL CPI Print', icon:'❄️', color:'var(--green)',
-    history:'Cool CPI (below expectations): SPY gaps up 0.5–1.5%, often fades into midday. Strong open then choppy afternoon is typical pattern.',
-    playbook:['CALLS in first 30–45 min on momentum','Watch for fade after 11 AM','Sell into strength — do not hold through midday fade','Afternoon often chops — reduce activity after noon','Session 1 is the play, Session 2 is risky'],
-    bias:'🟢 BULLISH LEAN — first hour only' },
+    history:'Last 20 FOMC days: SPY averages ±1.2% move. 60% show sell-the-news after initial pop. First 30 min almost always whipsaws.',
+    scenarios: null,
+    playbook:['🚫 NO TRADE in first 30 min after announcement','✅ Follow confirmed direction only — not the first move','📊 Use wider stops (+$0.30) all day','⏰ Session 2 often cleaner than Session 1 on FOMC days','🎯 Target: +$0.50 only on A+ confirmed setups'],
+    bias:'⚡ NEUTRAL — wait for direction confirmation after announcement',
+    alert:'🏦 FOMC DAY — Do NOT trade the announcement. Wait 30 min for structure.' },
+  cpi: { name:'CPI Release Day', icon:'📊', color:'var(--orange)',
+    history:'CPI prints at 8:30 AM ET. SPY/QQQ whipsaw violently in first 15-30 min. True direction usually clear by 9:45-10:00 AM. This is your best A+ day IF you wait.',
+    scenarios: [
+      { label:'🔴 HOT (above forecast)', color:'var(--red)', bg:'rgba(255,23,68,0.1)', border:'rgba(255,23,68,0.4)',
+        what:'Yields spike · Rate hike fears explode · SPY/QQQ gap down hard',
+        bias:'PUTS BIAS — wait for first bounce rejection after 9:45',
+        play:'Enter PUTS on first failed bounce above prev close. Target +$0.50. Stop -$0.30.' },
+      { label:'🟡 IN-LINE (at forecast)', color:'var(--accent)', bg:'rgba(245,197,24,0.08)', border:'rgba(245,197,24,0.3)',
+        what:'Choppy open · Mixed reaction · No clear direction for 30-45 min',
+        bias:'WAIT — no trade until 9:45+ and structure is clear',
+        play:'Sit flat until 10 AM. Only trade if 8+/10 signal score. Small size only.' },
+      { label:'🟢 COOL (below forecast)', color:'var(--green)', bg:'rgba(0,230,118,0.08)', border:'rgba(0,230,118,0.3)',
+        what:'Rate cut hopes return · SPY/QQQ gap up · Tech leads',
+        bias:'CALLS BIAS — first 45 min, then watch for fade',
+        play:'CALLS on pullback after 9:45. Target +$0.50. Exit before noon — afternoon fades are common.' },
+    ],
+    playbook:['🚫 Do NOT trade before 9:45 AM — 8:30 print causes 15-30 min whipsaw','⏳ Wait for 15-min candle to CLOSE and confirm direction','📊 This is a potential A+ day — big move both ways','🎯 If HOT: PUTS on bounce rejection. If COOL: CALLS on pullback','❌ Never chase the initial gap — it almost always gets partially filled'],
+    bias:'🎯 A+ POTENTIAL — but only after 9:45 AM confirmation',
+    alert:'📊 CPI DAY — Print at 8:30 AM ET. Do NOT trade before 9:45. Wait for structure.' },
+  jobs: { name:'Jobs Report (NFP)', icon:'👷', color:'var(--blue)',
+    history:'NFP prints first Friday of month at 8:30 AM ET. Strong jobs = bearish (rate fears). Weak jobs = bullish (rate cut hopes). Opposite of normal logic.',
+    scenarios: [
+      { label:'🔴 STRONG jobs (above forecast)', color:'var(--red)', bg:'rgba(255,23,68,0.1)', border:'rgba(255,23,68,0.4)',
+        what:'Rate hike fears · Dollar spikes · SPY/QQQ sell off',
+        bias:'PUTS BIAS after 9:45', play:'Wait for confirmed breakdown below prev close. PUTS on retest.' },
+      { label:'🟢 WEAK jobs (below forecast)', color:'var(--green)', bg:'rgba(0,230,118,0.08)', border:'rgba(0,230,118,0.3)',
+        what:'Rate cut hopes · SPY/QQQ rally · CALLS bias',
+        bias:'CALLS BIAS after 9:45', play:'CALLS on any pullback holding above prev close.' },
+    ],
+    playbook:['🚫 No trade before 9:45 AM — NFP causes violent whipsaw','⏳ Wait for 15-min candle confirmation','📊 Strong jobs = BEARISH (counterintuitive but consistent)','🎯 Weak jobs = BULLISH — CALLS on confirmation'],
+    bias:'⚡ REVERSAL LOGIC — strong jobs = bad for stocks',
+    alert:'👷 JOBS REPORT DAY — NFP at 8:30 AM. No trade before 9:45.' },
   opex: { name:'Options Expiration Week', icon:'⏰', color:'var(--orange)',
-    history:'OpEx week (3rd Friday): SPY historically pinned near max pain. Unusual gamma effects create sudden moves Thu/Fri. Smaller intraday ranges Mon–Wed.',
-    playbook:['Smaller size Mon–Wed (pinning effect)','Be ready for larger moves Thu–Fri','Avoid holding positions overnight during OpEx','Watch put/call ratio — extreme readings signal reversals','Premium decay accelerates — do not overpay for options'],
-    bias:'⚡ MIXED — gamma effects active' },
+    history:'OpEx 3rd Friday: SPY pinned near max pain. Gamma effects create sudden moves Thu-Fri. Smaller ranges Mon-Wed.',
+    scenarios: null,
+    playbook:['📊 Smaller size Mon–Wed (pinning effect)','⚡ Be ready for larger moves Thu–Fri','🚫 Avoid overnight holds during OpEx week','💰 Premium decay accelerates — do not overpay for options'],
+    bias:'⚡ MIXED — gamma pinning active',
+    alert:'⏰ OPEX WEEK — Unusual gamma effects. Reduce size. Watch for pin near round numbers.' },
   monday: { name:'Monday Open', icon:'📅', color:'var(--accent)',
-    history:'Mondays gap and trap 45% of the time. Weekend news causes overreaction. First 15–30 min often sets a false direction that reverses.',
-    playbook:['Wait until 9:45 AM before any trade','Do NOT trust the Monday open gap','Confirm direction with 15-min candle close','Lower size than normal','If gap fills within 30 min — that IS the signal'],
-    bias:'⚠️ CAUTION — gap and trap risk' },
+    history:'Mondays gap and trap 45% of the time. Weekend news overreaction common. First 15-30 min often sets false direction.',
+    scenarios: null,
+    playbook:['⏳ Wait until 9:45 AM — no exceptions','🚫 Do NOT trust the Monday open gap direction','✅ Confirm with 15-min candle close above/below key level','📊 Lower size than normal — 1 contract only'],
+    bias:'⚠️ CAUTION — gap and trap risk',
+    alert:'📅 MONDAY OPEN — Gap and trap risk. Wait for 9:45 AM structure.' },
   friday: { name:'Friday Afternoon', icon:'📅', color:'var(--text2)',
-    history:'Friday afternoons see profit-taking and position squaring. Volume drops after 2:30 PM. SPY tends to pull back from weekly highs.',
-    playbook:['Use tighter targets in Session 2','Do not open new positions after 3:30 PM','Take profits earlier than normal','Close all positions by 3:55 PM strictly','Avoid holding into the weekend'],
-    bias:'⚠️ CAUTION — low volume afternoon' },
+    history:'Fridays see profit-taking after 2 PM. Volume drops. SPY tends to pull back from weekly highs.',
+    scenarios: null,
+    playbook:['🎯 Tighter targets in Session 2 (+$0.35 max)','🚫 No new positions after 3:30 PM','✅ Close ALL positions by 3:55 PM — no exceptions','💰 Take profits earlier than normal on Fridays'],
+    bias:'⚠️ CAUTION — low volume profit-taking afternoon',
+    alert:null },
 };
 
-function runEventEngine() {
+// Economic calendar — upcoming events (updated manually or fetched)
+const ECON_CALENDAR = [
+  { date:'2026-06-10', time:'8:30 AM ET', event:'CPI Report', type:'cpi', importance:'HIGH', forecast:'4.2% YoY', prior:'3.4% YoY', note:'Most important number of the week. Hot print expected above 4.2% would be highest since April 2023.' },
+  { date:'2026-06-11', time:'8:30 AM ET', event:'Core CPI', type:'cpi', importance:'HIGH', forecast:'2.9% YoY', prior:'2.8% YoY', note:'Core CPI excludes food and energy. Watch for sticky services inflation.' },
+  { date:'2026-06-18', time:'2:00 PM ET', event:'FOMC Decision', type:'fomc', importance:'HIGH', forecast:'Hold at current rate', prior:'Hold', note:'Fed decision + Powell press conference. No hike expected but language matters.' },
+];
+
+async function runEventEngine() {
   const el = document.getElementById('event-prob-content');
   if(!el) return;
 
@@ -7860,40 +7900,101 @@ function runEventEngine() {
   const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
   const day = et.getDay();
   const h = et.getHours();
-  const headlines = Array.from(document.querySelectorAll('#news-intel-grid a div')).map(d=>d.textContent.toLowerCase()).join(' ');
+  const todayStr = et.toISOString().split('T')[0];
+  const tomorrowStr = new Date(et.getTime()+86400000).toISOString().split('T')[0];
 
   const events = [];
+  const alerts = [];
 
-  // Check headlines for events
-  if(headlines.includes('fomc')||headlines.includes('federal reserve')||headlines.includes('powell')) events.push('fomc');
-  if(headlines.includes('cpi')&&(headlines.includes('hot')||headlines.includes('above')||headlines.includes('surge'))) events.push('cpi_hot');
-  if(headlines.includes('cpi')&&(headlines.includes('cool')||headlines.includes('lower')||headlines.includes('below'))) events.push('cpi_cool');
+  // Check economic calendar for today and tomorrow
+  ECON_CALENDAR.forEach(cal => {
+    if(cal.date === todayStr || cal.date === tomorrowStr) {
+      const isToday = cal.date === todayStr;
+      const playbook = EVENT_PLAYBOOKS[cal.type];
+      if(playbook) {
+        events.push({ ...playbook, calEntry: cal, isToday });
+        if(isToday && playbook.alert) alerts.push(playbook.alert);
+      }
+    }
+  });
 
-  // Day-based events
-  if(day===1) events.push('monday');
-  if(day===5&&h>=14) events.push('friday');
+  // Also check headlines for detected events
+  const headlines = Array.from(document.querySelectorAll('#news-intel-grid a div, #fj-alert-strip span')).map(d=>d.textContent.toLowerCase()).join(' ');
+  if((headlines.includes('fomc')||headlines.includes('powell')||headlines.includes('federal reserve')) && !events.find(e=>e.calEntry?.type==='fomc')) {
+    events.push({...EVENT_PLAYBOOKS.fomc, isToday:true, calEntry:null});
+  }
+  if(headlines.includes('cpi')&&headlines.includes('hot')&&!events.find(e=>e.calEntry?.type==='cpi')) {
+    events.push({...EVENT_PLAYBOOKS.cpi, isToday:true, calEntry:null});
+  }
 
-  // Check for OpEx (3rd Friday of month)
+  // Day-based
+  if(day===1) events.push({...EVENT_PLAYBOOKS.monday, isToday:true, calEntry:null});
+  if(day===5&&h>=14) events.push({...EVENT_PLAYBOOKS.friday, isToday:true, calEntry:null});
   const date=et.getDate();
-  if(day===5&&date>=15&&date<=21) events.push('opex');
+  if(day===5&&date>=15&&date<=21) events.push({...EVENT_PLAYBOOKS.opex, isToday:true, calEntry:null});
 
   if(!events.length) {
-    el.innerHTML=`<div style="text-align:center;color:var(--text2);font-size:12px;padding:8px">No major scheduled events detected today. Standard trading conditions apply.</div>`;
+    el.innerHTML=`<div style="text-align:center;color:var(--text2);font-size:12px;padding:12px">✅ No major scheduled events today or tomorrow. Standard trading conditions.</div>`;
     return;
   }
 
-  el.innerHTML = events.map(key => {
-    const e = EVENT_PLAYBOOKS[key];
-    if(!e) return '';
-    return `<div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-left:3px solid ${e.color};border-radius:10px;padding:12px 14px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:18px">${e.icon}</span>
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;color:${e.color};letter-spacing:1px">${e.name}</div>
+  // Fire alerts for today's events
+  alerts.forEach(a => {
+    showAlertStrip('EVENT', a);
+    showToast('warning','⚡ EVENT ALERT', a, '📅', 10000);
+  });
+
+  el.innerHTML = events.map(ev => {
+    const cal = ev.calEntry;
+    const isToday = ev.isToday;
+    const dayLabel = cal ? (isToday ? '⚡ TODAY' : '📅 TOMORROW') : '⚡ DETECTED';
+
+    return `<div style="background:rgba(0,0,0,0.2);border:1px solid ${ev.color};border-radius:10px;padding:14px;margin-bottom:10px">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:20px">${ev.icon}</span>
+          <div>
+            <div style="font-family:Orbitron,sans-serif;font-size:12px;color:${ev.color};letter-spacing:1px">${ev.name}</div>
+            ${cal?`<div style="font-size:10px;color:var(--text3)">${cal.time} · ${cal.event}</div>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;background:${isToday?'rgba(255,23,68,0.2)':'rgba(245,197,24,0.1)'};color:${isToday?'var(--red)':'var(--accent)'};border:1px solid ${isToday?'rgba(255,23,68,0.4)':'rgba(245,197,24,0.3)'}">${dayLabel}</span>
+          ${cal?.importance==='HIGH'?'<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;background:rgba(255,23,68,0.1);color:var(--red);border:1px solid rgba(255,23,68,0.3)">HIGH IMPACT</span>':''}
+        </div>
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:8px;line-height:1.5">${e.history}</div>
-      <div style="font-size:10px;font-weight:700;color:${e.color};margin-bottom:6px">${e.bias}</div>
-      <div style="display:flex;flex-direction:column;gap:3px">
-        ${e.playbook.map(p=>`<div style="font-size:11px;color:var(--text);display:flex;gap:6px"><span style="color:${e.color}">▸</span>${p}</div>`).join('')}
+
+      ${cal?`<!-- Forecast numbers -->
+      <div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:center">
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">FORECAST</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--accent)">${cal.forecast}</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:center">
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">PRIOR</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--text)">${cal.prior}</div>
+        </div>
+        ${cal.note?`<div style="flex:1;font-size:11px;color:var(--text2);padding:6px;line-height:1.4;min-width:160px">${cal.note}</div>`:''}
+      </div>`:''}
+
+      <!-- Scenarios if available -->
+      ${ev.scenarios?`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:10px">
+        ${ev.scenarios.map(s=>`
+          <div style="background:${s.bg};border:1px solid ${s.border};border-radius:8px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:${s.color};margin-bottom:4px">${s.label}</div>
+            <div style="font-size:10px;color:var(--text2);margin-bottom:4px;line-height:1.4">${s.what}</div>
+            <div style="font-size:10px;font-weight:700;color:${s.color};margin-bottom:4px">${s.bias}</div>
+            <div style="font-size:10px;color:var(--text3);line-height:1.4">▸ ${s.play}</div>
+          </div>`).join('')}
+      </div>`:''}
+
+      <!-- Bias -->
+      <div style="font-size:11px;font-weight:700;color:${ev.color};margin-bottom:8px;padding:6px 10px;background:rgba(0,0,0,0.2);border-radius:6px">${ev.bias}</div>
+
+      <!-- Playbook -->
+      <div style="display:flex;flex-direction:column;gap:4px">
+        ${ev.playbook.map(p=>`<div style="font-size:11px;color:var(--text);display:flex;gap:6px;line-height:1.4"><span style="color:${ev.color};flex-shrink:0">▸</span>${p}</div>`).join('')}
       </div>
     </div>`;
   }).join('');
