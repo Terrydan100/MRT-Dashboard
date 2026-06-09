@@ -883,6 +883,24 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div id="level-guidance" style="margin-top:10px;background:rgba(0,180,255,0.05);border:1px solid rgba(0,180,255,0.15);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);display:none"></div>
     </div>
 
+    <!-- FINANCIALJUICE LIVE ALERTS -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(255,23,68,0.25);background:linear-gradient(135deg,rgba(255,23,68,0.04),rgba(0,0,0,0))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="fj-pulse" style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 1.5s infinite"></span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--red);letter-spacing:2px">⚡ FINANCIALJUICE — LIVE HEADLINES</div>
+          <div id="fj-updated" style="font-size:10px;color:var(--text3)"></div>
+        </div>
+        <button onclick="fetchFinancialJuice()" style="background:rgba(255,23,68,0.1);border:1px solid var(--red);color:var(--red);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+      </div>
+      <!-- Alert strip — scrolling row -->
+      <div id="fj-alert-strip" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin">
+        <div style="font-size:12px;color:var(--text2);padding:6px 10px;white-space:nowrap">Loading headlines...</div>
+      </div>
+      <!-- Latest headline popup area -->
+      <div id="fj-latest" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.3);border-radius:8px;font-size:12px;color:var(--text);line-height:1.5"></div>
+    </div>
+
     <!-- NEWS INTELLIGENCE PANEL -->
     <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,230,118,0.2)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
@@ -1451,6 +1469,16 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
   <!-- ===================== TRADING TAB ===================== -->
   <div class="tab-content" id="content-trading">
+    <!-- TOS ORDER TEMPLATES REMINDER -->
+    <div style="background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.25);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="font-size:16px">📋</div>
+      <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--accent);letter-spacing:1px;white-space:nowrap">TOS ORDER TEMPLATES</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="font-size:12px;color:var(--text)">🟡 <strong style="color:var(--accent)">Chop:</strong> +$0.35 target / -$0.30 stop</div>
+        <div style="font-size:12px;color:var(--text)">🟢 <strong style="color:var(--green)">Trend:</strong> +$0.50 target / -$0.30 stop</div>
+        <div style="font-size:12px;color:var(--text)">⚡ <strong style="color:var(--blue)">Move to BE:</strong> at +$0.20 profit</div>
+      </div>
+    </div>
     <div class="grid-2" style="margin-bottom:16px">
       <div class="card">
         <div class="section-title" style="margin-bottom:12px">⚡ SESSION STATUS</div>
@@ -3164,6 +3192,8 @@ async function initDashboard() {
   setInterval(checkMarketShock, 90000);
   setInterval(updateCEOScoreboard, 120000);
   setTimeout(checkMarketShock, 8000);
+  setTimeout(fetchFinancialJuice, 2000);
+  setInterval(fetchFinancialJuice, 90000); // refresh every 90 seconds
   setTimeout(runSignalCheck, 5000);
   setInterval(runSignalCheck, 120000);
   setTimeout(fetchWarRoom, 3000);
@@ -3560,13 +3590,13 @@ function showDailyPlanReminder() {
       ? '🔥 JUNE 1 AND BEYOND — STRICT PLAN ONLY. No exceptions. Your future is built today.'
       : 'Before you open ThinkorSwim, commit to your plan. Review your rules and trade with discipline.';
     setTimeout(()=>showPlanPopup('🎯','MORNING TRADING PLAN',strictMsg,
-      ['Wait until 9:45 AM — no early entries','Max risk: $30/trade (1 contract × $0.30 stop)','Daily goal: $30-60','Daily loss limit: -$120 (= 4 × $30 losses → STOP)','Never average down','Move stop to BE at +$0.20','At goal hit — CLOSE ThinkorSwim IMMEDIATELY']),3000);
+      ['Wait until 9:45 AM — no early entries','Max risk: $30/trade (1 contract × $0.30 stop)','Target: +$0.35/trade (Chop) · +$0.50/trade (Trend A+)','Session goal: $70-100 (2 good trades = DONE)','Daily loss limit: -$120 (= 4 × $30 losses → STOP)','Never average down','Move stop to BE at +$0.20','At goal hit — CLOSE ThinkorSwim IMMEDIATELY']),3000);
   }
 }
 
 function showPlanReminder() {
   showPlanPopup('📋','TRADING RULES REMINDER — JUNE 1 STRICT MODE','Your rules are your edge. No exceptions, no excuses.',
-    ['⏰ Sessions: 9:45-11:30 AM and 2:30-3:55 PM ONLY','🛑 Stop: -$0.30 | Standard Target: +$0.35 | A+: +$0.50','💰 At +$0.20 profit → move stop to BREAKEVEN immediately','📊 1 contract standard · 2 on A+ setup only · Max risk $30/trade ($60 on A+)','🚫 Daily loss limit: -$120 = 4 × $30 losses → CLOSE platform, walk away','🎯 Daily goal: $30-60 → when hit, CLOSE ThinkorSwim NOW','❌ NEVER average down — not once, not ever','🧠 Tape Truth Rule: ignore your bias, trade what you see']);
+    ['⏰ Sessions: 9:45-11:30 AM and 2:30-3:55 PM ONLY','🛑 Stop: -$0.30 | Chop Target: +$0.35 | Trend A+: +$0.50','💰 At +$0.20 profit → move stop to BREAKEVEN immediately','📊 1 contract standard · 2 on A+ setup only · Max risk $30/trade ($60 on A+)','🚫 Daily loss limit: -$120 = 4 × $30 losses → CLOSE platform, walk away','🎯 Target: +$0.35-$0.50/trade · Session goal: $70-100 (2 trades = done)','❌ NEVER average down — not once, not ever','🧠 Tape Truth Rule: ignore your bias, trade what you see']);
 }
 
 function showPreTradeChecklist() {
@@ -6168,33 +6198,37 @@ function renderRealEstate() {
   if(!grid || !alerts) return;
   const filtered = currentREFilter === 'all' ? realEstateListings : realEstateListings.filter(l => l.type === currentREFilter);
   grid.innerHTML = filtered.map(l => `
-    <div style="background:var(--bg2);border:1px solid ${l.alert?'rgba(255,23,68,0.4)':'var(--border)'};border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s"
+    <div style="background:var(--bg2);border:1px solid ${l.alert?'rgba(255,23,68,0.4)':'var(--border)'};border-radius:10px;padding:14px;transition:all 0.2s"
       onmouseover="this.style.borderColor='var(--accent)';this.style.transform='translateY(-2px)'"
-      onmouseout="this.style.borderColor='${l.alert?'rgba(255,23,68,0.4)':'var(--border)'}';this.style.transform='translateY(0)'"
-      onclick="flyToListing(${l.lat},${l.lng},'${l.name.replace(/'/g,'').replace(/"/g,'')}')">
+      onmouseout="this.style.borderColor='${l.alert?'rgba(255,23,68,0.4)':'var(--border)'}';this.style.transform='translateY(0)'">
       ${l.alert?'<div style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:1px;margin-bottom:6px">🚨 UNDER BDS$200K ALERT</div>':''}
-      <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">${l.type==='land'?'🌿':'l.type'==='house'?'🏡':'🏢'} ${l.name}</div>
+      <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">${l.type==='land'?'🌿':l.type==='house'?'🏡':'🏢'} ${l.name}</div>
       <div style="display:flex;gap:12px;margin-bottom:6px">
         <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--accent)">${l.price}</div>
         <div style="font-size:11px;color:var(--text2);padding-top:2px">📐 ${l.sqft} sq ft</div>
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:6px">📍 ${l.parish} · ${l.desc}</div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:10px;color:var(--text3)">${l.contact}</div>
-        <a href="${l.url}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm" style="font-size:10px;padding:3px 8px">View →</a>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">📍 ${l.parish} · ${l.desc}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <button onclick="showTab('barbados');setTimeout(()=>goToPlace('${l.name.replace(/'/g,'').replace(/"/g,'')} Barbados'),400)" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--blue);color:var(--blue)">🗺️ Map</button>
+        <a href="${l.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--green);color:var(--green)">🏠 View Listing ↗</a>
+        <a href="${l.url}" target="_blank" class="btn btn-sm btn-primary" style="font-size:10px;padding:3px 10px">📞 Contact ${l.contact}</a>
       </div>
     </div>`).join('') || '<div style="color:var(--text2);text-align:center;padding:20px;grid-column:1/-1">No listings in this category</div>';
 
   // Alerts panel
   const alertListings = realEstateListings.filter(l => l.alert);
   alerts.innerHTML = alertListings.map(l => `
-    <div style="background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.4);border-radius:10px;padding:14px;cursor:pointer;animation:pulse-red 2s infinite"
-      onclick="flyToListing(${l.lat},${l.lng},'${l.name.replace(/'/g,'')}')">
+    <div style="background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.4);border-radius:10px;padding:14px;animation:pulse-red 2s infinite">
       <div style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:1px;margin-bottom:4px">🚨 ALERT MATCH</div>
       <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">${l.name}</div>
       <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--red);margin-bottom:4px">${l.price}</div>
       <div style="font-size:11px;color:var(--text2)">📐 ${l.sqft} sq ft · 📍 ${l.parish}</div>
-      <div style="font-size:11px;color:var(--text2);margin-top:4px">${l.desc}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px;margin-bottom:8px">${l.desc}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button onclick="showTab('barbados');setTimeout(()=>goToPlace('${l.name.replace(/'/g,'')} Barbados'),400)" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--blue);color:var(--blue)">🗺️ Map</button>
+        <a href="${l.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:3px 10px;border-color:var(--green);color:var(--green)">🏠 View ↗</a>
+        <a href="${l.url}" target="_blank" class="btn btn-sm btn-primary" style="font-size:10px;padding:3px 10px">📞 Contact ${l.contact}</a>
+      </div>
     </div>`).join('');
 }
 
@@ -7156,7 +7190,102 @@ function updateCEOScoreboard() {
   } catch(e) {}
 }
 
-// ==================== PRE-MARKET WAR ROOM ====================
+// ==================== FINANCIALJUICE LIVE ALERTS ====================
+let fjAlerts = [];
+let fjLastAlert = '';
+
+async function fetchFinancialJuice() {
+  const stripEl = document.getElementById('fj-alert-strip');
+  const updEl = document.getElementById('fj-updated');
+  const latestEl = document.getElementById('fj-latest');
+  if(!stripEl) return;
+
+  try {
+    // Use allorigins to fetch FinancialJuice RSS
+    const feeds = [
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://feeds.financialjuice.com/financialjuice'),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://www.financialjuice.com/feed.ashx?Category=breaking')
+    ];
+
+    let items = [];
+    for(const url of feeds) {
+      try {
+        const r = await fetch(url);
+        if(!r.ok) continue;
+        const xml = await r.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xml, 'text/xml');
+        const entries = Array.from(doc.querySelectorAll('item, entry')).slice(0, 15);
+        if(entries.length) {
+          items = entries.map(e => ({
+            title: e.querySelector('title')?.textContent?.trim() || '',
+            link: e.querySelector('link')?.textContent?.trim() || e.querySelector('link')?.getAttribute('href') || '#',
+            time: e.querySelector('pubDate, updated')?.textContent || '',
+          })).filter(i => i.title);
+          if(items.length) break;
+        }
+      } catch(e) {}
+    }
+
+    // Fallback: use Finnhub general news as proxy for fast headlines
+    if(!items.length) {
+      const r = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
+      if(r.ok) {
+        const d = await r.json();
+        items = d.slice(0,15).map(a => ({
+          title: a.headline,
+          link: a.url,
+          time: new Date(a.datetime*1000).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
+        }));
+      }
+    }
+
+    if(!items.length) { stripEl.innerHTML = '<div style="font-size:12px;color:var(--text2);padding:6px 10px">No headlines available — check connection</div>'; return; }
+
+    fjAlerts = items;
+    if(updEl) updEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+    // Render alert strip — clickable pill buttons
+    stripEl.innerHTML = items.map((item, i) => {
+      const isMarketMoving = /fed|fomc|powell|cpi|jobs|gdp|war|crash|spike|surge|drop|cut|hike|rate|oil|ukraine|china|taiwan/i.test(item.title);
+      const color = isMarketMoving ? 'var(--red)' : 'var(--text2)';
+      const bg = isMarketMoving ? 'rgba(255,23,68,0.12)' : 'rgba(255,255,255,0.05)';
+      const border = isMarketMoving ? 'rgba(255,23,68,0.4)' : 'var(--border)';
+      return `<a href="${item.link}" target="_blank"
+        onclick="showFJAlert(${i})"
+        style="display:inline-flex;align-items:center;gap:6px;background:${bg};border:1px solid ${border};border-radius:20px;padding:5px 12px;white-space:nowrap;text-decoration:none;cursor:pointer;flex-shrink:0;transition:all 0.15s"
+        onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='${border}'">
+        ${isMarketMoving?'🚨':'📰'}
+        <span style="font-size:11px;color:${color};max-width:280px;overflow:hidden;text-overflow:ellipsis">${item.title.substring(0,80)}${item.title.length>80?'...':''}</span>
+      </a>`;
+    }).join('');
+
+    // Auto-popup if new market-moving headline detected
+    const topAlert = items.find(i => /fed|fomc|powell|cpi|jobs|gdp|war|crash|spike|surge|drop|cut|hike|rate/i.test(i.title));
+    if(topAlert && topAlert.title !== fjLastAlert) {
+      fjLastAlert = topAlert.title;
+      showToast('danger', '🚨 BREAKING', topAlert.title.substring(0,100), '⚡', 10000);
+    }
+
+  } catch(e) { stripEl.innerHTML = '<div style="font-size:12px;color:var(--text2);padding:6px 10px">Feed unavailable</div>'; }
+}
+
+function showFJAlert(idx) {
+  const item = fjAlerts[idx];
+  if(!item) return;
+  const el = document.getElementById('fj-latest');
+  if(!el) return;
+  const isMarketMoving = /fed|fomc|powell|cpi|jobs|gdp|war|crash|spike|surge|drop|cut|hike|rate|oil/i.test(item.title);
+  el.style.display = 'block';
+  el.style.borderColor = isMarketMoving ? 'rgba(255,23,68,0.5)' : 'var(--border)';
+  el.innerHTML = `
+    <div style="font-weight:700;color:${isMarketMoving?'var(--red)':'var(--text)'}; margin-bottom:4px">${isMarketMoving?'🚨':'📰'} ${item.title}</div>
+    ${item.time?`<div style="font-size:10px;color:var(--text3);margin-bottom:6px">${item.time}</div>`:''}
+    <div style="display:flex;gap:8px">
+      <a href="${item.link}" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--blue);color:var(--blue)">Read Full Story ↗</a>
+      <button onclick="document.getElementById('fj-latest').style.display='none'" class="btn btn-sm" style="font-size:11px">✕ Close</button>
+    </div>`;
+}
 async function fetchWarRoom() {
   const timeEl = document.getElementById('warroom-time');
   if(timeEl) timeEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
