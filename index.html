@@ -7076,36 +7076,47 @@ let srInterval = null;
 
 async function fetchSRLevels(sym) {
   currentSRSym = sym;
-  // Update button states
   ['SPY','QQQ'].forEach(s => {
     const btn = document.getElementById('sr-' + s.toLowerCase() + '-btn');
     if(btn) { btn.style.background = s===sym?'var(--accent)':''; btn.style.color = s===sym?'#000':''; }
   });
+
+  const resistEl = document.getElementById('sr-resistance');
+  const suppEl = document.getElementById('sr-support');
+  const priceEl = document.getElementById('sr-current-price');
+  const nearResist = document.getElementById('sr-nearest-resist');
+  const nearSupp = document.getElementById('sr-nearest-support');
+
+  if(resistEl) resistEl.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">Loading...</div>';
+
   try {
-    // Fetch candle data for S&R calculation
-    const now = Math.floor(Date.now()/1000);
-    const from = now - (5 * 24 * 3600); // 5 days of data
-    const r = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${sym}&resolution=60&from=${from}&to=${now}&token=${FINNHUB_KEY}`);
-    if(!r.ok) throw new Error('API error');
-    const data = await r.json();
-    if(data.s !== 'ok' || !data.c) throw new Error('No data');
+    // Yahoo Finance 60-min candle via allorigins — 5 days of hourly data
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=60m&range=5d`;
+    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+    if(!r.ok) throw new Error('fetch failed');
+    const d = await r.json();
+    const res = d?.chart?.result?.[0];
+    if(!res) throw new Error('no data');
 
-    const closes = data.c;
-    const highs = data.h;
-    const lows = data.l;
-    const currentPrice = closes[closes.length - 1];
+    const q = res.indicators.quote[0];
+    const highs = q.high.filter(v => v != null && !isNaN(v));
+    const lows = q.low.filter(v => v != null && !isNaN(v));
+    const closes = q.close.filter(v => v != null && !isNaN(v));
+    const currentPrice = res.meta.regularMarketPrice || closes[closes.length-1];
 
-    // Find S&R by identifying price levels where price has reversed multiple times
+    if(!currentPrice || !highs.length) throw new Error('no price data');
+
+    if(priceEl) priceEl.textContent = '$' + currentPrice.toFixed(2);
+
+    // Build S&R by clustering price levels with multiple touches
     const allLevels = [...highs, ...lows];
+    const tolerance = currentPrice * 0.002;
     const levelMap = {};
-    const tolerance = currentPrice * 0.002; // 0.2% tolerance
-
     allLevels.forEach(price => {
       const rounded = Math.round(price / tolerance) * tolerance;
       levelMap[rounded] = (levelMap[rounded] || 0) + 1;
     });
 
-    // Filter levels with 2+ touches, sort
     const significantLevels = Object.entries(levelMap)
       .filter(([p, count]) => count >= 2)
       .map(([p, count]) => ({ price: parseFloat(p), strength: count }))
@@ -7114,15 +7125,6 @@ async function fetchSRLevels(sym) {
 
     const resistance = significantLevels.filter(l => l.price > currentPrice).sort((a,b) => a.price - b.price).slice(0,5);
     const support = significantLevels.filter(l => l.price < currentPrice).sort((a,b) => b.price - a.price).slice(0,5);
-
-    // Render
-    const priceEl = document.getElementById('sr-current-price');
-    if(priceEl) priceEl.textContent = '$' + currentPrice.toFixed(2);
-
-    const resistEl = document.getElementById('sr-resistance');
-    const suppEl = document.getElementById('sr-support');
-    const nearResist = document.getElementById('sr-nearest-resist');
-    const nearSupp = document.getElementById('sr-nearest-support');
 
     if(resistEl) resistEl.innerHTML = resistance.length ? resistance.map(l => `
       <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);border-radius:6px;padding:6px 10px">
@@ -7140,8 +7142,16 @@ async function fetchSRLevels(sym) {
     if(nearSupp && support.length) nearSupp.textContent = '$' + support[0].price.toFixed(2);
 
   } catch(e) {
-    const resistEl = document.getElementById('sr-resistance');
-    if(resistEl) resistEl.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">⚠️ Data unavailable</div>';
+    // Fallback: use Finnhub quote for current price only
+    try {
+      const r2 = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FINNHUB_KEY}`);
+      if(r2.ok) {
+        const q2 = await r2.json();
+        if(priceEl && q2.c) priceEl.textContent = '$' + q2.c.toFixed(2);
+      }
+    } catch(e2) {}
+    if(resistEl) resistEl.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">⚠️ Level data unavailable — check connection</div>';
+    if(suppEl) suppEl.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">⚠️ Level data unavailable — check connection</div>';
   }
 }
 
