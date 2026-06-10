@@ -2513,6 +2513,34 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
   <!-- ===================== EDUCATION TAB ===================== -->
   <div class="tab-content" id="content-education">
+    <!-- TRADING LANGUAGE DECODER -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.25)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="font-size:22px">🔤</div>
+        <div>
+          <div style="font-family:Orbitron,sans-serif;font-size:13px;color:var(--blue);letter-spacing:2px">TRADING LANGUAGE DECODER</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Hear it on CNBC or Bloomberg? Look it up here instantly.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input class="form-input" id="tld-search" placeholder="Type any term — core soft, hawkish, gamma squeeze, tape..." 
+          style="flex:1;font-size:13px" oninput="searchTLD(this.value)">
+        <button onclick="searchTLD(document.getElementById('tld-search').value)" class="btn btn-primary" style="font-size:12px">DECODE</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <button onclick="filterTLD('all')" id="tld-all" class="btn btn-sm" style="font-size:10px;background:var(--blue);color:#000">All</button>
+        <button onclick="filterTLD('fed')" id="tld-fed" class="btn btn-sm" style="font-size:10px">🏦 Fed</button>
+        <button onclick="filterTLD('cpi')" id="tld-cpi" class="btn btn-sm" style="font-size:10px">📈 CPI/Inflation</button>
+        <button onclick="filterTLD('earnings')" id="tld-earn" class="btn btn-sm" style="font-size:10px">💰 Earnings</button>
+        <button onclick="filterTLD('options')" id="tld-opt" class="btn btn-sm" style="font-size:10px">⚡ Options</button>
+        <button onclick="filterTLD('market')" id="tld-mkt" class="btn btn-sm" style="font-size:10px">📊 Market</button>
+        <button onclick="filterTLD('cnbc')" id="tld-cnbc" class="btn btn-sm" style="font-size:10px">📺 CNBC Phrases</button>
+      </div>
+      <div id="tld-results" style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto">
+        <div style="font-size:12px;color:var(--text2);text-align:center;padding:16px">Start typing or select a category above</div>
+      </div>
+    </div>
+
     <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(245,197,24,0.05),rgba(0,180,255,0.05))">
       <div style="text-align:center;padding:10px">
         <div style="font-family:Orbitron,sans-serif;font-size:18px;color:var(--accent);margin-bottom:6px">🎓 NO BOSS NETWORK UNIVERSITY</div>
@@ -3382,6 +3410,7 @@ function showTab(id) {
     if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); renderReplayLibrary(); }
     if(id==='research') loadTradingViewCharts();
     if(id==='barbados') { renderFestivals(); renderRealEstate(); fetchBarbadosNews(); }
+    if(id==='education') { initTLD(); }
     if(id==='sportscards') renderSportsCards();
   }, 150);
   // Apply per-tab accent color if set
@@ -8249,8 +8278,7 @@ const EVENT_PLAYBOOKS = {
 // Economic calendar — upcoming events (updated manually or fetched)
 const ECON_CALENDAR = [
   // ── JUNE 2026 ──
-  { date:'2026-06-10', time:'8:30 AM ET', event:'CPI Report', type:'cpi', importance:'HIGH', forecast:'4.2% YoY', prior:'3.4% YoY', note:'Most important number of the week. Hot print above 4.2% would be highest since April 2023. Rate hike odds above 70%.' },
-  { date:'2026-06-11', time:'8:30 AM ET', event:'Core CPI', type:'cpi', importance:'HIGH', forecast:'2.9% YoY', prior:'2.8% YoY', note:'Core CPI excludes food and energy. Watch for sticky services inflation.' },
+  { date:'2026-06-10', time:'8:30 AM ET', event:'CPI Report (Headline + Core)', type:'cpi', importance:'HIGH', forecast:'4.2% YoY', prior:'3.4% YoY', forecastCore:'2.9% YoY', priorCore:'2.8% YoY', note:'Headline CPI includes food and energy. Core CPI excludes food and energy — watch both. Hot print above 4.2% headline would signal persistent inflation. Rate hike odds above 70%.' },
   { date:'2026-06-12', time:'8:30 AM ET', event:'PPI Report', type:'cpi', importance:'MEDIUM', forecast:'+0.2% MoM', prior:'+0.4% MoM', note:'Producer Price Index — leading indicator for future CPI. Hot PPI = inflation not cooling.' },
   { date:'2026-06-18', time:'2:00 PM ET', event:'FOMC Decision + Press Conference', type:'fomc', importance:'HIGH', forecast:'Hold at current rate', prior:'Hold', note:'Fed decision + Powell press conference. Language around future hikes matters more than the decision.' },
   { date:'2026-06-25', time:'8:30 AM ET', event:'GDP Revision Q1 2026', type:'jobs', importance:'MEDIUM', forecast:'+1.8% QoQ', prior:'+1.6% QoQ', note:'Q1 GDP second revision. Weak GDP = dovish Fed expectations = bullish for stocks.' },
@@ -8340,17 +8368,28 @@ async function runEventEngine() {
       </div>
 
       ${cal?`<!-- Forecast numbers -->
-      <div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:flex-start">
         <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:center">
-          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">FORECAST</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">${cal.forecastCore?'HEADLINE FORECAST':'FORECAST'}</div>
           <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--accent)">${cal.forecast}</div>
         </div>
         <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:center">
-          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">PRIOR</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px">${cal.forecastCore?'HEADLINE PRIOR':'PRIOR'}</div>
           <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--text)">${cal.prior}</div>
         </div>
+        ${cal.forecastCore?`
+        <div style="background:rgba(0,180,255,0.08);border:1px solid rgba(0,180,255,0.3);border-radius:8px;padding:6px 12px;text-align:center">
+          <div style="font-size:9px;color:var(--blue);letter-spacing:1px">CORE FORECAST</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--blue)">${cal.forecastCore}</div>
+        </div>
+        <div style="background:rgba(0,180,255,0.08);border:1px solid rgba(0,180,255,0.3);border-radius:8px;padding:6px 12px;text-align:center">
+          <div style="font-size:9px;color:var(--blue);letter-spacing:1px">CORE PRIOR</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--blue)">${cal.priorCore}</div>
+        </div>`:''}
         ${cal.note?`<div style="flex:1;font-size:11px;color:var(--text2);padding:6px;line-height:1.4;min-width:160px">${cal.note}</div>`:''}
-      </div>`:''}
+      </div>
+      ${cal.forecastCore?`<div style="font-size:10px;color:var(--text3);padding:4px 8px;background:rgba(0,0,0,0.2);border-radius:6px;margin-bottom:8px">💡 <strong style="color:var(--accent)">Headline</strong> includes food & energy · <strong style="color:var(--blue)">Core</strong> excludes food & energy — Fed watches Core more closely</div>`:''}
+      `:''}
 
       <!-- Scenarios if available -->
       ${ev.scenarios?`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:10px">
@@ -8374,7 +8413,124 @@ async function runEventEngine() {
   }).join('');
 }
 
-// ==================== MARKET REPLAY LIBRARY ====================
+// ==================== TRADING LANGUAGE DECODER ====================
+const TLD_GLOSSARY = [
+  // ── FED / RATES ──
+  { term:'Hawkish', category:'fed', impact:'bearish', icon:'🔴', plain:'The Fed is leaning toward raising interest rates or keeping them high. Higher rates = harder to borrow = stocks go down.', example:'Powell sounded hawkish — markets sold off.', effect:'SPY/QQQ drop. PUTS bias.' },
+  { term:'Dovish', category:'fed', impact:'bullish', icon:'🟢', plain:'The Fed is leaning toward cutting rates or keeping them low. Lower rates = easier to borrow = stocks go up.', example:'Fed sounded dovish — markets rallied.', effect:'SPY/QQQ rally. CALLS bias.' },
+  { term:'Pivot', category:'fed', impact:'bullish', icon:'🟢', plain:'The Fed officially changes direction — from raising to cutting rates, or vice versa. A dovish pivot is very bullish.', example:'Markets pricing in a Fed pivot by September.', effect:'CALLS bias. Strong rally if confirmed.' },
+  { term:'Pause', category:'fed', impact:'neutral', icon:'🟡', plain:'The Fed stops hiking rates but has not started cutting yet. Wait and see mode.', example:'Fed expected to pause at next meeting.', effect:'Mixed. Market waits for direction.' },
+  { term:'Transitory', category:'fed', impact:'bullish', icon:'🟢', plain:'Fed saying inflation is temporary and will go away on its own. Used to justify not raising rates.', example:'Fed called inflation transitory in 2021 — they were wrong.', effect:'Bullish short term, dangerous long term.' },
+  { term:'Neutral Rate', category:'fed', impact:'neutral', icon:'🟡', plain:'The interest rate that neither stimulates nor slows the economy. Around 2.5-3% historically.', example:'Fed says rates are now near neutral.', effect:'Signals rate hikes may be done.' },
+  { term:'Quantitative Tightening (QT)', category:'fed', impact:'bearish', icon:'🔴', plain:'Fed is shrinking its balance sheet by selling bonds. Less money in the system. Bearish for stocks.', example:'Fed announced faster QT pace.', effect:'SPY/QQQ sell off. PUTS bias.' },
+  { term:'Quantitative Easing (QE)', category:'fed', impact:'bullish', icon:'🟢', plain:'Fed is buying bonds and injecting money into the system. More money = higher stock prices.', example:'Fed returned to QE during COVID.', effect:'Strong CALLS bias. Everything rallies.' },
+  { term:'Dot Plot', category:'fed', impact:'neutral', icon:'🟡', plain:'A chart showing where each Fed official expects interest rates to be in the future. Released quarterly.', example:'Dot plot showed 3 cuts expected this year.', effect:'Bullish if cuts, bearish if hikes.' },
+  { term:'Forward Guidance', category:'fed', impact:'neutral', icon:'🟡', plain:'Fed communicating what it plans to do in the future. Words matter as much as actions.', example:'Fed gave dovish forward guidance.', effect:'Can move markets as much as actual decisions.' },
+  // ── CPI / INFLATION ──
+  { term:'Core Soft', category:'cpi', impact:'bullish', icon:'🟢', plain:'Core CPI came in BELOW the forecast. Less inflation than expected. Fed less likely to hike. Markets love this.', example:'Core came in soft at 2.8% vs 2.9% expected.', effect:'SPY/QQQ gap up. CALLS bias first hour.' },
+  { term:'Core Hot', category:'cpi', impact:'bearish', icon:'🔴', plain:'Core CPI came in ABOVE the forecast. More inflation than expected. Rate hike fears spike.', example:'Core was hot — yields spiked, SPY dropped.', effect:'SPY/QQQ gap down. PUTS bias first hour.' },
+  { term:'Headline CPI', category:'cpi', impact:'neutral', icon:'🟡', plain:'Total inflation including food and energy prices. Volatile month to month. Less important than Core to the Fed.', example:'Headline CPI at 4.2% YoY.', effect:'Moves market but Core matters more to Fed.' },
+  { term:'Core CPI', category:'cpi', impact:'neutral', icon:'🟡', plain:'Inflation excluding food and energy. This is what the Fed watches most closely because food/energy are too volatile.', example:'Core CPI strips out the noise.', effect:'Most important inflation number for Fed decisions.' },
+  { term:'Sticky Inflation', category:'cpi', impact:'bearish', icon:'🔴', plain:'Inflation that is not going away even after rate hikes. Services inflation (rent, wages) tends to be sticky.', example:'Services inflation remains sticky — Fed concerned.', effect:'Bearish. Suggests more hikes needed.' },
+  { term:'PCE', category:'cpi', impact:'neutral', icon:'🟡', plain:'Personal Consumption Expenditures — the Fed\'s preferred inflation measure. Comes out monthly after CPI.', example:'PCE came in at 2.6% — above 2% target.', effect:'Hot PCE = bearish. Cool PCE = bullish.' },
+  { term:'YoY', category:'cpi', impact:'neutral', icon:'⚪', plain:'Year over Year — comparing this month to the same month last year. Standard way to measure inflation.', example:'CPI up 4.2% YoY.', effect:'Context — high YoY = inflation persistent.' },
+  { term:'MoM', category:'cpi', impact:'neutral', icon:'⚪', plain:'Month over Month — comparing this month to last month. Shows the current trend direction.', example:'CPI up 0.3% MoM — accelerating.', effect:'Rising MoM = inflation getting worse.' },
+  { term:'Above Consensus', category:'cpi', impact:'bearish', icon:'🔴', plain:'The actual number came in higher than what analysts expected. Also called a "beat" for economic data (bad beat).', example:'CPI above consensus — rate fears spike.', effect:'Bearish for stocks. PUTS bias.' },
+  { term:'Below Consensus', category:'cpi', impact:'bullish', icon:'🟢', plain:'The actual number came in lower than what analysts expected. Also called "missing" for economic data (good miss).', example:'CPI below consensus — relief rally.', effect:'Bullish for stocks. CALLS bias.' },
+  { term:'Upside Surprise', category:'cpi', impact:'bearish', icon:'🔴', plain:'Data came in higher than expected. For inflation data, an upside surprise is BAD for stocks.', example:'Core PCE showed upside surprise.', effect:'Bearish. Sells off fast.' },
+  { term:'Downside Surprise', category:'cpi', impact:'bullish', icon:'🟢', plain:'Data came in lower than expected. For inflation data, a downside surprise is GOOD for stocks.', example:'CPI showed downside surprise — markets surged.', effect:'Bullish. Strong rally potential.' },
+  // ── EARNINGS ──
+  { term:'Beat', category:'earnings', impact:'bullish', icon:'🟢', plain:'Company reported earnings or revenue higher than analysts expected. Generally bullish.', example:'NVDA beat on EPS and revenue.', effect:'Stock gaps up. Sector often follows.' },
+  { term:'Miss', category:'earnings', impact:'bearish', icon:'🔴', plain:'Company reported earnings or revenue lower than analysts expected. Generally bearish.', example:'META missed on revenue estimates.', effect:'Stock gaps down. Can drag sector.' },
+  { term:'Guide Up', category:'earnings', impact:'bullish', icon:'🟢', plain:'Company raises its future earnings guidance — expecting to make more money going forward.', example:'AAPL guided up for next quarter.', effect:'Very bullish. Often more important than the beat.' },
+  { term:'Guide Down', category:'earnings', impact:'bearish', icon:'🔴', plain:'Company lowers its future earnings guidance — expecting to make less money going forward.', example:'Company beat but guided down — stock dropped.', effect:'Very bearish even if current quarter was good.' },
+  { term:'Whisper Number', category:'earnings', impact:'neutral', icon:'🟡', plain:'The unofficial earnings estimate that traders actually expect, often higher than the official consensus.', example:'Earnings beat consensus but missed the whisper.', effect:'Stock can drop even on a "beat" if below whisper.' },
+  { term:'EPS', category:'earnings', impact:'neutral', icon:'⚪', plain:'Earnings Per Share — how much profit the company made per share of stock.', example:'EPS came in at $4.20 vs $3.80 expected.', effect:'Above estimate = bullish. Below = bearish.' },
+  { term:'IV Crush', category:'earnings', impact:'neutral', icon:'🟡', plain:'After earnings, options implied volatility collapses — making options much cheaper. You can win on direction but still lose money.', example:'I bought calls before earnings and they lost value even though stock went up — IV crush.', effect:'Why you should not hold options through earnings.' },
+  // ── OPTIONS ──
+  { term:'Premium', category:'options', impact:'neutral', icon:'⚪', plain:'The price you pay for an option contract. Made up of intrinsic value and time value.', example:'Paying too much premium — option needs big move to profit.', effect:'High premium = more risk per trade.' },
+  { term:'Theta Decay', category:'options', impact:'bearish', icon:'🔴', plain:'Options lose value every day just from time passing, even if stock price doesn\'t move. Works against option buyers.', example:'Theta is eating my premium.', effect:'Why you don\'t hold options too long.' },
+  { term:'Gamma', category:'options', impact:'neutral', icon:'🟡', plain:'How fast an option\'s delta changes as the stock price moves. High gamma near expiration = volatile options.', example:'Gamma spiking into expiration.', effect:'OpEx week has high gamma — sudden violent moves.' },
+  { term:'Gamma Squeeze', category:'options', impact:'bullish', icon:'🟢', plain:'When a stock rises and market makers are forced to buy more stock to hedge, pushing the price higher in a feedback loop.', example:'GME gamma squeeze 2021.', effect:'Violent move up. Often reverses hard.' },
+  { term:'Delta', category:'options', impact:'neutral', icon:'⚪', plain:'How much an option price moves for every $1 move in the stock. 0.50 delta = option moves $0.50 for every $1 stock move.', example:'This call has 0.60 delta — good sensitivity.', effect:'Higher delta = more responsive to stock moves.' },
+  { term:'Implied Volatility (IV)', category:'options', impact:'neutral', icon:'🟡', plain:'The market\'s expectation of how much a stock will move. High IV = expensive options. Low IV = cheap options.', example:'IV is elevated before CPI — premiums are rich.', effect:'High IV before events = good for selling, bad for buying.' },
+  { term:'In the Money (ITM)', category:'options', impact:'neutral', icon:'⚪', plain:'A call option where the stock price is ABOVE the strike price. A put where stock is BELOW the strike. Has real value.', example:'My 718 puts are in the money — SPY at 715.', effect:'More expensive but more reliable.' },
+  { term:'Out of the Money (OTM)', category:'options', impact:'neutral', icon:'⚪', plain:'A call where stock is below strike, or put where stock is above strike. No intrinsic value — pure time value.', example:'These are OTM calls — need big move to profit.', effect:'Cheap but need larger move to win.' },
+  { term:'Max Pain', category:'options', impact:'neutral', icon:'🟡', plain:'The price where the most options expire worthless — causing maximum loss to option buyers. During OpEx, stocks often pin near max pain.', example:'Max pain for SPY this week is 720.', effect:'Watch for magnetic pull toward max pain on OpEx Friday.' },
+  // ── MARKET STRUCTURE ──
+  { term:'Tape', category:'market', impact:'neutral', icon:'⚪', plain:'The real-time flow of stock price transactions. Reading the tape means watching how buyers and sellers are actually transacting, not just the chart.', example:'Tape flipped bearish — exited the trade.', effect:'Most important signal. Trust the tape over your bias.' },
+  { term:'Bid/Ask Spread', category:'market', impact:'neutral', icon:'⚪', plain:'The gap between the highest price a buyer will pay (bid) and the lowest price a seller will accept (ask). Wide spread = less liquid.', example:'Wide spread on this option — hard to fill at mid.', effect:'Wide spreads cost you money on every trade.' },
+  { term:'Gap Up/Down', category:'market', impact:'neutral', icon:'⚪', plain:'When a stock or index opens significantly higher or lower than yesterday\'s close due to overnight news.', example:'SPY gapped up 1% on the CPI print.', effect:'Gaps often partially fill — don\'t chase the gap.' },
+  { term:'Gap Fill', category:'market', impact:'neutral', icon:'🟡', plain:'When price comes back to fill the empty space left by a gap. Gaps fill more often than not.', example:'SPY filling the gap from Monday open.', effect:'Common reversal target. Watch for it.' },
+  { term:'Dead Cat Bounce', category:'market', impact:'bearish', icon:'🔴', plain:'A temporary recovery in a stock or market that is still in a downtrend. Not a real reversal.', example:'That rally was just a dead cat bounce — sold off again.', effect:'Don\'t buy puts — wait for the bounce to fail.' },
+  { term:'Bear Trap', category:'market', impact:'bullish', icon:'🟢', plain:'A false breakdown that tricks traders into going short, then price reverses up hard squeezing them out.', example:'That break below support was a bear trap.', effect:'Dangerous for put holders. Always wait for confirmation.' },
+  { term:'Bull Trap', category:'market', impact:'bearish', icon:'🔴', plain:'A false breakout that tricks traders into going long, then price reverses down hard.', example:'Bull trap at the resistance level — calls got crushed.', effect:'Dangerous for call holders. Always confirm breakouts.' },
+  { term:'Resistance', category:'market', impact:'bearish', icon:'🔴', plain:'A price level where sellers are historically strong and price struggles to break above. Previous high is a common resistance.', example:'SPY rejecting at previous day high resistance.', effect:'Calls risk near resistance. Good PUTS entry on rejection.' },
+  { term:'Support', category:'market', impact:'bullish', icon:'🟢', plain:'A price level where buyers are historically strong and price struggles to break below. Previous low is common support.', example:'QQQ holding support at 715.', effect:'PUTS risk near support. Good CALLS entry on bounce.' },
+  { term:'Risk-On', category:'market', impact:'bullish', icon:'🟢', plain:'Market mood where investors are willing to take risk — buying stocks, selling bonds. Bullish environment.', example:'Risk-on day — tech leading, VIX falling.', effect:'CALLS bias. Broad market strength.' },
+  { term:'Risk-Off', category:'market', impact:'bearish', icon:'🔴', plain:'Market mood where investors want safety — selling stocks, buying bonds and gold. Bearish environment.', example:'Risk-off after the jobs report — flight to safety.', effect:'PUTS bias. Gold/bonds rally.' },
+  { term:'Flight to Safety', category:'market', impact:'bearish', icon:'🔴', plain:'Investors moving money from risky assets (stocks) to safe assets (gold, bonds, cash) during fear.', example:'Flight to safety on geopolitical fears.', effect:'SPY/QQQ sell off. PUTS bias.' },
+  { term:'Breadth', category:'market', impact:'neutral', icon:'🟡', plain:'How many stocks are participating in a market move. Strong breadth = most stocks going up = real rally.', example:'Breadth is weak — only 30% of stocks advancing.', effect:'Narrow breadth = rally not sustainable. Be cautious.' },
+  { term:'Advance/Decline', category:'market', impact:'neutral', icon:'🟡', plain:'The number of stocks going up vs going down. More advancers than decliners = healthy market.', example:'A/D ratio 3:1 today — broad strength.', effect:'Strong A/D confirms real rally. Weak A/D = warning.' },
+  // ── CNBC PHRASES ──
+  { term:'Priced In', category:'cnbc', impact:'neutral', icon:'🟡', plain:'The market has already accounted for this news in current prices. "It\'s priced in" means don\'t expect a big move.', example:'Rate hike was already priced in — no reaction.', effect:'If truly priced in, buy the news = sell the event.' },
+  { term:'Buy the Rumor, Sell the News', category:'cnbc', impact:'bearish', icon:'🔴', plain:'Stocks rally on expectations of good news, then sell off when the news actually happens.', example:'Classic buy the rumor sell the news — stock dropped on earnings beat.', effect:'Why stocks sometimes drop on good news.' },
+  { term:'Sell the Rip', category:'cnbc', impact:'bearish', icon:'🔴', plain:'In a downtrend, selling into any temporary bounce (rip) because the trend is down.', example:'Selling the rip back to resistance.', effect:'Bearish strategy in downtrends.' },
+  { term:'Buy the Dip', category:'cnbc', impact:'bullish', icon:'🟢', plain:'In an uptrend, buying on any temporary pullback because the trend is up.', example:'Bought the dip at support — good entry.', effect:'Bullish strategy in uptrends. Dangerous in downtrends.' },
+  { term:'Soft Landing', category:'cnbc', impact:'bullish', icon:'🟢', plain:'The Fed slows inflation without causing a recession. The ideal outcome.', example:'Fed achieving soft landing — market celebrating.', effect:'Very bullish. CALLS bias long term.' },
+  { term:'Hard Landing', category:'cnbc', impact:'bearish', icon:'🔴', plain:'The Fed raises rates so aggressively it causes a recession. The feared outcome.', example:'Hard landing fears returning to markets.', effect:'Very bearish. PUTS bias.' },
+  { term:'Capitulation', category:'cnbc', impact:'bullish', icon:'🟢', plain:'When panicked sellers finally give up and sell everything at any price. Often signals a bottom.', example:'Seeing capitulation in this selloff — could be the bottom.', effect:'Contrarian bullish signal. Look for CALLS after capitulation.' },
+  { term:'Short Squeeze', category:'cnbc', impact:'bullish', icon:'🟢', plain:'When a heavily shorted stock rises, forcing short sellers to buy to cover, which drives the price higher.', example:'GME short squeeze was historic.', effect:'Violent move up. Can create A+ CALLS opportunity.' },
+  { term:'Overbought', category:'cnbc', impact:'bearish', icon:'🔴', plain:'A stock or index has risen too far too fast and is likely to pull back. RSI above 70 is a common signal.', example:'SPY is overbought after 5 straight up days.', effect:'Caution for CALLS. Watch for consolidation or pullback.' },
+  { term:'Oversold', category:'cnbc', impact:'bullish', icon:'🟢', plain:'A stock or index has fallen too far too fast and is likely to bounce. RSI below 30 is a common signal.', example:'QQQ oversold — bounce likely.', effect:'Caution for PUTS. Watch for bounce opportunity.' },
+  { term:'Consolidation', category:'cnbc', impact:'neutral', icon:'🟡', plain:'Price moving sideways in a tight range after a big move. Can break up or down.', example:'SPY consolidating at resistance — waiting for direction.', effect:'Your signal to exit if in a trade. Wait for breakout to re-enter.' },
+];
+
+let tldFilter = 'all';
+
+function searchTLD(query) {
+  const el = document.getElementById('tld-results');
+  if(!el) return;
+  const q = (query||'').toLowerCase().trim();
+  const filtered = TLD_GLOSSARY.filter(t =>
+    (tldFilter === 'all' || t.category === tldFilter) &&
+    (q === '' || t.term.toLowerCase().includes(q) || t.plain.toLowerCase().includes(q) || t.example.toLowerCase().includes(q))
+  );
+  if(!filtered.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;font-size:13px">No terms found. Try a different word.</div>';
+    return;
+  }
+  el.innerHTML = filtered.map(t => {
+    const impactColor = t.impact==='bullish'?'var(--green)':t.impact==='bearish'?'var(--red)':'var(--accent)';
+    const impactBg = t.impact==='bullish'?'rgba(0,230,118,0.08)':t.impact==='bearish'?'rgba(255,23,68,0.08)':'rgba(245,197,24,0.06)';
+    return `<div style="background:${impactBg};border:1px solid ${impactColor.replace('var(--','rgba(').replace(')',',.25)')};border-left:3px solid ${impactColor};border-radius:8px;padding:12px 14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">${t.icon}</span>
+          <div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--text)">${t.term}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${impactBg};color:${impactColor};border:1px solid ${impactColor.replace('var(--','rgba(').replace(')',',.3)')}">${t.impact.toUpperCase()}</span>
+          <span style="font-size:10px;color:var(--text3);padding:2px 8px;border:1px solid var(--border);border-radius:10px">${t.category.toUpperCase()}</span>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text);line-height:1.5;margin-bottom:6px">${t.plain}</div>
+      <div style="font-size:11px;color:var(--text3);font-style:italic;margin-bottom:4px">"${t.example}"</div>
+      <div style="font-size:11px;font-weight:700;color:${impactColor}">▸ ${t.effect}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterTLD(cat) {
+  tldFilter = cat;
+  document.querySelectorAll('[id^="tld-"]').forEach(b => { b.style.background=''; b.style.color=''; });
+  const btn = document.getElementById('tld-'+cat);
+  if(btn) { btn.style.background='var(--blue)'; btn.style.color='#000'; }
+  searchTLD(document.getElementById('tld-search')?.value || '');
+}
+
+// Init show all on Learn tab open
+function initTLD() { searchTLD(''); }
 const REPLAY_EVENTS = [
   {date:'2024-08-05',type:'crash',icon:'📉',title:'Black Monday 2.0',spy:'-3.0%',qqq:'-3.7%',vix:'+65%',summary:'Yen carry trade unwind triggered global selloff. SPY gapped down hard at open, then recovered 60% of losses by close.',lesson:'Do not FOMO short a crash gap — the recovery was violent. Wait for structure.',playbook:'Cash or very small PUTS only. Watch for V-reversal after 10 AM.'},
   {date:'2024-07-11',type:'cpi',icon:'📈',title:'Cool CPI — July 2024',spy:'+1.0%',qqq:'+1.8%',vix:'-8%',summary:'CPI came in below expectations. SPY and QQQ gapped up significantly. Tech led. Strong all day with minor midday dip.',lesson:'Cool CPI = CALLS at open. Do not fade the first 45 minutes.',playbook:'CALLS on any pullback in first hour. Target +$0.50. Exit by noon.'},
