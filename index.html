@@ -784,6 +784,45 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- SPY/QQQ CALL/PUT RATIO -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.2)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">⚖️</span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--blue);letter-spacing:2px">OPTIONS FLOW — CALL/PUT RATIO</div>
+          <div id="cpr-updated" style="font-size:10px;color:var(--text3)"></div>
+        </div>
+        <button onclick="fetchCallPutRatio()" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <!-- SPY -->
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-family:Orbitron,sans-serif;font-size:13px;color:var(--accent);font-weight:700;margin-bottom:8px">SPY</div>
+          <div id="spy-cpr" style="font-family:Orbitron,sans-serif;font-size:28px;font-weight:900;color:var(--text2)">--</div>
+          <div id="spy-cpr-label" style="font-size:11px;color:var(--text2);margin-top:4px">C/P Ratio</div>
+          <div id="spy-cpr-bias" style="font-size:11px;font-weight:700;margin-top:6px;color:var(--text2)">--</div>
+          <div style="display:flex;justify-content:center;gap:16px;margin-top:8px">
+            <div><div style="font-size:9px;color:var(--green)">CALLS</div><div id="spy-calls" style="font-size:12px;color:var(--green);font-weight:700">--</div></div>
+            <div><div style="font-size:9px;color:var(--red)">PUTS</div><div id="spy-puts" style="font-size:12px;color:var(--red);font-weight:700">--</div></div>
+          </div>
+        </div>
+        <!-- QQQ -->
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-family:Orbitron,sans-serif;font-size:13px;color:var(--blue);font-weight:700;margin-bottom:8px">QQQ</div>
+          <div id="qqq-cpr" style="font-family:Orbitron,sans-serif;font-size:28px;font-weight:900;color:var(--text2)">--</div>
+          <div id="qqq-cpr-label" style="font-size:11px;color:var(--text2);margin-top:4px">C/P Ratio</div>
+          <div id="qqq-cpr-bias" style="font-size:11px;font-weight:700;margin-top:6px;color:var(--text2)">--</div>
+          <div style="display:flex;justify-content:center;gap:16px;margin-top:8px">
+            <div><div style="font-size:9px;color:var(--green)">CALLS</div><div id="qqq-calls" style="font-size:12px;color:var(--green);font-weight:700">--</div></div>
+            <div><div style="font-size:9px;color:var(--red)">PUTS</div><div id="qqq-puts" style="font-size:12px;color:var(--red);font-weight:700">--</div></div>
+          </div>
+        </div>
+      </div>
+      <div id="cpr-guidance" style="margin-top:10px;font-size:12px;color:var(--text2);text-align:center;padding:8px;background:rgba(0,0,0,0.2);border-radius:8px">
+        Ratio &gt;1.0 = more calls = bullish sentiment · Ratio &lt;1.0 = more puts = bearish sentiment
+      </div>
+    </div>
+
     <!-- PRE-MARKET WAR ROOM -->
     <div class="card" style="margin-bottom:16px;border:1px solid rgba(245,197,24,0.25);background:linear-gradient(135deg,rgba(245,197,24,0.04),rgba(0,0,0,0))">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
@@ -867,6 +906,8 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
             <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">PREV LOW</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--red)" id="spy-pl">--</div></div>
             <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">PREV CLOSE</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--text)" id="spy-pc">--</div></div>
             <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">CURR PRICE</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--accent)" id="spy-curr">--</div></div>
+            <div><div style="font-size:9px;color:var(--cyan);letter-spacing:1px">PM HIGH</div><div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--cyan)" id="spy-pmh">--</div></div>
+            <div><div style="font-size:9px;color:var(--cyan);letter-spacing:1px">PM LOW</div><div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--cyan)" id="spy-pml">--</div></div>
           </div>
         </div>
         <!-- QQQ -->
@@ -877,6 +918,8 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
             <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">PREV LOW</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--red)" id="qqq-pl">--</div></div>
             <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">PREV CLOSE</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--text)" id="qqq-pc">--</div></div>
             <div><div style="font-size:9px;color:var(--text2);letter-spacing:1px">CURR PRICE</div><div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--blue)" id="qqq-curr">--</div></div>
+            <div><div style="font-size:9px;color:var(--cyan);letter-spacing:1px">PM HIGH</div><div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--cyan)" id="qqq-pmh">--</div></div>
+            <div><div style="font-size:9px;color:var(--cyan);letter-spacing:1px">PM LOW</div><div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--cyan)" id="qqq-pml">--</div></div>
           </div>
         </div>
       </div>
@@ -3250,6 +3293,8 @@ async function initDashboard() {
   setInterval(checkMarketShock, 90000);
   setInterval(updateCEOScoreboard, 120000);
   setTimeout(checkMarketShock, 8000);
+  setTimeout(fetchCallPutRatio, 8000);
+  setInterval(fetchCallPutRatio, 300000);
   setTimeout(fetchFinancialJuice, 2000);
   setInterval(fetchFinancialJuice, 90000);
   setTimeout(updateVIXWidget, 3000);
@@ -7253,6 +7298,64 @@ function updateCEOScoreboard() {
   } catch(e) {}
 }
 
+// ==================== CALL/PUT RATIO ====================
+async function fetchCallPutRatio() {
+  const updEl = document.getElementById('cpr-updated');
+  if(updEl) updEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  async function getCPR(symbol) {
+    // Use Finnhub option chain summary
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/stock/option-chain?symbol=${symbol}&token=${FINNHUB_KEY}`);
+      if(!r.ok) return null;
+      const d = await r.json();
+      if(!d.data || !d.data.length) return null;
+      let totalCalls = 0, totalPuts = 0;
+      d.data.forEach(exp => {
+        (exp.options?.CALL||[]).forEach(o => { totalCalls += (o.openInterest||0) + (o.volume||0); });
+        (exp.options?.PUT||[]).forEach(o => { totalPuts += (o.openInterest||0) + (o.volume||0); });
+      });
+      if(!totalCalls && !totalPuts) return null;
+      return { calls: totalCalls, puts: totalPuts, ratio: totalPuts > 0 ? (totalCalls/totalPuts) : 0 };
+    } catch(e) { return null; }
+  }
+
+  function formatNum(n) { return n > 1000000 ? (n/1000000).toFixed(1)+'M' : n > 1000 ? (n/1000).toFixed(0)+'K' : n.toString(); }
+
+  function renderCPR(sym, data) {
+    const cprEl = document.getElementById(sym.toLowerCase()+'-cpr');
+    const biasEl = document.getElementById(sym.toLowerCase()+'-cpr-bias');
+    const callsEl = document.getElementById(sym.toLowerCase()+'-calls');
+    const putsEl = document.getElementById(sym.toLowerCase()+'-puts');
+    if(!data) {
+      if(cprEl) cprEl.textContent = 'N/A';
+      if(biasEl) biasEl.textContent = 'Data unavailable';
+      return;
+    }
+    const ratio = data.ratio;
+    const color = ratio > 1.2 ? 'var(--green)' : ratio < 0.8 ? 'var(--red)' : 'var(--accent)';
+    const bias = ratio > 1.2 ? '🟢 CALL BIAS — bullish flow' : ratio < 0.8 ? '🔴 PUT BIAS — bearish flow' : '⚡ NEUTRAL — balanced flow';
+    if(cprEl) { cprEl.textContent = ratio.toFixed(2); cprEl.style.color = color; }
+    if(biasEl) { biasEl.textContent = bias; biasEl.style.color = color; }
+    if(callsEl) callsEl.textContent = formatNum(data.calls);
+    if(putsEl) putsEl.textContent = formatNum(data.puts);
+  }
+
+  const [spyCPR, qqqCPR] = await Promise.all([getCPR('SPY'), getCPR('QQQ')]);
+  renderCPR('SPY', spyCPR);
+  renderCPR('QQQ', qqqCPR);
+
+  // Overall guidance
+  const guidanceEl = document.getElementById('cpr-guidance');
+  if(guidanceEl && spyCPR && qqqCPR) {
+    const bothBullish = spyCPR.ratio > 1.1 && qqqCPR.ratio > 1.1;
+    const bothBearish = spyCPR.ratio < 0.9 && qqqCPR.ratio < 0.9;
+    if(bothBullish) guidanceEl.textContent = '🟢 Both SPY & QQQ showing CALL bias — institutional flow tilts bullish. Supports CALL setups on confirmed signals.';
+    else if(bothBearish) guidanceEl.textContent = '🔴 Both SPY & QQQ showing PUT bias — institutional flow tilts bearish. Supports PUT setups on confirmed signals.';
+    else guidanceEl.textContent = '⚡ Mixed flow — SPY and QQQ diverging on options. Wait for technical confirmation before entry.';
+  }
+}
+
 // ==================== VIX DASHBOARD WIDGET ====================
 async function updateVIXWidget(manual = false) {
   let vix = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
@@ -7652,6 +7755,45 @@ async function fetchPrevDayLevels() {
     document.getElementById('qqq-pl').textContent = qqq.prev.low ? fmt(qqq.prev.low) : 'N/A';
     document.getElementById('qqq-pc').textContent = fmt(qqq.prev.close);
     document.getElementById('qqq-curr').textContent = fmt(qqq.current);
+  }
+
+  // Fetch premarket high/low via Yahoo 1-minute data (pre-market hours)
+  async function getPremarket(symbol) {
+    try {
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d&prePost=true`;
+      const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+      if(!r.ok) return null;
+      const d = await r.json();
+      const res = d?.chart?.result?.[0];
+      if(!res) return null;
+      const quotes = res.indicators.quote[0];
+      const timestamps = res.timestamp || [];
+      const marketOpen = 9.5 * 3600; // 9:30 AM in seconds from midnight ET
+      const preMarket = timestamps.map((ts, i) => {
+        const etHour = new Date(ts * 1000).toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hour12: false });
+        const [h, m] = etHour.split(':').map(Number);
+        const secFromMidnight = h * 3600 + m * 60;
+        return secFromMidnight < marketOpen ? quotes.high[i] : null;
+      }).filter(v => v != null && !isNaN(v));
+      if(!preMarket.length) return null;
+      return { pmHigh: Math.max(...preMarket), pmLow: Math.min(...preMarket) };
+    } catch(e) { return null; }
+  }
+
+  const [spyPM, qqqPM] = await Promise.all([getPremarket('SPY'), getPremarket('QQQ')]);
+  if(spyPM) {
+    document.getElementById('spy-pmh').textContent = fmt(spyPM.pmHigh);
+    document.getElementById('spy-pml').textContent = fmt(spyPM.pmLow);
+  } else {
+    document.getElementById('spy-pmh').textContent = 'N/A';
+    document.getElementById('spy-pml').textContent = 'N/A';
+  }
+  if(qqqPM) {
+    document.getElementById('qqq-pmh').textContent = fmt(qqqPM.pmHigh);
+    document.getElementById('qqq-pml').textContent = fmt(qqqPM.pmLow);
+  } else {
+    document.getElementById('qqq-pmh').textContent = 'N/A';
+    document.getElementById('qqq-pml').textContent = 'N/A';
   }
 
   const guidanceEl = document.getElementById('level-guidance');
