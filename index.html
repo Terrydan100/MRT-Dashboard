@@ -738,6 +738,62 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
     </div>
 
     <!-- SIGNAL ALERT CARD -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- TRADE BIAS ENGINE — MASTER SIGNAL                        -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div id="bias-engine-card" style="margin-bottom:16px;border-radius:14px;border:2px solid var(--border);background:linear-gradient(135deg,rgba(0,0,0,0.6),rgba(0,0,0,0.3));overflow:hidden">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="be-pulse" style="width:10px;height:10px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+          <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--text2);letter-spacing:2px">🧠 TRADE BIAS ENGINE</div>
+          <div id="be-updated" style="font-size:10px;color:var(--text3)"></div>
+        </div>
+        <button onclick="runBiasEngine()" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:4px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">⚡ SCAN NOW</button>
+      </div>
+
+      <!-- Main Output -->
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:0;align-items:stretch">
+
+        <!-- LEFT — Big verdict -->
+        <div id="be-verdict-panel" style="padding:20px 24px;text-align:center;border-right:1px solid var(--border);min-width:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,0.2)">
+          <div id="be-verdict" style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:var(--text2);letter-spacing:1px">SCANNING</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <div style="font-size:10px;color:var(--text3)">CONFIDENCE</div>
+            <div id="be-confidence" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--text2)">--%</div>
+          </div>
+          <!-- Confidence bar -->
+          <div style="width:120px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden">
+            <div id="be-conf-bar" style="height:100%;width:0%;border-radius:3px;transition:width 0.6s ease;background:var(--text2)"></div>
+          </div>
+          <div id="be-regime" style="font-size:10px;color:var(--text3);margin-top:4px;text-align:center"></div>
+        </div>
+
+        <!-- RIGHT — Details -->
+        <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+          <!-- Entry + Risk + Action -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
+            <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+              <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">BEST ENTRY ZONE</div>
+              <div id="be-entry" style="font-size:11px;color:var(--text);line-height:1.4">--</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+              <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">STOP / TARGET</div>
+              <div id="be-levels" style="font-size:11px;color:var(--text);line-height:1.4">--</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+              <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">RISK / SIZE</div>
+              <div id="be-risk" style="font-size:11px;color:var(--text);line-height:1.4">--</div>
+            </div>
+          </div>
+          <!-- Action line -->
+          <div id="be-action" style="font-size:12px;font-weight:700;color:var(--text2);padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:8px;border-left:3px solid var(--text3)"></div>
+          <!-- Signal factors -->
+          <div id="be-factors" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+        </div>
+      </div>
+    </div>
+
     <div id="signal-alert-card" style="background:linear-gradient(135deg,rgba(0,180,255,0.08),rgba(0,0,0,0));border:1px solid rgba(0,180,255,0.3);border-radius:14px;padding:14px 18px;margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:8px">
@@ -7592,7 +7648,225 @@ async function fetchMarketBreadth() {
   if(verdictEl) { verdictEl.textContent=verdict; verdictEl.style.color=color; }
 }
 
-// ==================== FINANCIALJUICE LIVE ALERTS ====================
+// ==================== TRADE BIAS ENGINE ====================
+async function runBiasEngine() {
+  const updEl = document.getElementById('be-updated');
+  const pulseEl = document.getElementById('be-pulse');
+  if(updEl) updEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  if(pulseEl) pulseEl.style.background = 'var(--accent)';
+
+  // ── READ ALL EXISTING DASHBOARD DATA ──────────────────────────────
+  const spyChg    = parseFloat(document.getElementById('tc-spy')?.textContent?.replace('%','')) || 0;
+  const qqqChg    = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
+  const vix       = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const vixChg    = parseFloat(document.getElementById('tc-vix')?.textContent?.replace('%','')) || 0;
+  const fg        = parseInt(document.getElementById('fg-value')?.textContent) || 50;
+  const warBias   = document.getElementById('warroom-bias-text')?.textContent || '';
+  const spyPH     = parseFloat(document.getElementById('spy-ph')?.textContent?.replace('$','')) || 0;
+  const spyPL     = parseFloat(document.getElementById('spy-pl')?.textContent?.replace('$','')) || 0;
+  const spyPC     = parseFloat(document.getElementById('spy-pc')?.textContent?.replace('$','')) || 0;
+  const spyCurr   = parseFloat(document.getElementById('spy-curr')?.textContent?.replace('$','')) || 0;
+  const spyPMH    = parseFloat(document.getElementById('spy-pmh')?.textContent?.replace('$','')) || 0;
+  const spyPML    = parseFloat(document.getElementById('spy-pml')?.textContent?.replace('$','')) || 0;
+  const qqqCurr   = parseFloat(document.getElementById('qqq-curr')?.textContent?.replace('$','')) || 0;
+  const qqqPC     = parseFloat(document.getElementById('qqq-pc')?.textContent?.replace('$','')) || 0;
+  const qqqPMH    = parseFloat(document.getElementById('qqq-pmh')?.textContent?.replace('$','')) || 0;
+  const qqqPML    = parseFloat(document.getElementById('qqq-pml')?.textContent?.replace('$','')) || 0;
+  const spyCPR    = parseFloat(document.getElementById('spy-cpr')?.textContent) || 1;
+  const qqqCPR    = parseFloat(document.getElementById('qqq-cpr')?.textContent) || 1;
+  const breadth   = document.getElementById('breadth-verdict')?.textContent || '';
+  const sigDir    = document.getElementById('sig-direction')?.textContent || '';
+  const sigScore  = parseInt(document.getElementById('sig-score')?.textContent) || 0;
+  const aplusScore= parseInt(document.getElementById('aplus-score')?.textContent) || 0;
+  const shockVis  = document.getElementById('shock-alert-banner')?.style.display !== 'none';
+  const esChg     = parseFloat(document.getElementById('wr-es-chg')?.textContent?.replace('%','')) || 0;
+  const nqChg     = parseFloat(document.getElementById('wr-nq-chg')?.textContent?.replace('%','')) || 0;
+
+  // Also fetch XLK & NVDA for sector confirmation (quick Finnhub quotes)
+  let xlkChg = 0, nvdaChg = 0;
+  try {
+    const [xlkR, nvdaR] = await Promise.all([
+      fetch(`https://finnhub.io/api/v1/quote?symbol=XLK&token=${FINNHUB_KEY}`),
+      fetch(`https://finnhub.io/api/v1/quote?symbol=NVDA&token=${FINNHUB_KEY}`)
+    ]);
+    if(xlkR.ok) { const d = await xlkR.json(); xlkChg = d.dp || 0; }
+    if(nvdaR.ok) { const d = await nvdaR.json(); nvdaChg = d.dp || 0; }
+  } catch(e) {}
+
+  // ── SCORING ENGINE ─────────────────────────────────────────────────
+  let bullPts = 0, bearPts = 0, choppyPts = 0;
+  const factors = [];
+
+  const add = (pts, label, bull) => {
+    if(bull === true)  { bullPts  += pts; factors.push({ t: label, d: 'bull', pts }); }
+    if(bull === false) { bearPts  += pts; factors.push({ t: label, d: 'bear', pts }); }
+    if(bull === null)  { choppyPts+= pts; factors.push({ t: label, d: 'chop', pts }); }
+  };
+
+  // Market shock = immediate override
+  if(shockVis) { bearPts += 30; factors.push({ t:'🚨 Market Shock Active', d:'bear', pts:30 }); }
+
+  // SPY/QQQ direction (15pts each)
+  if(spyChg > 0.3)       add(15, `SPY +${spyChg.toFixed(2)}%`, true);
+  else if(spyChg < -0.3) add(15, `SPY ${spyChg.toFixed(2)}%`, false);
+  else                    add(8,  `SPY flat (${spyChg.toFixed(2)}%)`, null);
+
+  if(qqqChg > 0.3)       add(15, `QQQ +${qqqChg.toFixed(2)}%`, true);
+  else if(qqqChg < -0.3) add(15, `QQQ ${qqqChg.toFixed(2)}%`, false);
+  else                    add(8,  `QQQ flat`, null);
+
+  // Price vs Previous Close (10pts)
+  if(spyCurr && spyPC) {
+    if(spyCurr > spyPC) add(10, 'SPY above prev close', true);
+    else                add(10, 'SPY below prev close', false);
+  }
+  if(qqqCurr && qqqPC) {
+    if(qqqCurr > qqqPC) add(8, 'QQQ above prev close', true);
+    else                 add(8, 'QQQ below prev close', false);
+  }
+
+  // Price vs Premarket levels (8pts)
+  if(spyCurr && spyPMH) {
+    if(spyCurr > spyPMH)      add(8, 'SPY above PM high', true);
+    else if(spyCurr < spyPML) add(8, 'SPY below PM low', false);
+    else                       add(4, 'SPY inside PM range', null);
+  }
+
+  // NQ/ES Futures (8pts)
+  if(nqChg > 0.2)       add(8, `NQ +${nqChg.toFixed(2)}%`, true);
+  else if(nqChg < -0.2) add(8, `NQ ${nqChg.toFixed(2)}%`, false);
+  if(esChg > 0.2)       add(6, `ES +${esChg.toFixed(2)}%`, true);
+  else if(esChg < -0.2) add(6, `ES ${esChg.toFixed(2)}%`, false);
+
+  // VIX (10pts)
+  if(vix < 18)           add(10, `VIX ${vix.toFixed(1)} — calm`, true);
+  else if(vix > 25)      add(10, `VIX ${vix.toFixed(1)} — elevated`, false);
+  else if(vixChg > 8)    add(8,  `VIX spiking +${vixChg.toFixed(1)}%`, false);
+  else if(vixChg < -5)   add(6,  `VIX falling — fear easing`, true);
+
+  // Call/Put Ratio (8pts)
+  if(spyCPR > 1.15 && qqqCPR > 1.15) add(8, `C/P bullish SPY:${spyCPR.toFixed(2)} QQQ:${qqqCPR.toFixed(2)}`, true);
+  else if(spyCPR < 0.85 && qqqCPR < 0.85) add(8, `C/P bearish SPY:${spyCPR.toFixed(2)} QQQ:${qqqCPR.toFixed(2)}`, false);
+
+  // Market Breadth (8pts)
+  if(breadth.includes('BROAD RALLY')) add(8, 'Broad rally — real strength', true);
+  else if(breadth.includes('BROAD SELLOFF')) add(8, 'Broad selloff — real weakness', false);
+  else if(breadth.includes('MIXED')) add(6, 'Mixed breadth', null);
+
+  // XLK/NVDA sector (8pts)
+  if(xlkChg > 0.3)        add(8, `XLK +${xlkChg.toFixed(2)}% — tech strong`, true);
+  else if(xlkChg < -0.3)  add(8, `XLK ${xlkChg.toFixed(2)}% — tech weak`, false);
+  if(nvdaChg > 1)          add(6, `NVDA +${nvdaChg.toFixed(2)}% — AI leading`, true);
+  else if(nvdaChg < -1)    add(6, `NVDA ${nvdaChg.toFixed(2)}% — AI dragging`, false);
+
+  // Fear & Greed (6pts)
+  if(fg > 65)            add(6, `F&G ${fg} — greedy`, true);
+  else if(fg < 35)       add(6, `F&G ${fg} — fearful`, false);
+  else                   add(3, `F&G ${fg} — neutral`, null);
+
+  // War Room bias (6pts)
+  if(warBias.includes('BULLISH')) add(6, 'War Room: Bullish bias', true);
+  else if(warBias.includes('BEARISH')) add(6, 'War Room: Bearish bias', false);
+
+  // Signal Alert score (8pts)
+  if(sigDir.includes('CALLS') && sigScore >= 7) add(8, `Signal: CALLS (${sigScore}/10)`, true);
+  else if(sigDir.includes('PUTS') && sigScore >= 7) add(8, `Signal: PUTS (${sigScore}/10)`, false);
+
+  // A+ Day score (6pts)
+  if(aplusScore >= 70) add(6, `A+ Score: ${aplusScore}/100`, true);
+  else if(aplusScore < 40) add(4, `A+ Score low: ${aplusScore}/100`, null);
+
+  // ── DETERMINE VERDICT ─────────────────────────────────────────────
+  const total = bullPts + bearPts + Math.max(choppyPts * 0.5, 0);
+  const netBull = bullPts - bearPts;
+  const confidence = total > 0 ? Math.min(Math.round(Math.abs(netBull) / (bullPts + bearPts + 1) * 100), 96) : 0;
+
+  // Session check
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const h = et.getHours(), m = et.getMinutes();
+  const inS1 = (h===9&&m>=45)||h===10||(h===11&&m<=30);
+  const inS2 = (h===14&&m>=30)||(h===15&&m<=55);
+  const inSession = inS1 || inS2;
+
+  let verdict, verdictColor, verdictBg, regime, entry, levels, risk, action, borderColor;
+
+  // Override: shock day
+  if(shockVis) {
+    verdict = '🚨 NO TRADE'; verdictColor = 'var(--red)'; borderColor = 'var(--red)';
+    regime = 'Volatility Shock';
+    entry = 'No entry on shock day';
+    levels = 'Stop: N/A · Target: N/A';
+    risk = '0 contracts · Sit out';
+    action = 'Market shock active — protect capital. No trades today.';
+  } else if(choppyPts > bullPts && choppyPts > bearPts) {
+    verdict = '⚡ CHOP DAY'; verdictColor = 'var(--text2)'; borderColor = 'var(--text2)';
+    regime = 'Range / Choppy';
+    entry = 'No clean entry zone — wait for breakout';
+    levels = 'Stop: -$0.30 · Skip this setup';
+    risk = '0 contracts · Sit out';
+    action = 'Chop day — do not trade. Wait for Session 2 if structure develops.';
+  } else if(confidence < 55 || (!inSession && h >= 9)) {
+    verdict = '⚠️ WAIT'; verdictColor = 'var(--accent)'; borderColor = 'var(--accent)';
+    regime = 'Developing — low confidence';
+    entry = 'Wait for 9:45 AM confirmation candle';
+    levels = 'No trade until setup confirms';
+    risk = '0 contracts until confidence ≥55%';
+    action = `Low confidence (${confidence}%). Wait for more signals to align before entering.`;
+  } else if(netBull > 0) {
+    verdict = '🟢 CALL DAY'; verdictColor = 'var(--green)'; borderColor = 'var(--green)';
+    regime = confidence >= 75 ? 'Trend Up — Strong' : 'Lean Bullish';
+    entry = spyPMH ? `Reclaim PM high ($${spyPMH.toFixed(2)}) or pullback to prev close ($${spyPC.toFixed(2)})` : 'Pullback to prev close or VWAP reclaim';
+    levels = `Stop: -$0.30 · Target: ${confidence >= 75 ? '+$0.50 (A+)' : '+$0.35'}`;
+    risk = confidence >= 75 ? '1-2 contracts (A+ setup confirmed)' : '1 contract standard';
+    action = inSession ? `CALLS bias confirmed (${confidence}% confidence). Wait for pullback entry — do not chase.` : `CALLS bias for today. Wait for 9:45 AM session open.`;
+  } else {
+    verdict = '🔴 PUT DAY'; verdictColor = 'var(--red)'; borderColor = 'var(--red)';
+    regime = confidence >= 75 ? 'Trend Down — Strong' : 'Lean Bearish';
+    entry = spyPML ? `Break below PM low ($${spyPML.toFixed(2)}) or reject at prev close ($${spyPC.toFixed(2)})` : 'Reject at prev close or VWAP fail';
+    levels = `Stop: -$0.30 · Target: ${confidence >= 75 ? '+$0.50 (A+)' : '+$0.35'}`;
+    risk = confidence >= 75 ? '1-2 contracts (A+ setup confirmed)' : '1 contract standard';
+    action = inSession ? `PUTS bias confirmed (${confidence}% confidence). Wait for bounce rejection — do not chase the drop.` : `PUTS bias for today. Wait for 9:45 AM session open.`;
+  }
+
+  // ── RENDER ─────────────────────────────────────────────────────────
+  const card = document.getElementById('bias-engine-card');
+  if(card) card.style.borderColor = borderColor;
+
+  const verdEl = document.getElementById('be-verdict');
+  const confEl = document.getElementById('be-confidence');
+  const confBar = document.getElementById('be-conf-bar');
+  const regEl  = document.getElementById('be-regime');
+  const entEl  = document.getElementById('be-entry');
+  const lvlEl  = document.getElementById('be-levels');
+  const rskEl  = document.getElementById('be-risk');
+  const actEl  = document.getElementById('be-action');
+  const facEl  = document.getElementById('be-factors');
+  const panel  = document.getElementById('be-verdict-panel');
+
+  if(verdEl) { verdEl.textContent = verdict; verdEl.style.color = verdictColor; }
+  if(confEl) { confEl.textContent = confidence + '%'; confEl.style.color = verdictColor; }
+  if(confBar){ confBar.style.width = confidence + '%'; confBar.style.background = verdictColor; }
+  if(regEl)  { regEl.textContent = regime; regEl.style.color = verdictColor; }
+  if(entEl)  entEl.textContent = entry;
+  if(lvlEl)  lvlEl.textContent = levels;
+  if(rskEl)  rskEl.textContent = risk;
+  if(actEl)  { actEl.textContent = action; actEl.style.borderLeftColor = borderColor; actEl.style.color = verdictColor; }
+  if(panel)  panel.style.background = verdictColor.replace('var(--','rgba(').replace(')',',.06)');
+  if(pulseEl){ pulseEl.style.background = verdictColor; }
+
+  if(facEl) {
+    const top = [...factors].sort((a,b) => b.pts - a.pts).slice(0,8);
+    facEl.innerHTML = top.map(f => {
+      const c = f.d==='bull'?'var(--green)':f.d==='bear'?'var(--red)':'var(--text3)';
+      return `<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${c.replace('var(--','rgba(').replace(')',',.1)')};color:${c};border:1px solid ${c.replace('var(--','rgba(').replace(')',',.25)')}">${f.t}</span>`;
+    }).join('');
+  }
+}
+
+// Auto-run after existing data loads
+setTimeout(() => { if(typeof runBiasEngine === 'function') runBiasEngine(); }, 9000);
+setInterval(() => { if(typeof runBiasEngine === 'function') runBiasEngine(); }, 180000); // refresh every 3 min
 let fjAlerts = [];
 let fjLastAlert = '';
 
