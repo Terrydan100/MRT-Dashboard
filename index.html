@@ -618,7 +618,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <span id="strip-msg" style="font-size:12px;font-weight:700;color:#fff;font-family:Rajdhani,sans-serif;letter-spacing:0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Alert</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-      <button onclick="showTab('dashboard')" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">VIEW</button>
+      <button onclick="viewAlertSection()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">VIEW</button>
       <button onclick="dismissAlertStrip()" style="background:transparent;border:none;color:rgba(255,255,255,0.7);font-size:14px;cursor:pointer;padding:2px 6px">✕</button>
     </div>
   </div>
@@ -882,6 +882,63 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
       <!-- Key Level Guidance -->
       <div id="level-guidance" style="margin-top:10px;background:rgba(0,180,255,0.05);border:1px solid rgba(0,180,255,0.15);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);display:none"></div>
+    </div>
+
+    <!-- VIX DASHBOARD + MARKET BREADTH + NEXT EVENT — 3 column grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:16px">
+
+      <!-- VIX DASHBOARD -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px" id="vix-widget">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--text2);letter-spacing:2px">📊 VIX DASHBOARD</div>
+          <button onclick="updateVIXWidget(true)" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">🔄</button>
+        </div>
+        <div style="text-align:center;margin-bottom:10px">
+          <div id="vix-level" style="font-family:Orbitron,sans-serif;font-size:36px;font-weight:900;color:var(--text2)">--</div>
+          <div id="vix-change" style="font-size:12px;color:var(--text2);margin-top:2px">--</div>
+        </div>
+        <div id="vix-status" style="text-align:center;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(255,255,255,0.05);color:var(--text2)">Loading...</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:10px;text-align:center">
+          <div style="background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);border-radius:6px;padding:5px">
+            <div style="font-size:9px;color:var(--green)">CALM</div>
+            <div style="font-size:10px;color:var(--text2)">&lt;18</div>
+          </div>
+          <div style="background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);border-radius:6px;padding:5px">
+            <div style="font-size:9px;color:var(--accent)">NORMAL</div>
+            <div style="font-size:10px;color:var(--text2)">18–25</div>
+          </div>
+          <div style="background:rgba(255,23,68,0.1);border:1px solid rgba(255,23,68,0.3);border-radius:6px;padding:5px">
+            <div style="font-size:9px;color:var(--red)">VOLATILE</div>
+            <div style="font-size:10px;color:var(--text2)">&gt;25</div>
+          </div>
+        </div>
+        <div id="vix-action" style="margin-top:8px;font-size:11px;color:var(--text2);text-align:center"></div>
+      </div>
+
+      <!-- NEXT MARKET MOVING EVENT -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
+        <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--text2);letter-spacing:2px;margin-bottom:10px">📅 NEXT MARKET EVENT</div>
+        <div id="next-event-content">
+          <div style="font-size:12px;color:var(--text2);text-align:center;padding:10px">Loading events...</div>
+        </div>
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:1px">UPCOMING</div>
+          <div id="upcoming-events" style="display:flex;flex-direction:column;gap:4px"></div>
+        </div>
+      </div>
+
+      <!-- MARKET BREADTH -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--text2);letter-spacing:2px">🌊 MARKET BREADTH</div>
+          <button onclick="fetchMarketBreadth()" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">🔄</button>
+        </div>
+        <div id="breadth-content" style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;color:var(--text2);text-align:center;padding:10px">Loading breadth data...</div>
+        </div>
+        <div id="breadth-verdict" style="margin-top:10px;font-size:12px;font-weight:700;text-align:center;color:var(--text2)"></div>
+      </div>
+
     </div>
 
     <!-- FINANCIALJUICE LIVE ALERTS -->
@@ -3194,7 +3251,12 @@ async function initDashboard() {
   setInterval(updateCEOScoreboard, 120000);
   setTimeout(checkMarketShock, 8000);
   setTimeout(fetchFinancialJuice, 2000);
-  setInterval(fetchFinancialJuice, 90000); // refresh every 90 seconds
+  setInterval(fetchFinancialJuice, 90000);
+  setTimeout(updateVIXWidget, 3000);
+  setTimeout(updateNextEventWidget, 1000);
+  setTimeout(fetchMarketBreadth, 4000);
+  setInterval(updateVIXWidget, 60000);
+  setInterval(fetchMarketBreadth, 120000);
   setTimeout(runSignalCheck, 5000);
   setInterval(runSignalCheck, 120000);
   setTimeout(fetchWarRoom, 3000);
@@ -7191,6 +7253,163 @@ function updateCEOScoreboard() {
   } catch(e) {}
 }
 
+// ==================== VIX DASHBOARD WIDGET ====================
+async function updateVIXWidget(manual = false) {
+  let vix = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  let vixChg = parseFloat(document.getElementById('tc-vix')?.textContent?.replace('%','')) || 0;
+
+  // Fetch fresh if manual or ticker empty
+  if(manual || !vix) {
+    try {
+      const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=2d')}`);
+      if(r.ok) {
+        const d = await r.json();
+        const meta = d?.chart?.result?.[0]?.meta;
+        if(meta) { vix = meta.regularMarketPrice; vixChg = (meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose * 100; }
+      }
+    } catch(e) {}
+  }
+
+  if(!vix) return;
+  const lvlEl = document.getElementById('vix-level');
+  const chgEl = document.getElementById('vix-change');
+  const statusEl = document.getElementById('vix-status');
+  const actionEl = document.getElementById('vix-action');
+  const widget = document.getElementById('vix-widget');
+
+  if(lvlEl) { lvlEl.textContent = vix.toFixed(1); }
+  if(chgEl) {
+    chgEl.textContent = (vixChg>=0?'+':'')+vixChg.toFixed(2)+'% today';
+    chgEl.style.color = vixChg>=0?'var(--red)':'var(--green)';
+  }
+
+  let status, statusColor, statusBg, action, borderColor;
+  if(vix < 18) {
+    status='🟢 CALM'; statusColor='var(--green)'; statusBg='rgba(0,230,118,0.1)'; borderColor='rgba(0,230,118,0.4)';
+    action='Low vol — options cheap. Good for directional plays. Standard size.';
+    if(lvlEl) lvlEl.style.color='var(--green)';
+  } else if(vix <= 25) {
+    status='🟡 NORMAL'; statusColor='var(--accent)'; statusBg='rgba(245,197,24,0.1)'; borderColor='rgba(245,197,24,0.4)';
+    action='Ideal range — premium elevated but manageable. Standard rules apply.';
+    if(lvlEl) lvlEl.style.color='var(--accent)';
+  } else if(vix <= 35) {
+    status='🔴 VOLATILE'; statusColor='var(--red)'; statusBg='rgba(255,23,68,0.1)'; borderColor='rgba(255,23,68,0.4)';
+    action='High vol — reduce size. Widen targets. Expect whipsaws. 1 contract only.';
+    if(lvlEl) lvlEl.style.color='var(--red)';
+  } else {
+    status='🚨 EXTREME'; statusColor='var(--red)'; statusBg='rgba(255,23,68,0.2)'; borderColor='var(--red)';
+    action='DANGER ZONE — do not trade. Cash is best position. Wait for VIX to settle.';
+    if(lvlEl) lvlEl.style.color='var(--red)';
+  }
+
+  if(statusEl) { statusEl.textContent=status; statusEl.style.color=statusColor; statusEl.style.background=statusBg; }
+  if(actionEl) actionEl.textContent=action;
+  if(widget) widget.style.borderColor=borderColor;
+}
+
+// ==================== NEXT MARKET MOVING EVENT ====================
+const MARKET_EVENTS_2026 = [
+  { date:'2026-06-10', time:'8:30 AM ET', name:'CPI Report', impact:'HIGH', desc:'Consumer Price Index — biggest SPY mover', color:'var(--red)' },
+  { date:'2026-06-11', time:'2:00 PM ET', name:'FOMC Meeting Minutes', impact:'HIGH', desc:'Fed policy signals — expect volatility', color:'var(--red)' },
+  { date:'2026-06-12', time:'8:30 AM ET', name:'PPI Report', impact:'MED', desc:'Producer Price Index', color:'var(--orange)' },
+  { date:'2026-06-13', time:'8:30 AM ET', name:'Retail Sales', impact:'MED', desc:'Consumer spending data', color:'var(--orange)' },
+  { date:'2026-06-17', time:'9:30 AM ET', name:'Options Expiration Week', impact:'MED', desc:'3rd Friday OpEx — gamma effects Thu/Fri', color:'var(--accent)' },
+  { date:'2026-06-18', time:'8:30 AM ET', name:'Jobless Claims', impact:'MED', desc:'Weekly unemployment data', color:'var(--orange)' },
+  { date:'2026-06-19', time:'All Day', name:'Juneteenth (Market Closed)', impact:'LOW', desc:'US Federal Holiday — no trading', color:'var(--text2)' },
+  { date:'2026-06-25', time:'9:30 AM ET', name:'Consumer Confidence', impact:'MED', desc:'Conference Board reading', color:'var(--orange)' },
+  { date:'2026-06-30', time:'8:30 AM ET', name:'PCE Inflation', impact:'HIGH', desc:'Fed preferred inflation measure — major mover', color:'var(--red)' },
+  { date:'2026-07-04', time:'All Day', name:'Independence Day (Market Closed)', impact:'LOW', desc:'US Federal Holiday', color:'var(--text2)' },
+  { date:'2026-07-10', time:'8:30 AM ET', name:'CPI Report', impact:'HIGH', desc:'Consumer Price Index', color:'var(--red)' },
+  { date:'2026-07-29', time:'2:00 PM ET', name:'FOMC Decision', impact:'HIGH', desc:'Fed rate decision — biggest market event', color:'var(--red)' },
+];
+
+function updateNextEventWidget() {
+  const el = document.getElementById('next-event-content');
+  const upcomingEl = document.getElementById('upcoming-events');
+  if(!el) return;
+
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  const future = MARKET_EVENTS_2026.filter(e => e.date >= today);
+  const next = future[0];
+  const upcoming = future.slice(1, 4);
+
+  if(!next) { el.innerHTML='<div style="font-size:12px;color:var(--text2);text-align:center">No upcoming events found</div>'; return; }
+
+  const daysAway = Math.ceil((new Date(next.date) - now) / (1000*60*60*24));
+  const daysText = daysAway === 0 ? '🔴 TODAY' : daysAway === 1 ? '🟡 TOMORROW' : `📅 In ${daysAway} days`;
+
+  el.innerHTML = `
+    <div style="background:rgba(0,0,0,0.2);border:1px solid ${next.color};border-radius:10px;padding:12px;text-align:center">
+      <div style="font-size:11px;font-weight:700;color:${next.color};margin-bottom:4px">${daysText}</div>
+      <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">${next.name}</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">${next.time}</div>
+      <div style="font-size:11px;color:var(--text3)">${next.desc}</div>
+      <div style="margin-top:6px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;display:inline-block;background:${next.impact==='HIGH'?'rgba(255,23,68,0.15)':next.impact==='MED'?'rgba(245,197,24,0.15)':'rgba(255,255,255,0.05)'};color:${next.impact==='HIGH'?'var(--red)':next.impact==='MED'?'var(--accent)':'var(--text2)'}">
+        ${next.impact} IMPACT
+      </div>
+    </div>`;
+
+  if(upcomingEl) {
+    upcomingEl.innerHTML = upcoming.map(e => {
+      const d = Math.ceil((new Date(e.date) - now) / (1000*60*60*24));
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <span style="font-size:11px;color:${e.color}">${e.name}</span>
+        <span style="font-size:10px;color:var(--text3)">${d === 0?'Today':d === 1?'Tomorrow':'In '+d+'d'}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ==================== MARKET BREADTH ====================
+async function fetchMarketBreadth() {
+  const el = document.getElementById('breadth-content');
+  const verdictEl = document.getElementById('breadth-verdict');
+  if(!el) return;
+
+  // Use SPY, QQQ, IWM, DIA as breadth proxies (free Finnhub quotes)
+  const symbols = ['SPY','QQQ','IWM','DIA'];
+  const results = [];
+
+  for(const sym of symbols) {
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FINNHUB_KEY}`);
+      if(r.ok) {
+        const d = await r.json();
+        if(d.c) results.push({ sym, chg: d.dp || 0, price: d.c });
+      }
+    } catch(e) {}
+  }
+
+  if(!results.length) { el.innerHTML='<div style="font-size:12px;color:var(--text2);text-align:center;padding:10px">Could not load breadth data</div>'; return; }
+
+  const up = results.filter(r => r.chg > 0).length;
+  const down = results.filter(r => r.chg < 0).length;
+  const total = results.length;
+  const bullPct = Math.round(up/total*100);
+
+  el.innerHTML = results.map(r => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;background:${r.chg>=0?'rgba(0,230,118,0.15)':'rgba(255,23,68,0.15)'};color:${r.chg>=0?'var(--green)':'var(--red)'};padding:2px 6px;border-radius:4px;font-weight:700">${r.chg>=0?'▲':'▼'}</span>
+        <span style="font-size:12px;font-weight:700;color:var(--text)">${r.sym}</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="font-size:11px;color:var(--text2)">$${r.price.toFixed(2)}</span>
+        <span style="font-size:11px;font-weight:700;color:${r.chg>=0?'var(--green)':'var(--red)'}">${r.chg>=0?'+':''}${r.chg.toFixed(2)}%</span>
+      </div>
+    </div>`).join('');
+
+  // Verdict
+  let verdict, color;
+  if(bullPct >= 75) { verdict='🟢 BROAD RALLY — Real strength, majority advancing'; color='var(--green)'; }
+  else if(bullPct >= 50) { verdict='🟡 MIXED — Narrow leadership, proceed with caution'; color='var(--accent)'; }
+  else if(bullPct >= 25) { verdict='🟠 WEAK — Most sectors down, reduce size'; color='var(--orange)'; }
+  else { verdict='🔴 BROAD SELLOFF — Do not fight the tape'; color='var(--red)'; }
+
+  if(verdictEl) { verdictEl.textContent=verdict; verdictEl.style.color=color; }
+}
+
 // ==================== FINANCIALJUICE LIVE ALERTS ====================
 let fjAlerts = [];
 let fjLastAlert = '';
@@ -8141,7 +8360,34 @@ function generateWeeklyReport() {
 
 // ==================== GLOBAL ALERT STRIP ====================
 let alertStripDismissed = false;
-let alertStripLevel = 0; // 0=none, 1=info, 2=warning, 3=critical
+let alertStripLevel = 0;
+let alertStripType = 'SHOCK'; // track current alert type for VIEW button
+
+function viewAlertSection() {
+  // Navigate to the relevant section based on alert type
+  switch(alertStripType) {
+    case 'SHOCK':
+      showTab('dashboard');
+      setTimeout(()=>{ const el=document.getElementById('shock-alert-banner'); if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.outline='2px solid var(--red)';setTimeout(()=>el.style.outline='',2000);} },300);
+      break;
+    case 'GOAL':
+    case 'LOSS':
+      showTab('dashboard');
+      setTimeout(()=>{ const el=document.getElementById('stat-pnl'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); },300);
+      break;
+    case 'PRECLOSE':
+    case 'SESSION':
+      showTab('trading');
+      setTimeout(()=>{ const el=document.getElementById('session-status'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); },300);
+      break;
+    case 'EVENT':
+      showTab('dashboard');
+      setTimeout(()=>{ const el=document.getElementById('event-prob-content'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); },300);
+      break;
+    default:
+      showTab('dashboard');
+  }
+}
 
 const ALERT_PRIORITY = {
   SHOCK:    { level:3, icon:'🚨', color:'linear-gradient(90deg,rgba(255,23,68,0.95),rgba(200,0,0,0.9))', badge:true },
@@ -8152,14 +8398,14 @@ const ALERT_PRIORITY = {
 };
 
 function showAlertStrip(type, msg) {
-  const cfg = ALERT_PRIORITY[type];
-  if (!cfg) return;
+  const cfg = ALERT_PRIORITY[type] || ALERT_PRIORITY['SHOCK'];
   const strip = document.getElementById('alert-strip');
   const icon = document.getElementById('strip-icon');
   const msgEl = document.getElementById('strip-msg');
   const badge = document.getElementById('global-alert-badge');
   if (!strip) return;
   alertStripDismissed = false;
+  alertStripType = type;
   strip.style.display = 'flex';
   strip.style.background = cfg.color;
   if (icon) icon.textContent = cfg.icon;
