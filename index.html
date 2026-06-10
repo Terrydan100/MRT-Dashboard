@@ -2472,13 +2472,19 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
     <!-- BARBADOS TELEPHONE DIRECTORY -->
     <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.2)">
       <div class="section-title" style="margin-bottom:12px">📞 BARBADOS TELEPHONE DIRECTORY</div>
+      <!-- Official directory links -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <a href="https://www.lime.com/bim/directory/" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--green);color:var(--green)">📖 LIME Official Directory ↗</a>
+        <a href="https://www.barbados.net/yellow_pages/" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--accent);color:var(--accent)">🌐 Yellow Pages ↗</a>
+        <a href="https://www.findyello.com/barbados/" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--blue);color:var(--blue)">🔍 FindYello ↗</a>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">💡 To search for a <strong style="color:var(--text2)">person by name</strong> — use the LIME Official Directory link above (residential listings)</div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
         <input class="form-input" id="barb-dir-input" placeholder="Search businesses, services, people..." 
           style="flex:1;min-width:200px;font-size:13px" 
           oninput="searchBarbadosDirectory()"
           onkeydown="if(event.key==='Enter')searchBarbadosDirectory()">
         <button class="btn btn-primary" onclick="searchBarbadosDirectory()" style="font-size:12px;white-space:nowrap">🔍 SEARCH</button>
-        <a href="https://www.barbados.net/yellow_pages/" target="_blank" class="btn btn-sm" style="font-size:11px;border-color:var(--accent);color:var(--accent);white-space:nowrap">🌐 Yellow Pages</a>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
         <button onclick="quickDirSearch('car rental')" class="btn btn-sm" style="font-size:10px;padding:3px 10px">🚗 Car Rental</button>
@@ -4607,9 +4613,19 @@ function initBiasChecker() {
     </div>`).join('');
 }
 
-let biasScores={};
 function setBias(i,val,btn) {
   biasScores[i]=val;
+  // Visual indicator — highlight selected button, dim the other
+  const parent = btn.parentElement;
+  parent.querySelectorAll('button').forEach(b => {
+    b.style.opacity = '0.4';
+    b.style.transform = 'scale(0.95)';
+  });
+  btn.style.opacity = '1';
+  btn.style.transform = 'scale(1.1)';
+  btn.style.boxShadow = val ? '0 0 8px rgba(0,230,118,0.6)' : '0 0 8px rgba(255,23,68,0.6)';
+  // Update row border
+  btn.closest('[style*="padding:8px"]').style.borderLeft = `3px solid ${val?'var(--green)':'var(--red)'}`;
   const score=Object.values(biasScores).filter(Boolean).length;
   const total=Object.keys(biasScores).length;
   const el=document.getElementById('bias-result');
