@@ -3400,10 +3400,13 @@ function updateSessionStatus() {
 
 // ==================== TABS ====================
 function showTab(id) {
+  const contentEl = document.getElementById('content-'+id);
+  const tabEl = document.getElementById('tab-'+id);
+  if(!contentEl || !tabEl) { console.warn('showTab: unknown tab', id); return; }
   document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
-  document.getElementById('content-'+id).classList.add('active');
-  document.getElementById('tab-'+id).classList.add('active');
+  contentEl.classList.add('active');
+  tabEl.classList.add('active');
   // Lazy-init charts when tab becomes visible
   setTimeout(()=>{
     if(id==='dashboard') { tryInitEquityChart(); loadTradingViewCharts(); updateCEOScoreboard(); showPatternBrief(); }
@@ -4712,7 +4715,7 @@ function updateWinrateChart() {
   const labels=Object.keys(byTicker);
   const data=labels.map(l=>Math.round(byTicker[l].wins/byTicker[l].total*100));
   if(window.winrateChart&&window.winrateChart.destroy)window.winrateChart.destroy();
-  window.winrateChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Win Rate %',data,backgroundColor:data.map(v=>v>=50?'rgba(0,230,118,0.5)':'rgba(255,23,68,0.5)'),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text2)'},grid:{display:false}},y:{ticks:{color:'var(--text2)',callback:v=>v+'%'},max:100,grid:{color:'rgba(30,45,74,0.3)'}}}}});
+  window.winrateChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Win Rate %',data,backgroundColor:data.map(v=>v>=50?'rgba(0,230,118,0.6)':'rgba(255,23,68,0.6)'),borderColor:data.map(v=>v>=50?'rgba(0,230,118,1)':'rgba(255,23,68,1)'),borderWidth:1,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8892b0'},grid:{display:false}},y:{ticks:{color:'#8892b0',callback:v=>v+'%'},max:100,grid:{color:'rgba(30,45,74,0.3)'}}}}});
 }
 
 function updateAllocationChart() {
@@ -4811,6 +4814,7 @@ function renderHeatmap() {
 let calView='week';
 function setCalView(v) { calView=v; initCalendar(); }
 function setCalendarView(v) {
+  calView = v;
   // Update button styles
   ['day','month','year','week'].forEach(b=>{
     const btn=document.getElementById('calv-'+b);
@@ -4818,21 +4822,13 @@ function setCalendarView(v) {
   });
   const dayView=document.getElementById('cal-day-view');
   const yearView=document.getElementById('cal-year-view');
-  const monthGrid=document.getElementById('cal-grid');
-  const calNav=document.querySelector('.cal-nav');
-  if(v==='day') {
-    if(dayView) dayView.style.display='block';
-    if(yearView) yearView.style.display='none';
-    renderDayView();
-  } else if(v==='year') {
-    if(dayView) dayView.style.display='none';
-    if(yearView) yearView.style.display='block';
-    renderYearView();
-  } else {
-    if(dayView) dayView.style.display='none';
-    if(yearView) yearView.style.display='none';
-    if(v==='week') renderWeekView();
-  }
+  const weekView=document.getElementById('cal-week-view');
+  if(dayView) dayView.style.display = v==='day' ? 'block' : 'none';
+  if(yearView) yearView.style.display = v==='year' ? 'block' : 'none';
+  if(weekView) weekView.style.display = v==='week' ? 'block' : 'none';
+  if(v==='day') renderDayView();
+  else if(v==='year') renderYearView();
+  else if(v==='week') renderWeekView();
   if(v!=='year') renderCalMonth();
 }
 function renderDayView() {
@@ -5041,17 +5037,27 @@ async function researchSymbol() {
       const chg=d.dp||0;
       const rc=document.getElementById('res-change');
       if(rc){rc.textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';rc.className='stat-val '+(chg>=0?'pos':'neg');}
-      // Fetch prev day candle for high/low
+      // Fetch prev day candle for high/low — Yahoo Finance (Finnhub candle returns 403 on free plan)
       try {
-        const now=Math.floor(Date.now()/1000);
-        const from=now-172800; // 2 days ago
-        const cr=await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${sym}&resolution=D&from=${from}&to=${now}&token=${FINNHUB_KEY}`);
+        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`;
+        const cr = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`);
         if(cr.ok){
-          const cd=await cr.json();
-          if(cd.s==='ok'&&cd.h&&cd.h.length>=2){
-            const idx=cd.h.length-2; // previous day (not today)
-            setPriceEl('res-pd-high','$'+cd.h[idx].toFixed(2));
-            setPriceEl('res-pd-low', '$'+cd.l[idx].toFixed(2));
+          const cd = await cr.json();
+          const res = cd?.chart?.result?.[0];
+          if(res) {
+            const q2 = res.indicators.quote[0];
+            const len = q2.close.filter(v=>v!=null).length;
+            const highs = q2.high.filter(v=>v!=null);
+            const lows = q2.low.filter(v=>v!=null);
+            const vols = q2.volume.filter(v=>v!=null);
+            if(highs.length >= 2) {
+              setPriceEl('res-pd-high','$'+highs[highs.length-2].toFixed(2));
+              setPriceEl('res-pd-low', '$'+lows[lows.length-2].toFixed(2));
+            }
+            if(vols.length > 0) {
+              const vol = vols[vols.length-1];
+              setPriceEl('res-vol', vol > 1000000 ? (vol/1000000).toFixed(1)+'M' : (vol/1000).toFixed(0)+'K');
+            }
           }
         }
       } catch(e2){ setPriceEl('res-pd-high','--'); setPriceEl('res-pd-low','--'); }
@@ -8540,6 +8546,11 @@ const REPLAY_EVENTS = [
   {date:'2024-01-12',type:'cpi',icon:'📈',title:'Sticky CPI — Jan 2024',spy:'-0.7%',qqq:'-0.9%',vix:'+8%',summary:'CPI slightly above expectations. Initial selloff, then recovery attempt failed. Choppy all day with bearish lean.',lesson:'Slightly hot CPI = bearish but with noise. Wait for 9:45 before entry.',playbook:'PUTS on first bounce rejection after 9:45 AM. Small size. Quick profit-taking.'},
   {date:'2023-11-01',type:'fomc',icon:'🏦',title:'FOMC Pause — Nov 2023',spy:'+1.9%',qqq:'+2.3%',vix:'-10%',summary:'Fed paused rate hikes. Powell flagged potential peak. SPY and QQQ surged. Clean bullish trend all session.',lesson:'Fed pause = strong CALLS day. Trend was clean — held all session.',playbook:'CALLS at open. Add on any dip. Target +$0.50. Hold through Session 2.'},
   {date:'2022-03-08',type:'oil',icon:'🛢️',title:'Oil Spike — Russia Sanctions',spy:'-0.5%',qqq:'-0.7%',vix:'+5%',summary:'Oil hit $130 amid Russia sanctions. Energy surged, tech fell. SPY choppy with sector rotation.',lesson:'Oil shock = sector rotation day. SPY choppy — not a clean options day.',playbook:'Smaller size. Avoid tech options. Watch for reversal as oil stabilizes.'},
+  {date:'2025-01-29',type:'fomc',icon:'🏦',title:'FOMC Hold — Jan 2025',spy:'+0.5%',qqq:'+0.8%',vix:'-6%',summary:'Fed held rates steady. Powell signaled no urgency to cut. Market rallied as "hold" was expected. Clean directional day.',lesson:'Expected hold = muted reaction. True direction set after Powell Q&A at 2:30 PM.',playbook:'Wait for Powell presser. CALLS if tone dovish. Small size.'},
+  {date:'2025-02-13',type:'cpi',icon:'🔥',title:'Hot CPI — Feb 2025',spy:'-0.8%',qqq:'-1.2%',vix:'+9%',summary:'CPI came in hotter than expected. Rate cut expectations pushed back. SPY and QQQ gapped down and stayed down all day.',lesson:'Hot CPI in 2025 = rate cut hopes crushed = bearish. No recovery bounce.',playbook:'PUTS on first failed bounce after 9:45. Do not hold past noon.'},
+  {date:'2025-04-07',type:'crash',icon:'📉',title:'Tariff Shock Selloff',spy:'-4.8%',qqq:'-5.4%',vix:'+40%',summary:'Major tariff announcements over weekend caused violent Monday gap down. Circuit breakers triggered. VIX spiked to 60+.',lesson:'Weekend policy shock = do not trade the open. Wait 30+ min for structure.',playbook:'SIT OUT first 30 min. If structure forms, PUTS on any bounce rejection.'},
+  {date:'2025-09-17',type:'fomc',icon:'🏦',title:'First Rate Cut — Sept 2025',spy:'+1.8%',qqq:'+2.4%',vix:'-15%',summary:'Fed cut rates 25bps for first time in years. Markets surged. CALLS bias all day. Session 1 and Session 2 both clean.',lesson:'First rate cut after long hold = very bullish. CALLS bias all day.',playbook:'CALLS on any pullback. Hold through Session 2. Trail stop.'},
+  {date:'2026-06-10',type:'cpi',icon:'📈',title:'CPI Day June 2026 — Your Trade',spy:'-2.6%',qqq:'-4.8%',vix:'+21%',summary:'Headline CPI 4.2% vs 3.4% prior. Hot print. SPY and QQQ sold off sharply. You waited for structure and took PUTS at 10 AM. Exited at 10:53 AM on consolidation. +$89 profit.',lesson:'Hot CPI = wait until 9:45, PUTS on bounce rejection, exit on consolidation signal.',playbook:'This was a textbook A+ PUT day. Held structure, followed rules, took profit.'},
 ];
 
 let replayFilter = 'all';
