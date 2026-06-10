@@ -1694,6 +1694,17 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <button class="btn btn-sm" onclick="nextMonth()">NEXT ▶</button>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
+        <!-- DAY VIEW -->
+        <div id="cal-day-view" style="display:none">
+          <div id="cal-day-title" style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:1px;margin-bottom:12px"></div>
+          <div id="cal-day-content" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+        <!-- WEEK VIEW (uses same grid) -->
+        <div id="cal-week-view" style="display:none"></div>
+        <!-- YEAR VIEW -->
+        <div id="cal-year-view" style="display:none">
+          <div id="cal-year-content" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px"></div>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -3409,12 +3420,14 @@ function showTab(id) {
   tabEl.classList.add('active');
   // Lazy-init charts when tab becomes visible
   setTimeout(()=>{
-    if(id==='dashboard') { tryInitEquityChart(); loadTradingViewCharts(); updateCEOScoreboard(); showPatternBrief(); }
-    if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); renderReplayLibrary(); }
-    if(id==='research') loadTradingViewCharts();
-    if(id==='barbados') { renderFestivals(); renderRealEstate(); fetchBarbadosNews(); }
-    if(id==='education') { initTLD(); }
-    if(id==='sportscards') renderSportsCards();
+    try { if(id==='dashboard') { tryInitEquityChart(); loadTradingViewCharts(); updateCEOScoreboard(); showPatternBrief(); } } catch(e) { console.warn('dashboard init error',e); }
+    try { if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); renderReplayLibrary(); } } catch(e) { console.warn('analytics init error',e); }
+    try { if(id==='research') loadTradingViewCharts(); } catch(e) {}
+    try { if(id==='barbados') { renderFestivals(); renderRealEstate(); fetchBarbadosNews(); } } catch(e) { console.warn('barbados init error',e); }
+    try { if(id==='education') { initTLD(); } } catch(e) { console.warn('education init error',e); }
+    try { if(id==='sportscards') renderSportsCards(); } catch(e) { console.warn('sportscards init error',e); }
+    try { if(id==='snkrs') renderSnkrs && renderSnkrs(); } catch(e) {}
+    try { if(id==='pokemon') renderPokemon && renderPokemon(); } catch(e) {}
   }, 150);
   // Apply per-tab accent color if set
   if(state.tabColors && state.tabColors[id]) {
