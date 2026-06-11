@@ -1624,8 +1624,153 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
     </div>
   </div>
 
-  <!-- ===================== TRADING TAB ===================== -->
-  <div class="tab-content" id="content-trading">
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- EOD HOLD DETECTOR — SEPARATE STRATEGY WIDGET          -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="tab-content active" id="content-eod-hold" style="display:none;padding:0"><!-- hidden anchor --></div>
+  <!-- Inject into dashboard below pattern brief -->
+  <script>
+  (function injectEOD(){
+    const db = document.getElementById('content-dashboard');
+    if(!db) return;
+    const eod = document.createElement('div');
+    eod.id = 'eod-hold-widget';
+    eod.innerHTML = `
+    <div style="border:2px solid var(--border);border-radius:14px;overflow:hidden;background:linear-gradient(135deg,rgba(0,0,0,0.5),rgba(0,0,0,0.3));margin-bottom:16px">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.3);flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="eod-pulse" style="width:10px;height:10px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+          <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--text2);letter-spacing:2px">🕐 EOD HOLD DETECTOR</div>
+          <div style="font-size:10px;color:var(--text3)" id="eod-updated"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="runEODDetector()" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
+          <button onclick="toggleEODRules()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">📋 RULES</button>
+          <button onclick="toggleEODTracker()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">📊 TRACKER</button>
+        </div>
+      </div>
+
+      <!-- Main verdict -->
+      <div style="display:grid;grid-template-columns:200px 1fr;gap:0;align-items:stretch">
+        <div id="eod-verdict-panel" style="padding:20px;text-align:center;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(0,0,0,0.2)">
+          <div id="eod-verdict" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:var(--text2)">SCANNING...</div>
+          <div id="eod-sub" style="font-size:11px;color:var(--text3);text-align:center"></div>
+        </div>
+        <div style="padding:14px 18px">
+          <!-- Conditions grid -->
+          <div id="eod-conditions" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px;margin-bottom:10px"></div>
+          <div id="eod-reason" style="font-size:12px;color:var(--text2);padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:8px;border-left:3px solid var(--border)"></div>
+        </div>
+      </div>
+
+      <!-- Theta warning (hidden until 2PM) -->
+      <div id="eod-theta-warning" style="display:none;padding:10px 18px;background:rgba(245,197,24,0.1);border-top:1px solid rgba(245,197,24,0.3);text-align:center;font-size:13px;font-weight:700;color:var(--accent)">
+        ⚠️ THETA ACCELERATING — Confirm trend still intact or EXIT
+      </div>
+
+      <!-- Hard exit alert (hidden until 3:50PM) -->
+      <div id="eod-exit-alert" style="display:none;padding:14px 18px;background:rgba(255,23,68,0.15);border-top:2px solid var(--red);text-align:center;animation:pulse-border 0.5s infinite">
+        <div style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:var(--red)">🚨 3:50 PM — EOD HOLD EXIT NOW</div>
+        <div style="font-size:13px;color:var(--text);margin-top:4px">CLOSE ALL POSITIONS IMMEDIATELY — No exceptions</div>
+      </div>
+
+      <!-- EOD Rules panel (collapsible) -->
+      <div id="eod-rules-panel" style="display:none;border-top:1px solid var(--border);padding:14px 18px">
+        <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--blue);letter-spacing:1px;margin-bottom:10px">EOD HOLD RULES</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:4px;font-size:11px">
+          <div style="color:var(--green)">✅ A+ Day Score 80+ required</div>
+          <div style="color:var(--green)">✅ 1 contract only — no exceptions</div>
+          <div style="color:var(--green)">✅ Entry same as scalp — wait 9:45, VWAP, EMA, RSI</div>
+          <div style="color:var(--green)">✅ Stop -$0.20 at entry — hard stop, no change</div>
+          <div style="color:var(--green)">✅ Move stop to breakeven at +$0.50 profit</div>
+          <div style="color:var(--green)">✅ Move stop to +$0.50 locked when up +$1.00</div>
+          <div style="color:var(--green)">✅ Trail stop — never let winner go red</div>
+          <div style="color:var(--green)">✅ Buy deeper ITM strike — less theta decay</div>
+          <div style="color:var(--green)">✅ Hard EXIT at 3:50 PM — no matter what</div>
+          <div style="color:var(--red)">🚫 Do NOT hold on chop days</div>
+          <div style="color:var(--red)">🚫 Do NOT hold if VIX above 25</div>
+          <div style="color:var(--red)">🚫 Do NOT hold if tech leaders not confirming</div>
+          <div style="color:var(--red)">🚫 Do NOT use more than 1 contract</div>
+        </div>
+      </div>
+
+      <!-- EOD Comparison Tracker (collapsible) -->
+      <div id="eod-tracker-panel" style="display:none;border-top:1px solid var(--border);padding:14px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--accent);letter-spacing:1px">EOD COMPARISON TRACKER</div>
+          <button onclick="openEODLogModal()" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">+ LOG TRADE</button>
+        </div>
+        <!-- Summary stats -->
+        <div id="eod-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px">SCALP BETTER</div>
+            <div id="eod-scalp-wins" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;color:var(--blue)">0</div>
+            <div style="font-size:10px;color:var(--text3)">times</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px">EOD BETTER</div>
+            <div id="eod-hold-wins" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;color:var(--green)">0</div>
+            <div style="font-size:10px;color:var(--text3)">times</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px">AVG SCALP</div>
+            <div id="eod-avg-scalp" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;color:var(--text)">$0</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px">AVG EOD</div>
+            <div id="eod-avg-hold" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;color:var(--text)">$0</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--accent);border-radius:8px;padding:8px;text-align:center;grid-column:span 1">
+            <div style="font-size:9px;color:var(--accent);letter-spacing:1px">VERDICT</div>
+            <div id="eod-recommendation" style="font-size:12px;font-weight:700;color:var(--accent);margin-top:4px">Log 20 trades to see</div>
+          </div>
+        </div>
+        <!-- Trade log table -->
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:11px">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border)">
+                <th style="text-align:left;padding:6px 8px;color:var(--text3);font-weight:600">DATE</th>
+                <th style="text-align:left;padding:6px 8px;color:var(--text3);font-weight:600">ENTRY</th>
+                <th style="text-align:right;padding:6px 8px;color:var(--text3);font-weight:600">ACTUAL P&L</th>
+                <th style="text-align:right;padding:6px 8px;color:var(--text3);font-weight:600">QQQ @ 3:50</th>
+                <th style="text-align:right;padding:6px 8px;color:var(--text3);font-weight:600">EST EOD P&L</th>
+                <th style="text-align:center;padding:6px 8px;color:var(--text3);font-weight:600">VERDICT</th>
+                <th style="padding:4px"></th>
+              </tr>
+            </thead>
+            <tbody id="eod-log-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:16px;color:var(--text3);font-size:12px">No trades logged yet. Click + LOG TRADE to start tracking.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+    db.appendChild(eod);
+  })();
+  </script>
+
+  <!-- EOD Log Modal -->
+  <div class="modal-overlay" id="eod-log-modal">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-title">📊 LOG EOD COMPARISON TRADE <button class="modal-close" onclick="closeModal('eod-log-modal')">✕</button></div>
+      <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="eod-date"></div>
+      <div class="form-group"><label class="form-label">Ticker</label>
+        <select class="form-input" id="eod-ticker"><option value="QQQ">QQQ</option><option value="SPY">SPY</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Entry Time (e.g. 9:52 AM)</label><input class="form-input" type="text" id="eod-entry-time" placeholder="9:52 AM"></div>
+      <div class="form-group"><label class="form-label">Entry Option Price ($)</label><input class="form-input" type="number" id="eod-entry-price" placeholder="2.90" step="0.01"></div>
+      <div class="form-group"><label class="form-label">Exit Time (actual scalp exit)</label><input class="form-input" type="text" id="eod-exit-time" placeholder="10:06 AM"></div>
+      <div class="form-group"><label class="form-label">Actual Scalp P&L ($)</label><input class="form-input" type="number" id="eod-actual-pnl" placeholder="62" step="1"></div>
+      <div class="form-group"><label class="form-label">QQQ Price at 3:50 PM (check chart after close)</label><input class="form-input" type="number" id="eod-qqq-350" placeholder="705.50" step="0.01"></div>
+      <div class="form-group"><label class="form-label">Option Value at 3:50 PM (estimated)</label><input class="form-input" type="number" id="eod-opt-350" placeholder="4.20" step="0.01"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn" onclick="closeModal('eod-log-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEODTrade()">SAVE</button>
+      </div>
+    </div>
+  </div>
     <!-- TOS ORDER TEMPLATES REMINDER -->
     <div style="background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.25);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div style="font-size:16px">📋</div>
@@ -7490,6 +7635,174 @@ async function fetchCallPutRatio() {
     else guidanceEl.textContent = '⚡ Mixed flow — SPY and QQQ diverging on options. Wait for technical confirmation before entry.';
   }
 }
+
+// ==================== EOD HOLD DETECTOR ====================
+const EOD_STORAGE_KEY = 'mrt_eod_trades_v1';
+
+function loadEODTrades() {
+  try { return JSON.parse(localStorage.getItem(EOD_STORAGE_KEY)) || []; } catch(e) { return []; }
+}
+function saveEODTrades(trades) {
+  localStorage.setItem(EOD_STORAGE_KEY, JSON.stringify(trades));
+}
+
+async function runEODDetector() {
+  const updEl = document.getElementById('eod-updated');
+  if(updEl) updEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  const vix        = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const qqqChg     = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
+  const aplusScore = parseInt(document.getElementById('aplus-score')?.textContent) || 0;
+  const breadth    = document.getElementById('breadth-verdict')?.textContent || '';
+  const warBias    = document.getElementById('warroom-bias-text')?.textContent || '';
+
+  let nvdaChg=0, msftChg=0, aaplChg=0;
+  try {
+    const [nr,mr,ar] = await Promise.all([
+      fetch(`https://finnhub.io/api/v1/quote?symbol=NVDA&token=${FINNHUB_KEY}`),
+      fetch(`https://finnhub.io/api/v1/quote?symbol=MSFT&token=${FINNHUB_KEY}`),
+      fetch(`https://finnhub.io/api/v1/quote?symbol=AAPL&token=${FINNHUB_KEY}`)
+    ]);
+    if(nr.ok){const d=await nr.json();nvdaChg=d.dp||0;}
+    if(mr.ok){const d=await mr.json();msftChg=d.dp||0;}
+    if(ar.ok){const d=await ar.json();aaplChg=d.dp||0;}
+  } catch(e){}
+
+  const bullDay = qqqChg > 0;
+  const conditions = [
+    { label:'A+ Day Score 80+', pass:aplusScore>=80, value:`${aplusScore}/100`, tip:'A+ Detector must score 80+ for EOD hold' },
+    { label:'QQQ Direction Clear (0.5%+)', pass:Math.abs(qqqChg)>=0.5, value:`${qqqChg>=0?'+':''}${qqqChg.toFixed(2)}%`, tip:'QQQ needs 0.5%+ move — flat QQQ = no EOD hold' },
+    { label:'VIX Cooperative (<25)', pass:vix>0&&vix<25, value:vix>0?vix.toFixed(1):'N/A', tip:'VIX above 25 = fear mode = skip EOD hold' },
+    { label:'Market Breadth Confirming', pass:breadth.includes('BROAD RALLY')||breadth.includes('BROAD SELLOFF'), value:breadth.includes('BROAD RALLY')?'Strong Up':breadth.includes('BROAD SELLOFF')?'Strong Down':breadth.includes('MIXED')?'Mixed':'Neutral', tip:'Majority of stocks must move same direction as QQQ' },
+    { label:'Tech Leaders Confirming', pass:[nvdaChg,msftChg,aaplChg].filter(c=>bullDay?c>0.3:c<-0.3).length>=2, value:`NVDA ${nvdaChg>=0?'+':''}${nvdaChg.toFixed(1)}% / MSFT ${msftChg>=0?'+':''}${msftChg.toFixed(1)}% / AAPL ${aaplChg>=0?'+':''}${aaplChg.toFixed(1)}%`, tip:'At least 2 of NVDA/MSFT/AAPL must confirm QQQ direction' },
+    { label:'Macro Catalyst Present', pass:warBias.includes('BULLISH')||warBias.includes('BEARISH'), value:warBias.includes('BULLISH')?'Bullish catalyst':warBias.includes('BEARISH')?'Bearish catalyst':'None detected', tip:'War Room must detect a clear macro catalyst' },
+    { label:'War Room Aligned', pass:(bullDay&&warBias.includes('BULLISH'))||(!bullDay&&warBias.includes('BEARISH')), value:warBias.substring(0,30)||'Neutral', tip:'Pre-Market War Room bias must agree with QQQ direction' }
+  ];
+
+  const allPass = conditions.every(c=>c.pass);
+  const passCount = conditions.filter(c=>c.pass).length;
+  const failedConditions = conditions.filter(c=>!c.pass);
+
+  const condEl = document.getElementById('eod-conditions');
+  if(condEl) condEl.innerHTML = conditions.map(c=>`
+    <div title="${c.tip}" style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:${c.pass?'rgba(0,230,118,0.07)':'rgba(255,23,68,0.07)'};border:1px solid ${c.pass?'rgba(0,230,118,0.25)':'rgba(255,23,68,0.25)'};border-radius:6px;cursor:help">
+      <span style="font-size:13px">${c.pass?'✅':'❌'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:10px;font-weight:700;color:${c.pass?'var(--green)':'var(--red)'}">${c.label}</div>
+        <div style="font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.value}</div>
+      </div>
+    </div>`).join('');
+
+  const verdEl  = document.getElementById('eod-verdict');
+  const subEl   = document.getElementById('eod-sub');
+  const panelEl = document.getElementById('eod-verdict-panel');
+  const reasonEl= document.getElementById('eod-reason');
+  const pulseEl = document.getElementById('eod-pulse');
+  const widget  = document.getElementById('eod-hold-widget');
+
+  let verdictColor = allPass ? 'var(--green)' : 'var(--red)';
+  let reason = allPass
+    ? 'All 7 conditions passing — EOD hold VALID today. Enter at 9:45, stop -$0.20, move to BE at +$0.50, trail stop, EXIT by 3:50 PM.'
+    : `${7-passCount} failing: ${failedConditions.map(c=>c.label).join(', ')}. Scalp only — take your +$0.35 and move on.`;
+
+  if(verdEl)  { verdEl.innerHTML = allPass ? '🟢 YES<br><span style="font-size:13px">Hold Runner</span>' : '🔴 NO<br><span style="font-size:13px">Scalp Only</span>'; verdEl.style.color = verdictColor; }
+  if(subEl)   { subEl.textContent = `${passCount}/7 conditions met`; subEl.style.color = verdictColor; }
+  if(panelEl) panelEl.style.background = allPass ? 'rgba(0,230,118,0.06)' : 'rgba(255,23,68,0.06)';
+  if(reasonEl){ reasonEl.textContent = reason; reasonEl.style.borderLeftColor = verdictColor; }
+  if(pulseEl) pulseEl.style.background = verdictColor;
+  if(widget)  { const card=widget.querySelector('div'); if(card) card.style.borderColor=verdictColor; }
+
+  renderEODTracker();
+}
+
+function checkEODTimeAlerts() {
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const h=et.getHours(), m=et.getMinutes(), totalMin=h*60+m;
+  const thetaEl=document.getElementById('eod-theta-warning');
+  const exitEl=document.getElementById('eod-exit-alert');
+  if(thetaEl) thetaEl.style.display=(totalMin>=840&&totalMin<870)?'block':'none';
+  if(exitEl) {
+    if(totalMin>=870&&totalMin<=960){
+      exitEl.style.display='block';
+      if(m===50&&h===15){
+        showToast('danger','🚨 EOD HOLD EXIT NOW','3:50 PM — CLOSE ALL POSITIONS IMMEDIATELY','🚨',30000);
+        if(typeof showAlertStrip==='function') showAlertStrip('EOD','🚨 3:50 PM — EOD HOLD EXIT NOW — Close all positions');
+      }
+    } else { exitEl.style.display='none'; }
+  }
+}
+setInterval(checkEODTimeAlerts,30000);
+setTimeout(checkEODTimeAlerts,2000);
+
+function toggleEODRules(){const el=document.getElementById('eod-rules-panel');if(el)el.style.display=el.style.display==='none'?'block':'none';}
+function toggleEODTracker(){const el=document.getElementById('eod-tracker-panel');if(el){el.style.display=el.style.display==='none'?'block':'none';if(el.style.display==='block')renderEODTracker();}}
+function openEODLogModal(){
+  document.getElementById('eod-date').value=new Date().toISOString().split('T')[0];
+  ['eod-entry-time','eod-entry-price','eod-exit-time','eod-actual-pnl','eod-qqq-350','eod-opt-350'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  openModal('eod-log-modal');
+}
+
+function saveEODTrade(){
+  const date=document.getElementById('eod-date').value;
+  const ticker=document.getElementById('eod-ticker').value;
+  const entTime=document.getElementById('eod-entry-time').value;
+  const entPx=parseFloat(document.getElementById('eod-entry-price').value)||0;
+  const exitTime=document.getElementById('eod-exit-time').value;
+  const actPnl=parseFloat(document.getElementById('eod-actual-pnl').value)||0;
+  const qqq350=parseFloat(document.getElementById('eod-qqq-350').value)||0;
+  const opt350=parseFloat(document.getElementById('eod-opt-350').value)||0;
+  if(!date||!entPx||actPnl===0) return showToast('danger','Missing Info','Fill date, entry price and actual P&L','❌');
+  const eodPnl=opt350>0&&entPx>0?Math.round((opt350-entPx)*100):null;
+  const verdict=eodPnl!==null?(eodPnl>actPnl?'EOD Better':'Scalp Better'):'Incomplete';
+  const trades=loadEODTrades();
+  trades.unshift({id:Date.now(),date,ticker,entTime,entPx,exitTime,actPnl,qqq350,opt350,eodPnl,verdict});
+  saveEODTrades(trades);
+  closeModal('eod-log-modal');
+  renderEODTracker();
+  showToast('success','EOD Trade Logged',`${date} — Actual: $${actPnl} vs EOD: ${eodPnl!==null?'$'+eodPnl:'TBD'}`, '📊');
+}
+
+function renderEODTracker(){
+  const trades=loadEODTrades();
+  const tbody=document.getElementById('eod-log-tbody');
+  if(!tbody) return;
+  if(!trades.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--text3);font-size:12px">No trades logged yet. Click + LOG TRADE to start tracking.</td></tr>';return;}
+  tbody.innerHTML=trades.slice(0,20).map(t=>{
+    const vc=t.verdict==='EOD Better'?'var(--green)':t.verdict==='Scalp Better'?'var(--blue)':'var(--text3)';
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:6px 8px;color:var(--text2)">${t.date}</td>
+      <td style="padding:6px 8px;color:var(--text3)">${t.entTime||'--'} @ $${t.entPx.toFixed(2)}</td>
+      <td style="padding:6px 8px;text-align:right;color:${t.actPnl>=0?'var(--green)':'var(--red)'}">$${t.actPnl}</td>
+      <td style="padding:6px 8px;text-align:right;color:var(--text2)">${t.qqq350?'$'+t.qqq350.toFixed(2):'--'}</td>
+      <td style="padding:6px 8px;text-align:right;color:${t.eodPnl>t.actPnl?'var(--green)':t.eodPnl<t.actPnl?'var(--red)':'var(--text3)'}">${t.eodPnl!==null?'$'+t.eodPnl:'Add opt price'}</td>
+      <td style="padding:6px 8px;text-align:center;font-weight:700;color:${vc}">${t.verdict}</td>
+      <td style="padding:4px;text-align:center"><button onclick="deleteEODTrade(${t.id})" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">✕</button></td>
+    </tr>`;
+  }).join('');
+  const complete=trades.filter(t=>t.eodPnl!==null);
+  const scalpWins=complete.filter(t=>t.verdict==='Scalp Better').length;
+  const eodWins=complete.filter(t=>t.verdict==='EOD Better').length;
+  const avgScalp=complete.length?Math.round(complete.reduce((s,t)=>s+t.actPnl,0)/complete.length):0;
+  const avgEOD=complete.length?Math.round(complete.reduce((s,t)=>s+(t.eodPnl||0),0)/complete.length):0;
+  const scalpEl=document.getElementById('eod-scalp-wins'); if(scalpEl)scalpEl.textContent=scalpWins;
+  const holdEl=document.getElementById('eod-hold-wins');   if(holdEl)holdEl.textContent=eodWins;
+  const avgSEl=document.getElementById('eod-avg-scalp');   if(avgSEl)avgSEl.textContent='$'+avgScalp;
+  const avgHEl=document.getElementById('eod-avg-hold');     if(avgHEl)avgHEl.textContent='$'+avgEOD;
+  const recEl=document.getElementById('eod-recommendation');
+  if(recEl){
+    if(complete.length>=20){
+      if(eodWins>scalpWins*1.5){recEl.textContent='🟢 Consider EOD Holds';recEl.style.color='var(--green)';}
+      else if(scalpWins>eodWins){recEl.textContent='🔵 Scalp Only — data says so';recEl.style.color='var(--blue)';}
+      else{recEl.textContent='⚡ Mixed — keep logging';recEl.style.color='var(--accent)';}
+    } else { recEl.textContent=`Log ${20-complete.length} more to see verdict`; recEl.style.color='var(--text3)'; }
+  }
+}
+
+function deleteEODTrade(id){const trades=loadEODTrades().filter(t=>t.id!==id);saveEODTrades(trades);renderEODTracker();}
+
+setTimeout(()=>{if(typeof runEODDetector==='function')runEODDetector();},11000);
+setInterval(()=>{if(typeof runEODDetector==='function')runEODDetector();},300000);
 
 // ==================== VIX DASHBOARD WIDGET ====================
 async function updateVIXWidget(manual = false) {
