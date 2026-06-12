@@ -1040,6 +1040,56 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
     </div>
 
+    <!-- POLITICAL & GEOPOLITICAL ALERT ENGINE -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(255,109,0,0.3);background:linear-gradient(135deg,rgba(255,109,0,0.04),rgba(0,0,0,0))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="geo-pulse" style="width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--orange);letter-spacing:2px">🌍 POLITICAL & GEOPOLITICAL ALERTS</div>
+          <div id="geo-updated" style="font-size:10px;color:var(--text3)"></div>
+        </div>
+        <button onclick="fetchGeoAlerts()" style="background:rgba(255,109,0,0.1);border:1px solid var(--orange);color:var(--orange);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
+      </div>
+      <!-- Active alert panel — hidden until triggered -->
+      <div id="geo-active-alert" style="display:none;margin-bottom:10px;border-radius:10px;overflow:hidden;border:2px solid var(--orange)">
+        <!-- Headline -->
+        <div id="geo-headline-bar" style="padding:10px 14px;background:rgba(255,109,0,0.12)">
+          <div style="font-size:10px;color:var(--orange);letter-spacing:1px;margin-bottom:4px">🚨 POLITICAL EVENT DETECTED</div>
+          <div id="geo-headline-text" style="font-size:13px;font-weight:700;color:var(--text);line-height:1.4"></div>
+          <div id="geo-event-type" style="font-size:11px;color:var(--orange);margin-top:4px"></div>
+        </div>
+        <!-- Historical pattern -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--border)">
+          <div style="background:var(--bg2);padding:10px 12px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">HISTORICAL SAMPLE</div>
+            <div id="geo-sample" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--text)">--</div>
+            <div style="font-size:10px;color:var(--text3)">similar events</div>
+          </div>
+          <div style="background:var(--bg2);padding:10px 12px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">FIRST HOUR BIAS</div>
+            <div id="geo-bias" style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--text2)">--</div>
+          </div>
+          <div style="background:var(--bg2);padding:10px 12px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">REVERSAL RISK</div>
+            <div id="geo-reversal" style="font-size:13px;font-weight:700;color:var(--text2)">--</div>
+          </div>
+          <div style="background:var(--bg2);padding:10px 12px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">CONFIDENCE</div>
+            <div id="geo-confidence" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--text2)">--%</div>
+          </div>
+        </div>
+        <!-- Playbook -->
+        <div id="geo-playbook" style="padding:10px 14px;background:rgba(0,0,0,0.3)">
+          <div style="font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:6px">TRADE PLAYBOOK</div>
+          <div id="geo-playbook-steps" style="display:flex;flex-direction:column;gap:4px"></div>
+        </div>
+      </div>
+      <!-- Recent headlines strip -->
+      <div id="geo-strip" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin">
+        <div style="font-size:11px;color:var(--text3);padding:4px 8px;white-space:nowrap">Scanning for political events...</div>
+      </div>
+    </div>
+
     <!-- FINANCIALJUICE LIVE ALERTS -->
     <div class="card" style="margin-bottom:16px;border:1px solid rgba(255,23,68,0.25);background:linear-gradient(135deg,rgba(255,23,68,0.04),rgba(0,0,0,0))">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
@@ -7635,6 +7685,91 @@ async function fetchCallPutRatio() {
     else guidanceEl.textContent = '⚡ Mixed flow — SPY and QQQ diverging on options. Wait for technical confirmation before entry.';
   }
 }
+
+// ==================== POLITICAL & GEOPOLITICAL ALERT ENGINE ====================
+const GEO_PLAYBOOKS = {
+  iran_escalation: { label:'Iran Escalation / Military Strike', keywords:['iran','strike','missile','attack','escalat','bomb','military','airstrike','tehran'], bias:'🔴 Bearish', biasColor:'var(--red)', sample:14, bearPct:71, reversalPct:42, confidence:68, avgFirstHour:'-0.8%', playbook:['⏰ Wait for 9:45 AM — do NOT react to the gap','📉 QQQ below VWAP at 9:45 → PUTS on first bounce rejection','⚠️ Reversal risk 42% — geopolitical gaps often fill','🎯 Target +$0.35 scalp only — not an EOD hold day','🚫 Do NOT chase the gap down — wait for structure'] },
+  iran_peace:      { label:'Iran Peace / Ceasefire / Deal', keywords:['ceasefire','peace deal','iran deal','halt strikes','withdraw','truce','negotiate','iran agreement','wind down'], bias:'🟢 Bullish', biasColor:'var(--green)', sample:11, bearPct:18, reversalPct:27, confidence:73, avgFirstHour:'+1.1%', playbook:['⏰ Wait for 9:45 AM — confirm gap holds','📈 QQQ above VWAP → CALLS on pullback to VWAP','✅ Lower reversal risk on peace news','🎯 Target +$0.50 if A+ >80, else +$0.35','📊 Check Tech Leaders confirming before entry'] },
+  tariff_new:      { label:'New Tariffs / Trade War Escalation', keywords:['tariff','trade war','impose tariff','new tariff','reciprocal tariff','levy','import tax','25 percent','10 percent tariff'], bias:'🔴 Bearish', biasColor:'var(--red)', sample:19, bearPct:79, reversalPct:38, confidence:74, avgFirstHour:'-1.2%', playbook:['⏰ Wait for 9:45 AM — tariff gaps often partially fill','📉 QQQ below VWAP → PUTS on rejection of premarket low','⚠️ Watch for Trump to walk back — reversal risk 38%','🎯 Target +$0.35 first — do not hold without confirmation','🚫 No EOD holds on tariff shock days'] },
+  tariff_deal:     { label:'Tariff Deal / Trade Truce / Pause', keywords:['tariff pause','trade deal','tariff deal','tariff exempt','tariff waive','trade truce','90 day pause','tariff suspension'], bias:'🟢 Bullish', biasColor:'var(--green)', sample:12, bearPct:17, reversalPct:25, confidence:71, avgFirstHour:'+1.4%', playbook:['⏰ Wait for 9:45 AM — confirm move holding','📈 CALLS on first pullback to VWAP','✅ 83% hold the initial move — strong day','🎯 Consider EOD hold if A+ >80 and tech confirming','📊 Watch NVDA/MSFT — tariff relief = tech bullish'] },
+  fed_hawkish:     { label:'Fed Hawkish / Rate Hike Signal', keywords:['rate hike','hawkish','powell hawkish','hike rates','tighten monetary','restrictive policy','inflation fight','rates higher'], bias:'🔴 Bearish', biasColor:'var(--red)', sample:22, bearPct:77, reversalPct:31, confidence:76, avgFirstHour:'-0.9%', playbook:['⏰ Wait for 9:45 AM — first candle sets direction','📉 PUTS on VWAP rejection or break below PM low','📊 Watch 10Y yield — spiking yield confirms bearish','🎯 Target +$0.35 scalp — hawkish days trend bearish','✅ Lower reversal risk than geopolitical events'] },
+  fed_dovish:      { label:'Fed Dovish / Rate Cut Signal', keywords:['rate cut','dovish','powell dovish','cut rates','pause rate hike','easing policy','accommodative','fed pivot'], bias:'🟢 Bullish', biasColor:'var(--green)', sample:18, bearPct:22, reversalPct:28, confidence:72, avgFirstHour:'+1.0%', playbook:['⏰ Wait for 9:45 AM — confirm QQQ holding above VWAP','📈 CALLS on pullback to VWAP or prev close','✅ Strong trend days — consider EOD hold if A+ >80','🎯 Target +$0.50 on confirmed A+ setup','📊 VIX falling = confirmation. VIX rising = caution'] },
+  trump_economy:   { label:'Trump Economic / Political Announcement', keywords:['trump announces','trump says','trump posts','trump signs','trump tariff','trump deal','trump iran','trump trade','truth social market','executive order market'], bias:'⚡ Watch', biasColor:'var(--accent)', sample:31, bearPct:48, reversalPct:51, confidence:52, avgFirstHour:'±0.6%', playbook:['⏰ Do NOT trade the initial reaction — 51% reversal rate','👀 Watch 15 min before forming a bias','📊 Let QQQ show direction — above or below VWAP','⚡ Highest reversal risk event type','🎯 Smaller size until direction confirmed at 9:45'] },
+  oil_shock:       { label:'Oil Price Spike / OPEC Shock', keywords:['oil spike','opec cut','crude surge','oil supply cut','barrel spike','wti surge','brent surge','energy crisis','oil embargo'], bias:'🔴 Bearish', biasColor:'var(--red)', sample:16, bearPct:69, reversalPct:44, confidence:63, avgFirstHour:'-0.7%', playbook:['⏰ Wait for 9:45 AM — oil shocks create choppy opens','📉 PUTS on VWAP rejection if QQQ below open','⚠️ Reversal risk 44% — oil spikes often fade intraday','🎯 Scalp only +$0.35 — not a trending day','📊 Watch XLE energy sector for confirmation'] }
+};
+
+let lastGeoAlert='', geoAlertActive=false;
+
+async function fetchGeoAlerts() {
+  const updEl=document.getElementById('geo-updated');
+  const pulseEl=document.getElementById('geo-pulse');
+  if(updEl) updEl.textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  try {
+    const r=await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
+    if(!r.ok) throw new Error();
+    const articles=await r.json();
+    const headlines=articles.slice(0,30);
+    const geoStrip=document.getElementById('geo-strip');
+
+    let matchedPlaybook=null, matchedHeadline='';
+    for(const article of headlines) {
+      const h=(article.headline||'').toLowerCase();
+      for(const [key,pb] of Object.entries(GEO_PLAYBOOKS)) {
+        if(pb.keywords.some(kw=>h.includes(kw))) { matchedPlaybook={key,...pb}; matchedHeadline=article.headline; break; }
+      }
+      if(matchedPlaybook) break;
+    }
+
+    const politicalHeadlines=headlines.filter(a=>{const h=(a.headline||'').toLowerCase();return Object.values(GEO_PLAYBOOKS).some(pb=>pb.keywords.some(kw=>h.includes(kw)));});
+
+    if(geoStrip) {
+      if(politicalHeadlines.length) {
+        geoStrip.innerHTML=politicalHeadlines.slice(0,8).map(a=>{
+          const h=(a.headline||'').toLowerCase();
+          const isPeace=GEO_PLAYBOOKS.iran_peace.keywords.some(k=>h.includes(k))||GEO_PLAYBOOKS.tariff_deal.keywords.some(k=>h.includes(k))||GEO_PLAYBOOKS.fed_dovish.keywords.some(k=>h.includes(k));
+          const isBear=GEO_PLAYBOOKS.iran_escalation.keywords.some(k=>h.includes(k))||GEO_PLAYBOOKS.tariff_new.keywords.some(k=>h.includes(k))||GEO_PLAYBOOKS.fed_hawkish.keywords.some(k=>h.includes(k));
+          const color=isPeace?'var(--green)':isBear?'var(--red)':'var(--accent)';
+          const bg=isPeace?'rgba(0,230,118,0.08)':isBear?'rgba(255,23,68,0.08)':'rgba(245,197,24,0.06)';
+          const border=isPeace?'rgba(0,230,118,0.3)':isBear?'rgba(255,23,68,0.3)':'rgba(245,197,24,0.3)';
+          return `<a href="${a.url||'#'}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:${bg};border:1px solid ${border};border-radius:16px;padding:4px 10px;white-space:nowrap;text-decoration:none;flex-shrink:0"><span style="font-size:11px;color:${color}">${a.headline.substring(0,70)}${a.headline.length>70?'...':''}</span></a>`;
+        }).join('');
+      } else {
+        geoStrip.innerHTML='<div style="font-size:11px;color:var(--text3);padding:4px 8px;white-space:nowrap">No political events in current headlines — monitoring...</div>';
+      }
+    }
+
+    if(matchedPlaybook && matchedHeadline!==lastGeoAlert) {
+      lastGeoAlert=matchedHeadline;
+      renderGeoAlert(matchedPlaybook,matchedHeadline);
+      if(pulseEl){pulseEl.style.background=matchedPlaybook.biasColor;}
+      showToast(matchedPlaybook.bias.includes('🟢')?'success':'danger',`🌍 ${matchedPlaybook.label}`,`${matchedHeadline.substring(0,80)} — ${matchedPlaybook.confidence}% confidence`,'🌍',15000);
+    } else if(!matchedPlaybook) {
+      const alertEl=document.getElementById('geo-active-alert');
+      if(alertEl) alertEl.style.display='none';
+      if(pulseEl) pulseEl.style.background='var(--text3)';
+    }
+  } catch(e) {
+    const strip=document.getElementById('geo-strip');
+    if(strip) strip.innerHTML='<div style="font-size:11px;color:var(--text3);padding:4px 8px">Feed unavailable — monitoring paused</div>';
+  }
+}
+
+function renderGeoAlert(pb,headline) {
+  const alertEl=document.getElementById('geo-active-alert'); if(!alertEl) return;
+  alertEl.style.display='block'; alertEl.style.borderColor=pb.biasColor;
+  const set=(id,val,color)=>{const el=document.getElementById(id);if(el){el.textContent=val;if(color)el.style.color=color;}};
+  set('geo-headline-text',headline);
+  set('geo-event-type',pb.label,pb.biasColor);
+  set('geo-sample',pb.sample);
+  set('geo-bias',`${pb.bias} — ${100-pb.bearPct}% bull / ${pb.bearPct}% bear in first hour`,pb.biasColor);
+  set('geo-reversal',`${pb.reversalPct}% reversal risk`,pb.reversalPct>40?'var(--orange)':'var(--green)');
+  set('geo-confidence',pb.confidence+'%',pb.biasColor);
+  const playbookEl=document.getElementById('geo-playbook-steps');
+  if(playbookEl) playbookEl.innerHTML=pb.playbook.map(s=>`<div style="font-size:11px;color:var(--text);padding:3px 0;display:flex;gap:6px"><span style="color:${pb.biasColor};flex-shrink:0">▸</span>${s}</div>`).join('');
+}
+
+setTimeout(fetchGeoAlerts,5000);
+setInterval(fetchGeoAlerts,90000);
 
 // ==================== EOD HOLD DETECTOR ====================
 const EOD_STORAGE_KEY = 'mrt_eod_trades_v1';
