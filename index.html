@@ -737,8 +737,39 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
-    <!-- SIGNAL ALERT CARD -->
-    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- SESSION TIMER + RUNNING P&L BANNER -->
+    <div id="session-pnl-banner" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <!-- Session Timer -->
+      <div style="background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-family:Orbitron,sans-serif;font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:2px">SESSION WINDOW</div>
+          <div id="session-label" style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--text2)">CHECKING...</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:Orbitron,sans-serif;font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:2px">TIME LEFT / UNTIL</div>
+          <div id="session-countdown" style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:var(--text2)">--:--</div>
+        </div>
+      </div>
+      <!-- Running P&L -->
+      <div style="background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-family:Orbitron,sans-serif;font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:2px">TODAY'S P&L</div>
+          <div id="spnl-today" style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:var(--text2)">$0.00</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:Orbitron,sans-serif;font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:2px">GOAL</div>
+          <div id="spnl-goal-bar-wrap" style="width:80px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-bottom:2px">
+            <div id="spnl-goal-bar" style="height:100%;width:0%;background:var(--green);border-radius:4px;transition:width 0.5s ease"></div>
+          </div>
+          <div id="spnl-goal-label" style="font-size:10px;color:var(--text3)">$0 of $70</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:Orbitron,sans-serif;font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:2px">LIMIT LEFT</div>
+          <div id="spnl-limit" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--green)">$120</div>
+        </div>
+      </div>
+    </div>
+
     <!-- TRADE BIAS ENGINE — MASTER SIGNAL                        -->
     <!-- ══════════════════════════════════════════════════════════ -->
     <div id="bias-engine-card" style="margin-bottom:16px;border-radius:14px;border:2px solid var(--border);background:linear-gradient(135deg,rgba(0,0,0,0.6),rgba(0,0,0,0.3));overflow:hidden">
@@ -3766,6 +3797,7 @@ async function initDashboard() {
   showMarketContext();
   setInterval(checkMarketShock, 90000);
   setInterval(updateCEOScoreboard, 120000);
+  setInterval(()=>{if(typeof updateRunningPNL==='function')updateRunningPNL();}, 30000);
   setTimeout(checkMarketShock, 8000);
   setTimeout(fetchCallPutRatio, 8000);
   setInterval(fetchCallPutRatio, 300000);
@@ -8133,7 +8165,125 @@ function deleteMOAEntry(id){const d=loadMOA().filter(e=>e.id!==id);saveMOA(d);re
 // Init MOA on analytics tab
 const _origShowTabMOA = window.showTab;
 
-// ==================== POLITICAL & GEOPOLITICAL ALERT ENGINE ====================
+// ==================== SESSION TIMER + RUNNING P&L BANNER ====================
+function updateSessionTimer() {
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const h=et.getHours(), m=et.getMinutes(), s=et.getSeconds();
+  const totalSec = h*3600 + m*60 + s;
+
+  // Session windows in seconds
+  const S1_START = 9*3600+45*60;
+  const S1_END   = 11*3600+30*60;
+  const S2_START = 14*3600+30*60;
+  const S2_END   = 15*3600+55*60;
+
+  const labelEl     = document.getElementById('session-label');
+  const countdownEl = document.getElementById('session-countdown');
+
+  function fmt(secs) {
+    const mm = Math.floor(secs/60);
+    const ss = secs % 60;
+    return `${mm}:${ss.toString().padStart(2,'0')}`;
+  }
+
+  let label, countdown, color, borderColor;
+
+  if(totalSec < S1_START) {
+    const remaining = S1_START - totalSec;
+    label = '⏰ PRE-MARKET'; color = 'var(--text2)'; borderColor = 'var(--border)';
+    countdown = fmt(remaining);
+    countdownEl && (countdownEl.title = 'Time until Session 1 opens');
+  } else if(totalSec >= S1_START && totalSec < S1_END) {
+    const remaining = S1_END - totalSec;
+    label = '🟢 SESSION 1 LIVE'; color = 'var(--green)'; borderColor = 'rgba(0,230,118,0.4)';
+    countdown = fmt(remaining);
+    if(remaining <= 900) { color='var(--orange)'; } // last 15 min warning
+    if(remaining <= 300) { // last 5 min
+      showToast('danger','⏰ Session 1 Closing','5 minutes left in Session 1 — wrap up trades','⏰',10000);
+    }
+  } else if(totalSec >= S1_END && totalSec < S2_START) {
+    const remaining = S2_START - totalSec;
+    label = '🌙 LUNCH — NO TRADES'; color = 'var(--text3)'; borderColor = 'var(--border)';
+    countdown = fmt(remaining);
+    countdownEl && (countdownEl.title = 'Time until Session 2 opens');
+  } else if(totalSec >= S2_START && totalSec < S2_END) {
+    const remaining = S2_END - totalSec;
+    label = '🟢 SESSION 2 LIVE'; color = 'var(--green)'; borderColor = 'rgba(0,230,118,0.4)';
+    countdown = fmt(remaining);
+    if(remaining <= 900) { color='var(--orange)'; }
+    if(remaining <= 300) {
+      showToast('danger','⏰ Session 2 Closing','5 minutes left — close all positions by 3:55','⏰',10000);
+    }
+  } else if(totalSec >= S2_END) {
+    label = '🔴 MARKET CLOSED'; color = 'var(--red)'; borderColor = 'rgba(255,23,68,0.3)';
+    countdown = 'DONE';
+  }
+
+  if(labelEl)     { labelEl.textContent=label; labelEl.style.color=color; }
+  if(countdownEl) { countdownEl.textContent=countdown; countdownEl.style.color=color; }
+
+  const banner = document.getElementById('session-pnl-banner');
+  if(banner) {
+    const timerBox = banner.querySelector('div:first-child');
+    if(timerBox) timerBox.style.borderColor = borderColor;
+  }
+
+  // Update P&L banner from today's trades
+  updateRunningPNL();
+}
+
+function updateRunningPNL() {
+  if(!state.trades) return;
+  const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  const todayTrades = state.trades.filter(t => {
+    if(t.type==='WITHDRAWAL'||t.type==='DEPOSIT') return false;
+    return t.date === today;
+  });
+  const todayPNL = todayTrades.reduce((s,t) => s+(parseFloat(t.pnl)||0), 0);
+  const goal = 70; // session goal
+  const limit = 120; // daily loss limit
+  const limitLeft = limit + Math.min(todayPNL, 0); // how much loss room remains
+
+  const pnlEl   = document.getElementById('spnl-today');
+  const barEl   = document.getElementById('spnl-goal-bar');
+  const labelEl = document.getElementById('spnl-goal-label');
+  const limitEl = document.getElementById('spnl-limit');
+  const pnlBox  = document.getElementById('session-pnl-banner')?.querySelector('div:last-child');
+
+  if(pnlEl) {
+    pnlEl.textContent = (todayPNL>=0?'+':'')+`$${todayPNL.toFixed(2)}`;
+    pnlEl.style.color = todayPNL > 0 ? 'var(--green)' : todayPNL < 0 ? 'var(--red)' : 'var(--text2)';
+  }
+  const goalPct = Math.min(Math.max((todayPNL/goal)*100, 0), 100);
+  if(barEl) { barEl.style.width=goalPct+'%'; barEl.style.background = todayPNL>=goal?'var(--green)':todayPNL<0?'var(--red)':'var(--accent)'; }
+  if(labelEl) labelEl.textContent = `$${Math.max(todayPNL,0).toFixed(0)} of $${goal}`;
+  if(limitEl) {
+    limitEl.textContent = `$${Math.max(limitLeft,0).toFixed(0)}`;
+    limitEl.style.color = limitLeft < 30 ? 'var(--red)' : limitLeft < 60 ? 'var(--orange)' : 'var(--green)';
+  }
+  if(pnlBox) pnlBox.style.borderColor = todayPNL >= goal ? 'rgba(0,230,118,0.5)' : todayPNL <= -limit ? 'rgba(255,23,68,0.5)' : 'var(--border)';
+
+  // Fire goal reached toast once
+  if(todayPNL >= goal && !window._goalToastFired) {
+    window._goalToastFired = true;
+    showToast('success','🎯 DAILY GOAL HIT',`+$${todayPNL.toFixed(2)} — Session goal reached. CLOSE ThinkorSwim NOW.`,'🎯',20000);
+  }
+  // Fire limit warning
+  if(todayPNL <= -120 && !window._limitToastFired) {
+    window._limitToastFired = true;
+    showToast('danger','🚨 DAILY LOSS LIMIT HIT',`-$${Math.abs(todayPNL).toFixed(2)} — STOP ALL TRADING. Close platform now.`,'🚨',30000);
+  }
+}
+
+// Reset toast flags at midnight
+setInterval(()=>{
+  const h=new Date().getHours();
+  if(h===0){window._goalToastFired=false;window._limitToastFired=false;}
+},60000);
+
+setInterval(updateSessionTimer, 1000); // every second for countdown
+setTimeout(updateSessionTimer, 500);
 const GEO_PLAYBOOKS = {
   iran_escalation: { label:'Iran Escalation / Military Strike', keywords:['iran','strike','missile','attack','escalat','bomb','military','airstrike','tehran'], bias:'🔴 Bearish', biasColor:'var(--red)', sample:14, bearPct:71, reversalPct:42, confidence:68, avgFirstHour:'-0.8%', playbook:['⏰ Wait for 9:45 AM — do NOT react to the gap','📉 QQQ below VWAP at 9:45 → PUTS on first bounce rejection','⚠️ Reversal risk 42% — geopolitical gaps often fill','🎯 Target +$0.35 scalp only — not an EOD hold day','🚫 Do NOT chase the gap down — wait for structure'] },
   iran_peace:      { label:'Iran Peace / Ceasefire / Deal', keywords:['ceasefire','peace deal','iran deal','halt strikes','withdraw','truce','negotiate','iran agreement','wind down'], bias:'🟢 Bullish', biasColor:'var(--green)', sample:11, bearPct:18, reversalPct:27, confidence:73, avgFirstHour:'+1.1%', playbook:['⏰ Wait for 9:45 AM — confirm gap holds','📈 QQQ above VWAP → CALLS on pullback to VWAP','✅ Lower reversal risk on peace news','🎯 Target +$0.50 if A+ >80, else +$0.35','📊 Check Tech Leaders confirming before entry'] },
