@@ -825,6 +825,55 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- TODAY'S PLAYBOOK -->
+    <div class="card" style="margin-bottom:12px;border:1px solid rgba(245,197,24,0.3);background:linear-gradient(135deg,rgba(245,197,24,0.05),rgba(0,0,0,0))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">📋 TODAY'S PLAYBOOK</div>
+        <div id="playbook-updated" style="font-size:10px;color:var(--text3)"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">
+        <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">MARKET REGIME</div>
+          <div id="pb-regime" style="font-size:13px;font-weight:700;color:var(--text2)">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">BEST STRATEGY</div>
+          <div id="pb-strategy" style="font-size:13px;font-weight:700;color:var(--text2)">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">EXPECTED HOLD</div>
+          <div id="pb-hold" style="font-size:13px;font-weight:700;color:var(--text2)">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">AGGRESSION</div>
+          <div id="pb-aggression" style="font-size:13px;font-weight:700;color:var(--text2)">--</div>
+        </div>
+      </div>
+      <div id="pb-note" style="margin-top:8px;font-size:11px;color:var(--text2);padding:6px 10px;background:rgba(0,0,0,0.2);border-radius:6px;border-left:3px solid var(--accent)"></div>
+    </div>
+
+    <!-- A+ DAY DETECTOR -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,229,255,0.2);background:linear-gradient(135deg,rgba(0,229,255,0.04),rgba(0,0,0,0))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">🏆</span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--cyan);letter-spacing:2px">A+ DAY DETECTOR</div>
+        </div>
+        <button onclick="runAPlusDetector()" style="background:rgba(0,229,255,0.1);border:1px solid var(--cyan);color:var(--cyan);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center">
+        <div style="text-align:center;background:rgba(0,0,0,0.4);border:2px solid var(--border);border-radius:50%;width:100px;height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0" id="aplus-circle">
+          <div id="aplus-score" style="font-family:Orbitron,sans-serif;font-size:28px;font-weight:900;color:var(--text2)">--</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px">/100</div>
+        </div>
+        <div>
+          <div id="aplus-grade" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:var(--text2);margin-bottom:6px">SCANNING...</div>
+          <div id="aplus-action" style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:8px">Loading market conditions...</div>
+          <div id="aplus-factors" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- BID/ASK PRESSURE SCORE -->
     <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.2)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
@@ -992,28 +1041,6 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
-    <!-- A+ DAY DETECTOR -->
-    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,229,255,0.2);background:linear-gradient(135deg,rgba(0,229,255,0.04),rgba(0,0,0,0))">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:18px">🏆</span>
-          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--cyan);letter-spacing:2px">A+ DAY DETECTOR</div>
-        </div>
-        <button onclick="runAPlusDetector()" style="background:rgba(0,229,255,0.1);border:1px solid var(--cyan);color:var(--cyan);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
-      </div>
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center">
-        <!-- Score Circle -->
-        <div style="text-align:center;background:rgba(0,0,0,0.4);border:2px solid var(--border);border-radius:50%;width:100px;height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0" id="aplus-circle">
-          <div id="aplus-score" style="font-family:Orbitron,sans-serif;font-size:28px;font-weight:900;color:var(--text2)">--</div>
-          <div style="font-size:9px;color:var(--text3);letter-spacing:1px">/100</div>
-        </div>
-        <div>
-          <div id="aplus-grade" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:var(--text2);margin-bottom:6px">SCANNING...</div>
-          <div id="aplus-action" style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:8px">Loading market conditions...</div>
-          <div id="aplus-factors" style="display:flex;flex-wrap:wrap;gap:4px"></div>
-        </div>
-      </div>
-    </div>
 
     <!-- EVENT PROBABILITY ENGINE -->
     <div class="card" style="margin-bottom:16px;border:1px solid rgba(255,109,0,0.2);background:linear-gradient(135deg,rgba(255,109,0,0.04),rgba(0,0,0,0))">
@@ -8164,6 +8191,55 @@ function deleteMOAEntry(id){const d=loadMOA().filter(e=>e.id!==id);saveMOA(d);re
 
 // Init MOA on analytics tab
 const _origShowTabMOA = window.showTab;
+
+// ==================== TODAY'S PLAYBOOK ====================
+function updateTodaysPlaybook() {
+  const regimeName = document.getElementById('regime-name')?.textContent || '';
+  const biasVerdict = document.getElementById('be-verdict')?.textContent || '';
+  const confidence = parseInt(document.getElementById('be-confidence')?.textContent) || 0;
+  const aplusScore = parseInt(document.getElementById('aplus-score')?.textContent) || 0;
+  const vix = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+
+  let regime, strategy, hold, aggression, note, color;
+
+  if(regimeName.includes('SHOCK') || vix > 30) {
+    regime='🚨 Shock Day'; strategy='STAY FLAT'; hold='No trade'; aggression='ZERO'; color='var(--red)';
+    note='Market shock active — cash is the best position. Do not trade today.';
+  } else if(regimeName.includes('TREND UP')) {
+    regime='📈 Trend Day Up'; strategy='CALL PULLBACKS'; hold='15–60 min'; color='var(--green)';
+    aggression = aplusScore >= 80 ? 'AGGRESSIVE' : 'NORMAL';
+    note = aplusScore >= 80 ? 'A+ trending day — hold runners longer. Move stop to BE at +$0.20. Trail stop.' : 'Trend day — take pullback entries. Target +$0.35 min, hold if momentum continues.';
+  } else if(regimeName.includes('TREND DOWN')) {
+    regime='📉 Trend Day Down'; strategy='PUT BOUNCES'; hold='15–60 min'; color='var(--red)';
+    aggression = aplusScore >= 80 ? 'AGGRESSIVE' : 'NORMAL';
+    note = aplusScore >= 80 ? 'A+ trending down — hold runners. Sell bounces at VWAP/resistance.' : 'Trend down — sell bounce rejections. Do not fight the tape. Target +$0.35 min.';
+  } else if(regimeName.includes('CHOP') || regimeName.includes('RANGE')) {
+    regime='⚡ Chop/Range Day'; strategy='QUICK SCALPS ONLY'; hold='5–15 min'; aggression='DEFENSIVE'; color='var(--text2)';
+    note='Chop day — take profits fast at +$0.20-$0.35. No runners. Skip if signal score under 7/10.';
+  } else if(regimeName.includes('VOLATILITY')) {
+    regime='🌩️ High Vol Day'; strategy='WAIT FOR STRUCTURE'; hold='10–30 min'; aggression='REDUCED'; color='var(--orange)';
+    note='High volatility — wait for clear structure. Wider stops may be needed. 1 contract only.';
+  } else {
+    regime='🟡 Mixed/Developing'; strategy='STANDARD RULES'; hold='+$0.35 target'; aggression='NORMAL'; color='var(--accent)';
+    note='No clear regime yet — follow standard rules. Wait for 8+/10 signal. 1 contract.';
+  }
+
+  const pbR=document.getElementById('pb-regime');
+  const pbS=document.getElementById('pb-strategy');
+  const pbH=document.getElementById('pb-hold');
+  const pbA=document.getElementById('pb-aggression');
+  const pbN=document.getElementById('pb-note');
+  const pbU=document.getElementById('playbook-updated');
+
+  if(pbR){pbR.textContent=regime;pbR.style.color=color;}
+  if(pbS){pbS.textContent=strategy;pbS.style.color=color;}
+  if(pbH){pbH.textContent=hold;pbH.style.color=color;}
+  if(pbA){pbA.textContent=aggression;pbA.style.color=aggression==='AGGRESSIVE'?'var(--green)':aggression==='ZERO'||aggression==='DEFENSIVE'?'var(--red)':'var(--accent)';}
+  if(pbN){pbN.textContent=note;pbN.style.borderLeftColor=color;}
+  if(pbU) pbU.textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+setTimeout(updateTodaysPlaybook, 12000);
+setInterval(updateTodaysPlaybook, 120000);
 
 // ==================== SESSION TIMER + RUNNING P&L BANNER ====================
 function updateSessionTimer() {
