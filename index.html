@@ -3553,7 +3553,7 @@ async function initDashboard() {
   calcBS();
   calcPosition();
   setInterval(updateSessionStatus, 30000);
-  setInterval(fetchMarketData, 60000);
+  setInterval(fetchMarketData, 30000); // refresh every 30 seconds for real-time feel
   setInterval(updateTradingIntelligence, 60000);
   setInterval(fetchCryptoPrices, 120000);
   showDailyPlanReminder();
@@ -4097,51 +4097,53 @@ async function fetchMarketData() {
     }
   }
 
-  // SPY, QQQ, NVDA, META, TSLA, VIX — try Finnhub first, Yahoo fallback
-  const syms=['SPY','QQQ','NVDA','META','TSLA','VIX'];
-  for(const sym of syms) {
-    try {
-      const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FINNHUB_KEY}`);
-      if(r.ok){
-        const d=await r.json();
-        if(d.c) {
-          const chg=d.dp||0;
-          const chgStr=(chg>=0?'+':'')+chg.toFixed(2)+'%';
-          const col=chg>=0?'var(--green)':'var(--red)';
-          const k=sym.toLowerCase();
-          const el=document.getElementById('t-'+k);
-          const ec=document.getElementById('tc-'+k);
-          const el2=document.getElementById('t-'+k+'2');
-          if(el){el.textContent='$'+d.c.toFixed(2);}
-          if(ec){ec.textContent=' '+chgStr;ec.style.color=col;}
-          if(el2){el2.textContent='$'+d.c.toFixed(2);}
-          const ri=document.getElementById('research-sym-label');
-          if(ri&&ri.textContent===sym){
-            document.getElementById('res-price').textContent='$'+d.c.toFixed(2);
-            const rc=document.getElementById('res-change');
-            rc.textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';
-            rc.className='stat-val '+(chg>=0?'pos':'neg');
-          }
-          continue; // Finnhub worked, skip Yahoo fallback
-        }
+  // SPY, QQQ, NVDA, META, TSLA, VIX, BTC, ETH, GOLD, OIL — parallel fetch
+  const syms=['SPY','QQQ','NVDA','META','TSLA','^VIX','BTC-USD','ETH-USD'];
+  const finnhubSyms=['SPY','QQQ','NVDA','META','TSLA','VIX'];
+
+  // Fetch all Finnhub quotes in parallel
+  const results = await Promise.allSettled(
+    finnhubSyms.map(sym =>
+      fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FINNHUB_KEY}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => ({ sym, data: d }))
+        .catch(() => ({ sym, data: null }))
+    )
+  );
+
+  for(const result of results) {
+    if(result.status !== 'fulfilled') continue;
+    const { sym, data: d } = result.value;
+    if(!d || !d.c) {
+      // Yahoo fallback for this symbol
+      const yData = await fetchYahoo(sym==='VIX'?'^VIX':sym);
+      if(yData) {
+        const chg = yData.prevClose ? ((yData.price - yData.prevClose)/yData.prevClose*100) : 0;
+        const k = sym.toLowerCase();
+        const el = document.getElementById('t-'+k);
+        const ec = document.getElementById('tc-'+k);
+        if(el) el.textContent = '$'+yData.price.toFixed(2);
+        if(ec) { ec.textContent = (chg>=0?'+':'')+chg.toFixed(2)+'%'; ec.style.color = chg>=0?'var(--green)':'var(--red)'; }
       }
-    } catch(e) {}
-    // Yahoo Finance fallback for this symbol
-    const yData = await fetchYahoo(sym);
-    if (yData) {
-      const k = sym.toLowerCase();
-      const el = document.getElementById('t-'+k);
-      const ec = document.getElementById('tc-'+k);
-      const el2 = document.getElementById('t-'+k+'2');
-      if (el) el.textContent = '$'+yData.price.toFixed(2);
-      if (el2) el2.textContent = '$'+yData.price.toFixed(2);
-      if (ec && yData.prevClose) {
-        const chg = ((yData.price - yData.prevClose) / yData.prevClose * 100);
-        ec.textContent = ' '+(chg>=0?'+':'')+chg.toFixed(2)+'%';
-        ec.style.color = chg>=0?'var(--green)':'var(--red)';
-      }
+      continue;
     }
-    await new Promise(r=>setTimeout(r,200));
+    const chg = d.dp || 0;
+    const chgStr = (chg>=0?'+':'')+chg.toFixed(2)+'%';
+    const col = chg>=0?'var(--green)':'var(--red)';
+    const k = sym.toLowerCase();
+    const el  = document.getElementById('t-'+k);
+    const ec  = document.getElementById('tc-'+k);
+    const el2 = document.getElementById('t-'+k+'2');
+    if(el)  el.textContent  = '$'+d.c.toFixed(2);
+    if(ec)  { ec.textContent = ' '+chgStr; ec.style.color = col; }
+    if(el2) el2.textContent = '$'+d.c.toFixed(2);
+    const ri = document.getElementById('research-sym-label');
+    if(ri && ri.textContent===sym) {
+      const rp = document.getElementById('res-price');
+      const rc = document.getElementById('res-change');
+      if(rp) rp.textContent = '$'+d.c.toFixed(2);
+      if(rc) { rc.textContent = (chg>=0?'+':'')+chg.toFixed(2)+'%'; rc.className='stat-val '+(chg>=0?'pos':'neg'); }
+    }
   }
   // Crypto tickers
   try {
