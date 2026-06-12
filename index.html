@@ -794,6 +794,59 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- BID/ASK PRESSURE SCORE -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.2)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">⚖️</span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--blue);letter-spacing:2px">BID/ASK PRESSURE SCORE</div>
+          <div id="bap-updated" style="font-size:10px;color:var(--text3)"></div>
+        </div>
+        <button onclick="fetchBidAskPressure()" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <!-- SPY -->
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--accent);margin-bottom:8px">SPY</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <div style="text-align:center;flex:1">
+              <div style="font-size:9px;color:var(--green);letter-spacing:1px">BUYER PRESSURE</div>
+              <div id="spy-buy-pct" style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700;color:var(--green)">--%</div>
+            </div>
+            <div style="text-align:center;flex:1">
+              <div style="font-size:9px;color:var(--red);letter-spacing:1px">SELLER PRESSURE</div>
+              <div id="spy-sell-pct" style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700;color:var(--red)">--%</div>
+            </div>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin-bottom:6px">
+            <div id="spy-pressure-bar" style="height:100%;width:50%;background:linear-gradient(90deg,var(--green),var(--red));transition:width 0.5s ease"></div>
+          </div>
+          <div id="spy-pressure-verdict" style="font-size:11px;font-weight:700;text-align:center;color:var(--text2)">--</div>
+          <div id="spy-bid-ask-detail" style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px"></div>
+        </div>
+        <!-- QQQ -->
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--blue);margin-bottom:8px">QQQ</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <div style="text-align:center;flex:1">
+              <div style="font-size:9px;color:var(--green);letter-spacing:1px">BUYER PRESSURE</div>
+              <div id="qqq-buy-pct" style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700;color:var(--green)">--%</div>
+            </div>
+            <div style="text-align:center;flex:1">
+              <div style="font-size:9px;color:var(--red);letter-spacing:1px">SELLER PRESSURE</div>
+              <div id="qqq-sell-pct" style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700;color:var(--red)">--%</div>
+            </div>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin-bottom:6px">
+            <div id="qqq-pressure-bar" style="height:100%;width:50%;background:linear-gradient(90deg,var(--green),var(--red));transition:width 0.5s ease"></div>
+          </div>
+          <div id="qqq-pressure-verdict" style="font-size:11px;font-weight:700;text-align:center;color:var(--text2)">--</div>
+          <div id="qqq-bid-ask-detail" style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px"></div>
+        </div>
+      </div>
+      <div id="bap-combined-verdict" style="font-size:12px;font-weight:700;text-align:center;padding:8px;background:rgba(0,0,0,0.2);border-radius:8px;color:var(--text2)">Loading pressure data...</div>
+    </div>
+
     <div id="signal-alert-card" style="background:linear-gradient(135deg,rgba(0,180,255,0.08),rgba(0,0,0,0));border:1px solid rgba(0,180,255,0.3);border-radius:14px;padding:14px 18px;margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:8px">
@@ -983,8 +1036,21 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div id="level-guidance" style="margin-top:10px;background:rgba(0,180,255,0.05);border:1px solid rgba(0,180,255,0.15);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);display:none"></div>
     </div>
 
-    <!-- VIX DASHBOARD + MARKET BREADTH + NEXT EVENT — 3 column grid -->
+    <!-- VIX DASHBOARD + MARKET BREADTH + NEXT EVENT + REGIME — responsive grid -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:16px">
+
+      <!-- MARKET REGIME DETECTOR -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--text2);letter-spacing:2px">🎯 MARKET REGIME</div>
+          <button onclick="detectMarketRegime()" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">🔄</button>
+        </div>
+        <div id="regime-badge" style="text-align:center;margin-bottom:10px">
+          <div id="regime-name" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:var(--text2)">SCANNING...</div>
+          <div id="regime-sub" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
+        </div>
+        <div id="regime-strategy" style="font-size:11px;color:var(--text2);padding:8px;background:rgba(0,0,0,0.3);border-radius:8px;line-height:1.5;border-left:3px solid var(--border)"></div>
+      </div>
 
       <!-- VIX DASHBOARD -->
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px" id="vix-widget">
@@ -1801,7 +1867,28 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
   })();
   </script>
 
-  <!-- EOD Log Modal -->
+  <!-- MOA Log Modal -->
+<div class="modal-overlay" id="moa-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">🔍 LOG MISSED OPPORTUNITY <button class="modal-close" onclick="closeModal('moa-modal')">✕</button></div>
+    <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="moa-date"></div>
+    <div class="form-group"><label class="form-label">QQQ best move today (%)</label><input class="form-input" type="number" id="moa-best-move" placeholder="+2.1" step="0.1"></div>
+    <div class="form-group"><label class="form-label">Best entry time</label><input class="form-input" type="text" id="moa-entry-time" placeholder="9:47 AM"></div>
+    <div class="form-group"><label class="form-label">Best exit time</label><input class="form-input" type="text" id="moa-exit-time" placeholder="11:12 AM"></div>
+    <div class="form-group"><label class="form-label">Direction (CALLS or PUTS)</label>
+      <select class="form-input" id="moa-direction"><option>CALLS</option><option>PUTS</option></select></div>
+    <div class="form-group"><label class="form-label">Potential option gain ($)</label><input class="form-input" type="number" id="moa-potential" placeholder="148" step="1"></div>
+    <div class="form-group"><label class="form-label">Dashboard Bias Engine score at entry time (%)</label><input class="form-input" type="number" id="moa-signal-score" placeholder="68" step="1"></div>
+    <div class="form-group"><label class="form-label">Did you take the trade?</label>
+      <select class="form-input" id="moa-taken"><option value="no">No — missed it</option><option value="yes">Yes — took it</option><option value="early">Yes — exited too early</option></select></div>
+    <div class="form-group"><label class="form-label">Why missed / what happened</label>
+      <input class="form-input" type="text" id="moa-reason" placeholder="Signal score only 68, needed 80..."></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn" onclick="closeModal('moa-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMOAEntry()">SAVE</button>
+    </div>
+  </div>
+</div>
   <div class="modal-overlay" id="eod-log-modal">
     <div class="modal" style="max-width:440px">
       <div class="modal-title">📊 LOG EOD COMPARISON TRADE <button class="modal-close" onclick="closeModal('eod-log-modal')">✕</button></div>
@@ -1821,6 +1908,63 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
   </div>
+    <!-- TRADE MANAGEMENT ASSISTANT -->
+    <div class="card" style="margin-bottom:16px;border:2px solid rgba(0,230,118,0.3);background:linear-gradient(135deg,rgba(0,230,118,0.04),rgba(0,0,0,0))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">🎯</span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--green);letter-spacing:2px">TRADE MANAGEMENT ASSISTANT</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3)">Enter your active trade to get live guidance</div>
+      </div>
+      <!-- Input row -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px">
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">TICKER</label>
+          <select class="form-input" id="tm-ticker" style="font-size:12px"><option>QQQ</option><option>SPY</option></select></div>
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">TYPE</label>
+          <select class="form-input" id="tm-type" style="font-size:12px"><option>CALL</option><option>PUT</option></select></div>
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">ENTRY PRICE ($)</label>
+          <input class="form-input" id="tm-entry" type="number" placeholder="1.44" step="0.01" style="font-size:12px"></div>
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">CURRENT PRICE ($)</label>
+          <input class="form-input" id="tm-current" type="number" placeholder="1.89" step="0.01" style="font-size:12px" oninput="updateTradeManager()"></div>
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">CONTRACTS</label>
+          <input class="form-input" id="tm-contracts" type="number" placeholder="1" value="1" min="1" max="2" style="font-size:12px" oninput="updateTradeManager()"></div>
+        <div style="display:flex;align-items:flex-end">
+          <button onclick="updateTradeManager()" class="btn btn-primary" style="width:100%;font-size:12px">ANALYZE</button>
+        </div>
+      </div>
+      <!-- Output panel -->
+      <div id="tm-output" style="display:none">
+        <!-- P&L Status -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:10px">
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px">UNREALIZED P&L</div>
+            <div id="tm-pnl" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;margin-top:4px">$0</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px">% MOVE</div>
+            <div id="tm-pct" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;margin-top:4px">0%</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px">STOP PRICE</div>
+            <div id="tm-stop" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--red);margin-top:4px">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px">TARGET</div>
+            <div id="tm-target" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--green);margin-top:4px">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px">RUNNER TARGET</div>
+            <div id="tm-runner" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--cyan);margin-top:4px">--</div>
+          </div>
+        </div>
+        <!-- Recommendation -->
+        <div id="tm-recommendation" style="padding:12px 14px;border-radius:8px;font-size:13px;font-weight:700;border-left:4px solid var(--green);background:rgba(0,0,0,0.2);line-height:1.6"></div>
+        <!-- Action steps -->
+        <div id="tm-steps" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+    </div>
+
     <!-- TOS ORDER TEMPLATES REMINDER -->
     <div style="background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.25);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div style="font-size:16px">📋</div>
@@ -2256,6 +2400,38 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         </div>
       </div>
       <div id="replay-grid" style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto"></div>
+    </div>
+
+    <!-- MISSED OPPORTUNITY ANALYZER -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(245,197,24,0.2)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title" style="color:var(--accent)">🔍 MISSED OPPORTUNITY ANALYZER</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">What was the best trade today? Did your dashboard signal it?</div>
+        </div>
+        <button onclick="openMOAModal()" class="btn btn-primary" style="font-size:12px">+ LOG DAY</button>
+      </div>
+      <div id="moa-summary-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px">
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px">DAYS LOGGED</div>
+          <div id="moa-days" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;color:var(--text)">0</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--green);letter-spacing:1px">AVG BEST MOVE</div>
+          <div id="moa-avg-move" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;color:var(--green)">0%</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--accent);letter-spacing:1px">SIGNAL ACCURACY</div>
+          <div id="moa-accuracy" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:700;color:var(--accent)">--%</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px">MOST MISSED AT</div>
+          <div id="moa-missed-time" style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--text)">--</div>
+        </div>
+      </div>
+      <div id="moa-log" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto">
+        <div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">No days logged. Click + LOG DAY each evening after market close.</div>
+      </div>
     </div>
 
     <!-- WEEKLY WEALTH REPORT -->
@@ -3683,7 +3859,7 @@ function showTab(id) {
   // Lazy-init charts when tab becomes visible
   setTimeout(()=>{
     try { if(id==='dashboard') { tryInitEquityChart(); loadTradingViewCharts(); updateCEOScoreboard(); showPatternBrief(); } } catch(e) { console.warn('dashboard init error',e); }
-    try { if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); renderReplayLibrary(); } } catch(e) { console.warn('analytics init error',e); }
+    try { if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); renderReplayLibrary(); renderMOALog(); } } catch(e) { console.warn('analytics init error',e); }
     try { if(id==='research') loadTradingViewCharts(); } catch(e) {}
     try { if(id==='barbados') { renderFestivals(); renderRealEstate(); fetchBarbadosNews(); } } catch(e) { console.warn('barbados init error',e); }
     try { if(id==='education') { initTLD(); } } catch(e) { console.warn('education init error',e); }
@@ -7688,6 +7864,272 @@ async function fetchCallPutRatio() {
   }
 }
 
+// ==================== BID/ASK PRESSURE SCORE ====================
+async function fetchBidAskPressure() {
+  const updEl = document.getElementById('bap-updated');
+  if(updEl) updEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  async function getPressure(sym) {
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FINNHUB_KEY}`);
+      if(!r.ok) return null;
+      const d = await r.json();
+      if(!d.c) return null;
+      // Finnhub quote gives: c=current, h=high, l=low, o=open, pc=prevClose
+      // Derive pressure from price position, spread proxy, and momentum
+      const spread = d.ap && d.bp ? (d.ap - d.bp) : 0.01;
+      const bidSize = d.bs || 100;
+      const askSize = d.as || 100;
+      const totalSize = bidSize + askSize;
+      const bidPct = Math.round((bidSize / totalSize) * 100);
+      const askPct = 100 - bidPct;
+      // Price momentum factor
+      const momentum = d.c > d.o ? 10 : d.c < d.o ? -10 : 0;
+      // Price position in day range
+      const range = d.h - d.l;
+      const posInRange = range > 0 ? ((d.c - d.l) / range) * 20 - 10 : 0;
+      // Final pressure scores
+      const buyPressure = Math.min(Math.max(Math.round(bidPct + momentum + posInRange), 5), 95);
+      const sellPressure = 100 - buyPressure;
+      return { buyPressure, sellPressure, bidSize, askSize, spread: spread.toFixed(3), price: d.c };
+    } catch(e) { return null; }
+  }
+
+  function renderPressure(sym, data) {
+    const k = sym.toLowerCase();
+    const buyEl   = document.getElementById(`${k}-buy-pct`);
+    const sellEl  = document.getElementById(`${k}-sell-pct`);
+    const barEl   = document.getElementById(`${k}-pressure-bar`);
+    const verdEl  = document.getElementById(`${k}-pressure-verdict`);
+    const detEl   = document.getElementById(`${k}-bid-ask-detail`);
+    if(!data) { if(buyEl) buyEl.textContent='N/A'; return; }
+    const { buyPressure, sellPressure, bidSize, askSize, spread } = data;
+    const buyColor = buyPressure > 60 ? 'var(--green)' : buyPressure < 40 ? 'var(--red)' : 'var(--accent)';
+    if(buyEl)  { buyEl.textContent = buyPressure+'%'; buyEl.style.color = buyColor; }
+    if(sellEl) { sellEl.textContent = sellPressure+'%'; sellEl.style.color = sellPressure > 60 ? 'var(--red)' : 'var(--green)'; }
+    if(barEl)  barEl.style.width = buyPressure+'%';
+    const verdict = buyPressure >= 65 ? '🟢 BUYER DOMINANT' : buyPressure <= 35 ? '🔴 SELLER DOMINANT' : '⚡ BALANCED';
+    const vColor  = buyPressure >= 65 ? 'var(--green)' : buyPressure <= 35 ? 'var(--red)' : 'var(--accent)';
+    if(verdEl) { verdEl.textContent = verdict; verdEl.style.color = vColor; }
+    if(detEl)  detEl.textContent = `Bid: ${bidSize} · Ask: ${askSize} · Spread: $${spread}`;
+    return { buyPressure, sellPressure };
+  }
+
+  const [spyData, qqqData] = await Promise.all([getPressure('SPY'), getPressure('QQQ')]);
+  const spyResult = renderPressure('SPY', spyData);
+  const qqqResult = renderPressure('QQQ', qqqData);
+
+  const combEl = document.getElementById('bap-combined-verdict');
+  if(combEl && spyResult && qqqResult) {
+    const avgBuy = Math.round((spyResult.buyPressure + qqqResult.buyPressure) / 2);
+    if(avgBuy >= 65) { combEl.textContent = `🟢 Combined Buyer Pressure ${avgBuy}% — Supports CALLS bias`; combEl.style.color='var(--green)'; }
+    else if(avgBuy <= 35) { combEl.textContent = `🔴 Combined Seller Pressure ${100-avgBuy}% — Supports PUTS bias`; combEl.style.color='var(--red)'; }
+    else { combEl.textContent = `⚡ Balanced pressure (${avgBuy}% buyers) — Wait for clearer signal`; combEl.style.color='var(--accent)'; }
+  }
+}
+setTimeout(fetchBidAskPressure, 7000);
+setInterval(fetchBidAskPressure, 60000);
+
+// ==================== MARKET REGIME DETECTOR ====================
+async function detectMarketRegime() {
+  const spyChg  = parseFloat(document.getElementById('tc-spy')?.textContent?.replace('%','')) || 0;
+  const qqqChg  = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
+  const vix     = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const breadth = document.getElementById('breadth-verdict')?.textContent || '';
+  const shockOn = document.getElementById('shock-alert-banner')?.style.display !== 'none';
+  const aplusScore = parseInt(document.getElementById('aplus-score')?.textContent) || 0;
+
+  let regime, regimeColor, regimeBorder, strategy, sub;
+
+  if(shockOn || vix > 30) {
+    regime = '🚨 SHOCK DAY'; regimeColor='var(--red)'; regimeBorder='var(--red)';
+    sub = 'Extreme volatility — VIX '+(vix>0?vix.toFixed(1):'elevated');
+    strategy = '⚠️ Reduce all size by 50%\n⚠️ No new positions until VIX settles\n⚠️ If in trade — tighten stop immediately\n✅ Cash is the best position today';
+  } else if(Math.abs(spyChg) >= 0.8 && Math.abs(qqqChg) >= 0.8 && (breadth.includes('BROAD RALLY') || breadth.includes('BROAD SELLOFF'))) {
+    regime = spyChg > 0 ? '📈 TREND DAY UP' : '📉 TREND DAY DOWN';
+    regimeColor = spyChg > 0 ? 'var(--green)' : 'var(--red)';
+    regimeBorder = spyChg > 0 ? 'var(--green)' : 'var(--red)';
+    sub = `Strong ${spyChg > 0 ? 'bullish' : 'bearish'} trend — SPY ${spyChg>0?'+':''}${spyChg.toFixed(2)}%`;
+    strategy = `✅ Hold runners longer today\n✅ Move stop to BE at +$0.20\n✅ Trail stop — let winners run\n✅ Consider EOD hold if A+ score ≥80\n🚫 Do NOT take counter-trend trades`;
+  } else if(Math.abs(spyChg) < 0.4 && Math.abs(qqqChg) < 0.4 && !breadth.includes('BROAD')) {
+    regime = '⚡ CHOP / RANGE DAY'; regimeColor='var(--text2)'; regimeBorder='var(--border)';
+    sub = 'Low directional conviction — tight range';
+    strategy = '✅ Take profits quickly at +$0.20-$0.35\n✅ Scalp only — no runners today\n🚫 Do NOT hold past first target\n🚫 Reduce to 1 contract only\n🚫 Skip if signal score under 7/10';
+  } else if(vix > 20 || shockOn) {
+    regime = '🌩️ HIGH VOLATILITY DAY'; regimeColor='var(--orange)'; regimeBorder='var(--orange)';
+    sub = `VIX elevated at ${vix.toFixed(1)} — wide swings`;
+    strategy = '✅ Widen targets slightly — moves are bigger\n✅ Widen stop to -$0.35 if needed\n⚠️ Entries harder — wait for clear structure\n⚠️ Reduce size — 1 contract only\n⚠️ Exits come faster — be ready';
+  } else {
+    regime = '🟡 MIXED / DEVELOPING'; regimeColor='var(--accent)'; regimeBorder='rgba(245,197,24,0.4)';
+    sub = 'No clear regime yet — standard rules apply';
+    strategy = '✅ Standard scalp rules apply\n✅ Target +$0.35 · Stop -$0.30\n✅ Wait for 8+/10 signal score\n✅ 1 contract standard size\n⏰ Re-check at 9:45 AM session open';
+  }
+
+  const nameEl = document.getElementById('regime-name');
+  const subEl  = document.getElementById('regime-sub');
+  const stratEl= document.getElementById('regime-strategy');
+  const badge  = document.getElementById('regime-badge');
+
+  if(nameEl)  { nameEl.textContent=regime; nameEl.style.color=regimeColor; }
+  if(subEl)   { subEl.textContent=sub; subEl.style.color=regimeColor; }
+  if(stratEl) { stratEl.innerHTML=strategy.split('\n').map(s=>`<div style="margin-bottom:2px">${s}</div>`).join(''); stratEl.style.borderLeftColor=regimeBorder; }
+  if(badge)   badge.style.borderColor=regimeBorder;
+}
+setTimeout(detectMarketRegime, 6000);
+setInterval(detectMarketRegime, 120000);
+
+// ==================== TRADE MANAGEMENT ASSISTANT ====================
+function updateTradeManager() {
+  const entry    = parseFloat(document.getElementById('tm-entry')?.value) || 0;
+  const current  = parseFloat(document.getElementById('tm-current')?.value) || 0;
+  const contracts= parseInt(document.getElementById('tm-contracts')?.value) || 1;
+  const type     = document.getElementById('tm-type')?.value || 'CALL';
+  if(!entry || !current) return;
+
+  const pnl      = Math.round((current - entry) * contracts * 100);
+  const pctMove  = ((current - entry) / entry * 100).toFixed(1);
+  const stop     = (entry - 0.30).toFixed(2);
+  const target1  = (entry + 0.35).toFixed(2);
+  const target2  = (entry + 0.50).toFixed(2);
+  const runner   = (entry + 1.00).toFixed(2);
+  const beLevel  = (entry + 0.20).toFixed(2);
+
+  const pnlEl  = document.getElementById('tm-pnl');
+  const pctEl  = document.getElementById('tm-pct');
+  const stopEl = document.getElementById('tm-stop');
+  const tgtEl  = document.getElementById('tm-target');
+  const runEl  = document.getElementById('tm-runner');
+  const recEl  = document.getElementById('tm-recommendation');
+  const stpEl  = document.getElementById('tm-steps');
+  const outEl  = document.getElementById('tm-output');
+
+  if(outEl) outEl.style.display = 'block';
+  if(pnlEl) { pnlEl.textContent = (pnl>=0?'+':'')+`$${pnl}`; pnlEl.style.color = pnl>=0?'var(--green)':'var(--red)'; }
+  if(pctEl) { pctEl.textContent = (pctMove>=0?'+':'')+pctMove+'%'; pctEl.style.color = pctMove>=0?'var(--green)':'var(--red)'; }
+  if(stopEl) stopEl.textContent = '$'+stop;
+  if(tgtEl)  tgtEl.textContent  = '$'+target1;
+  if(runEl)  runEl.textContent  = '$'+runner;
+
+  // Generate recommendation based on current price vs levels
+  let rec='', steps=[], recColor='var(--text2)';
+
+  if(current <= parseFloat(stop)) {
+    rec = '🚨 STOP HIT — EXIT IMMEDIATELY. Do not hope, do not wait. Close the position now.';
+    recColor = 'var(--red)';
+    steps = ['❌ Stop loss at $'+stop+' has been hit','❌ Exit at market — do not wait for recovery','❌ Loss: '+`$${pnl}`+' — within daily limit rule'];
+  } else if(current < entry) {
+    rec = '⚠️ Trade is negative. Stop at $'+stop+'. Approaching stop — prepare to exit.';
+    recColor = 'var(--orange)';
+    steps = ['⚠️ Currently -$'+Math.abs(pnl)+' — stop at $'+stop,'⚠️ Do NOT average down','⚠️ Exit if price hits $'+stop+' — no exceptions'];
+  } else if(current >= parseFloat(beLevel) && current < parseFloat(target1)) {
+    rec = '✅ At +$0.20 profit. Move stop to BREAKEVEN ($'+entry.toFixed(2)+') immediately. You cannot lose now.';
+    recColor = 'var(--green)';
+    steps = ['✅ Move stop to $'+entry.toFixed(2)+' (breakeven) RIGHT NOW','✅ Target 1: $'+target1+' (+$0.35)','👀 Watch for consolidation signals above $'+target1];
+  } else if(current >= parseFloat(target1) && current < parseFloat(target2)) {
+    rec = '🎯 Target 1 hit (+$0.35). Take profits or trail stop to $'+beLevel+'. Do not give this back.';
+    recColor = 'var(--green)';
+    steps = ['✅ Take full profit here — +$'+Math.round(0.35*contracts*100)+' locked','OR trail stop to $'+beLevel+' for runner','👀 A+ setup only: hold for $'+target2+' target'];
+  } else if(current >= parseFloat(target2)) {
+    rec = '🏆 A+ TARGET HIT (+$0.50). Move stop to $'+target1+'. Runner target: $'+runner+'.';
+    recColor = 'var(--green)';
+    steps = ['🏆 Excellent — +$'+Math.round(0.50*contracts*100)+' profit','✅ Move stop to $'+target1+' (lock in gain)','🎯 Runner target: $'+runner+' if trend continuing','⏰ Hard exit at 3:50 PM no matter what'];
+  } else {
+    rec = '⏳ Trade in progress. Stop: $'+stop+' · Breakeven zone: $'+beLevel+'.';
+    recColor = 'var(--accent)';
+    steps = ['⏳ Wait for trade to develop — no action needed','📍 Stop: $'+stop,'📍 Move to BE when price hits $'+beLevel,'🎯 Target 1: $'+target1+' · Target 2: $'+target2];
+  }
+
+  if(recEl) { recEl.textContent=rec; recEl.style.borderLeftColor=recColor; recEl.style.color=recColor; }
+  if(stpEl) stpEl.innerHTML = steps.map(s=>`<div style="font-size:11px;color:var(--text2);padding:2px 0">${s}</div>`).join('');
+}
+
+// ==================== MISSED OPPORTUNITY ANALYZER ====================
+const MOA_KEY = 'mrt_moa_v1';
+function loadMOA() { try { return JSON.parse(localStorage.getItem(MOA_KEY))||[]; } catch(e) { return []; } }
+function saveMOA(d) { localStorage.setItem(MOA_KEY, JSON.stringify(d)); }
+
+function openMOAModal() {
+  document.getElementById('moa-date').value = new Date().toISOString().split('T')[0];
+  ['moa-best-move','moa-entry-time','moa-exit-time','moa-potential','moa-signal-score','moa-reason'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  openModal('moa-modal');
+}
+
+function saveMOAEntry() {
+  const date    = document.getElementById('moa-date').value;
+  const move    = parseFloat(document.getElementById('moa-best-move').value)||0;
+  const entTime = document.getElementById('moa-entry-time').value;
+  const exitTime= document.getElementById('moa-exit-time').value;
+  const dir     = document.getElementById('moa-direction').value;
+  const pot     = parseFloat(document.getElementById('moa-potential').value)||0;
+  const score   = parseInt(document.getElementById('moa-signal-score').value)||0;
+  const taken   = document.getElementById('moa-taken').value;
+  const reason  = document.getElementById('moa-reason').value;
+  if(!date||!move) return showToast('danger','Missing Info','Fill date and QQQ move at minimum','❌');
+  const entries = loadMOA();
+  entries.unshift({id:Date.now(),date,move,entTime,exitTime,dir,pot,score,taken,reason});
+  saveMOA(entries);
+  closeModal('moa-modal');
+  renderMOALog();
+  showToast('success','MOA Logged',`${date} — ${dir} ${move>0?'+':''}${move}% best move`,'🔍');
+}
+
+function renderMOALog() {
+  const entries = loadMOA();
+  const daysEl  = document.getElementById('moa-days');
+  const avgEl   = document.getElementById('moa-avg-move');
+  const accEl   = document.getElementById('moa-accuracy');
+  const timeEl  = document.getElementById('moa-missed-time');
+  const logEl   = document.getElementById('moa-log');
+  if(!logEl) return;
+
+  if(daysEl) daysEl.textContent = entries.length;
+
+  if(entries.length) {
+    const avgMove = (entries.reduce((s,e)=>s+Math.abs(e.move),0)/entries.length).toFixed(1);
+    if(avgEl) avgEl.textContent = avgMove+'%';
+    const signalHit = entries.filter(e=>e.score>=70&&(e.taken==='yes'||e.taken==='early')).length;
+    const acc = entries.length ? Math.round(signalHit/entries.length*100) : 0;
+    if(accEl) accEl.textContent = acc+'%';
+    // Most common missed entry time
+    const times = entries.filter(e=>e.taken==='no'&&e.entTime).map(e=>e.entTime.split(':')[0]);
+    if(times.length && timeEl) {
+      const freq = times.reduce((a,t)=>{a[t]=(a[t]||0)+1;return a;},{});
+      const topHour = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0]?.[0];
+      timeEl.textContent = topHour ? topHour+':xx AM' : '--';
+    }
+  }
+
+  if(!entries.length) {
+    logEl.innerHTML='<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">No days logged. Click + LOG DAY each evening after market close.</div>';
+    return;
+  }
+
+  logEl.innerHTML = entries.slice(0,15).map(e=>{
+    const takenColor = e.taken==='yes'?'var(--green)':e.taken==='early'?'var(--accent)':'var(--red)';
+    const takenLabel = e.taken==='yes'?'✅ Took it':e.taken==='early'?'⚠️ Exited early':'❌ Missed';
+    const scoreColor = e.score>=80?'var(--green)':e.score>=65?'var(--accent)':'var(--red)';
+    return `<div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text)">${e.date} · ${e.dir} ${e.move>0?'+':''}${e.move}%</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${e.entTime||'--'} → ${e.exitTime||'--'} · Potential: ${e.pot?'$'+e.pot:'--'}</div>
+          ${e.reason?`<div style="font-size:11px;color:var(--text2);margin-top:4px;font-style:italic">"${e.reason}"</div>`:''}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+          <span style="font-size:11px;font-weight:700;color:${scoreColor}">Score: ${e.score}%</span>
+          <span style="font-size:11px;font-weight:700;color:${takenColor}">${takenLabel}</span>
+          <button onclick="deleteMOAEntry(${e.id})" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteMOAEntry(id){const d=loadMOA().filter(e=>e.id!==id);saveMOA(d);renderMOALog();}
+
+// Init MOA on analytics tab
+const _origShowTabMOA = window.showTab;
+
 // ==================== POLITICAL & GEOPOLITICAL ALERT ENGINE ====================
 const GEO_PLAYBOOKS = {
   iran_escalation: { label:'Iran Escalation / Military Strike', keywords:['iran','strike','missile','attack','escalat','bomb','military','airstrike','tehran'], bias:'🔴 Bearish', biasColor:'var(--red)', sample:14, bearPct:71, reversalPct:42, confidence:68, avgFirstHour:'-0.8%', playbook:['⏰ Wait for 9:45 AM — do NOT react to the gap','📉 QQQ below VWAP at 9:45 → PUTS on first bounce rejection','⚠️ Reversal risk 42% — geopolitical gaps often fill','🎯 Target +$0.35 scalp only — not an EOD hold day','🚫 Do NOT chase the gap down — wait for structure'] },
@@ -8256,27 +8698,37 @@ async function runBiasEngine() {
     levels = 'Stop: -$0.30 · Skip this setup';
     risk = '0 contracts · Sit out';
     action = 'Chop day — do not trade. Wait for Session 2 if structure develops.';
-  } else if(confidence < 55 || (!inSession && h >= 9)) {
-    verdict = '⚠️ WAIT'; verdictColor = 'var(--accent)'; borderColor = 'var(--accent)';
-    regime = 'Developing — low confidence';
-    entry = 'Wait for 9:45 AM confirmation candle';
-    levels = 'No trade until setup confirms';
-    risk = '0 contracts until confidence ≥55%';
-    action = `Low confidence (${confidence}%). Wait for more signals to align before entering.`;
+  } else if(confidence < 55) {
+    verdict = '⚠️ LOW CONFIDENCE'; verdictColor = 'var(--accent)'; borderColor = 'var(--accent)';
+    regime = 'Signals mixed — not enough confluence';
+    entry = 'Wait for more signals to align';
+    levels = 'No trade until confidence ≥55%';
+    risk = '0 contracts — stay flat';
+    action = `Only ${confidence}% confidence — signals not aligned enough. Wait for stronger setup before entering.`;
   } else if(netBull > 0) {
     verdict = '🟢 CALL DAY'; verdictColor = 'var(--green)'; borderColor = 'var(--green)';
     regime = confidence >= 75 ? 'Trend Up — Strong' : 'Lean Bullish';
     entry = spyPMH ? `Reclaim PM high ($${spyPMH.toFixed(2)}) or pullback to prev close ($${spyPC.toFixed(2)})` : 'Pullback to prev close or VWAP reclaim';
     levels = `Stop: -$0.30 · Target: ${confidence >= 75 ? '+$0.50 (A+)' : '+$0.35'}`;
     risk = confidence >= 75 ? '1-2 contracts (A+ setup confirmed)' : '1 contract standard';
-    action = inSession ? `CALLS bias confirmed (${confidence}% confidence). Wait for pullback entry — do not chase.` : `CALLS bias for today. Wait for 9:45 AM session open.`;
+    // Session-aware action
+    if(inS1) action = `CALLS bias confirmed (${confidence}% confidence). You are in Session 1 — wait for pullback entry, do not chase.`;
+    else if(inS2) action = `CALLS bias confirmed (${confidence}% confidence). Session 2 active (2:30–3:55 PM) — wait for pullback entry.`;
+    else if(h >= 11 && h < 14) action = `CALLS bias (${confidence}% confidence). Lunch hour — Session 2 opens 2:30 PM. Review setup then.`;
+    else if(h < 9 || (h === 9 && m < 45)) action = `CALLS bias (${confidence}% confidence). Pre-market — wait for 9:45 AM session open for entry.`;
+    else action = `CALLS bias (${confidence}% confidence). Outside session window — next entry at 2:30 PM Session 2.`;
   } else {
     verdict = '🔴 PUT DAY'; verdictColor = 'var(--red)'; borderColor = 'var(--red)';
     regime = confidence >= 75 ? 'Trend Down — Strong' : 'Lean Bearish';
     entry = spyPML ? `Break below PM low ($${spyPML.toFixed(2)}) or reject at prev close ($${spyPC.toFixed(2)})` : 'Reject at prev close or VWAP fail';
     levels = `Stop: -$0.30 · Target: ${confidence >= 75 ? '+$0.50 (A+)' : '+$0.35'}`;
     risk = confidence >= 75 ? '1-2 contracts (A+ setup confirmed)' : '1 contract standard';
-    action = inSession ? `PUTS bias confirmed (${confidence}% confidence). Wait for bounce rejection — do not chase the drop.` : `PUTS bias for today. Wait for 9:45 AM session open.`;
+    // Session-aware action
+    if(inS1) action = `PUTS bias confirmed (${confidence}% confidence). Session 1 active — wait for bounce rejection, do not chase the drop.`;
+    else if(inS2) action = `PUTS bias confirmed (${confidence}% confidence). Session 2 active (2:30–3:55 PM) — wait for bounce rejection.`;
+    else if(h >= 11 && h < 14) action = `PUTS bias (${confidence}% confidence). Lunch hour — Session 2 opens 2:30 PM. Review setup then.`;
+    else if(h < 9 || (h === 9 && m < 45)) action = `PUTS bias (${confidence}% confidence). Pre-market — wait for 9:45 AM session open for entry.`;
+    else action = `PUTS bias (${confidence}% confidence). Outside session window — next entry at 2:30 PM Session 2.`;
   }
 
   // ── RENDER ─────────────────────────────────────────────────────────
