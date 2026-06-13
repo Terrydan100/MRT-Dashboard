@@ -1998,6 +1998,51 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
   </div>
   <!-- ===================== TRADING TAB ===================== -->
   <div class="tab-content" id="content-trading">
+    <!-- STRIKE SELECTION ASSISTANT -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,229,255,0.25);background:linear-gradient(135deg,rgba(0,229,255,0.04),rgba(0,0,0,0))">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:18px">🎯</span>
+        <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--cyan);letter-spacing:2px">STRIKE SELECTION ASSISTANT</div>
+        <div style="font-size:11px;color:var(--text3)">— Which strike should I buy?</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px">
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">TICKER</label>
+          <select class="form-input" id="ss-ticker" style="font-size:12px" onchange="runStrikeAssist()"><option>QQQ</option><option>SPY</option></select></div>
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">DIRECTION</label>
+          <select class="form-input" id="ss-type" style="font-size:12px" onchange="runStrikeAssist()"><option>CALL</option><option>PUT</option></select></div>
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">CURRENT PRICE ($)</label>
+          <input class="form-input" id="ss-price" type="number" placeholder="716.00" step="0.50" style="font-size:12px" oninput="runStrikeAssist()"></div>
+        <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">SETUP TYPE</label>
+          <select class="form-input" id="ss-setup" style="font-size:12px" onchange="runStrikeAssist()">
+            <option value="scalp">Scalp (+$0.35)</option>
+            <option value="aplus">A+ (+$0.50)</option>
+            <option value="eod">EOD Hold</option>
+          </select></div>
+      </div>
+      <div id="ss-output" style="display:none">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:10px">
+          <div style="background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.3);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:9px;color:var(--cyan);letter-spacing:1px;margin-bottom:4px">RECOMMENDED STRIKE</div>
+            <div id="ss-strike" style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:var(--cyan)">--</div>
+            <div id="ss-strike-note" style="font-size:10px;color:var(--text3);margin-top:2px"></div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">EST PREMIUM RANGE</div>
+            <div id="ss-premium" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--text)">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">MAX COST (1 CONTRACT)</div>
+            <div id="ss-cost" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--text)">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">ACCOUNT RISK</div>
+            <div id="ss-acct-risk" style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--text)">--</div>
+          </div>
+        </div>
+        <div id="ss-reasoning" style="font-size:11px;color:var(--text2);padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:8px;border-left:3px solid var(--cyan);line-height:1.6"></div>
+      </div>
+    </div>
+
     <!-- TRADE MANAGEMENT ASSISTANT -->
     <div class="card" style="margin-bottom:16px;border:2px solid rgba(0,230,118,0.3);background:linear-gradient(135deg,rgba(0,230,118,0.04),rgba(0,0,0,0))">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
@@ -8235,6 +8280,95 @@ function deleteMOAEntry(id){const d=loadMOA().filter(e=>e.id!==id);saveMOA(d);re
 // Init MOA on analytics tab
 const _origShowTabMOA = window.showTab;
 
+// ==================== STRIKE SELECTION ASSISTANT ====================
+function runStrikeAssist() {
+  const ticker  = document.getElementById('ss-ticker')?.value || 'QQQ';
+  const type    = document.getElementById('ss-type')?.value || 'CALL';
+  const price   = parseFloat(document.getElementById('ss-price')?.value) || 0;
+  const setup   = document.getElementById('ss-setup')?.value || 'scalp';
+  if(!price) return;
+
+  const outEl = document.getElementById('ss-output');
+  if(outEl) outEl.style.display = 'block';
+
+  // Strike selection logic for $2,000 cash account
+  // For scalp: slightly OTM (1-2 strikes out) — cheaper premium, enough delta
+  // For A+: ATM or 1 strike OTM — more delta for bigger move
+  // For EOD: ITM (1-2 strikes in) — less theta decay, more intrinsic value
+
+  const roundTo = ticker === 'QQQ' ? 1 : 1; // QQQ strikes every $1
+  const atm = Math.round(price / roundTo) * roundTo;
+
+  let strike, strikeNote, premiumRange, reasoning;
+
+  if(type === 'CALL') {
+    if(setup === 'scalp') {
+      strike = atm + 1;
+      strikeNote = '1 strike OTM';
+      premiumRange = '$0.40–$1.20';
+      reasoning = `For a scalp targeting +$0.35, 1 strike OTM gives you enough delta (0.40–0.45) without overpaying. At $${price}, the $${strike}C should cost $0.40–$1.20 depending on time of day and VIX. Stop at -$0.30 means risking $30 max. If premium is above $1.50, skip — too expensive for a scalp.`;
+    } else if(setup === 'aplus') {
+      strike = atm;
+      strikeNote = 'ATM — max delta';
+      premiumRange = '$0.80–$2.00';
+      reasoning = `A+ setup targeting +$0.50 — go ATM for maximum delta (0.50). The $${strike}C gives you the most sensitivity to QQQ movement. Higher premium but the +$0.50 target covers it. If ATM costs over $2.50, go 1 strike OTM instead to protect risk.`;
+    } else { // EOD
+      strike = atm - 1;
+      strikeNote = '1 strike ITM — less theta';
+      premiumRange = '$1.50–$3.50';
+      reasoning = `EOD hold — go 1 strike ITM ($${strike}C) to minimize theta decay over the day. ITM options lose less value from time decay. Delta will be 0.55–0.65 — better for a trending day hold. Hard exit at 3:50 PM no matter what.`;
+    }
+  } else { // PUT
+    if(setup === 'scalp') {
+      strike = atm - 1;
+      strikeNote = '1 strike OTM';
+      premiumRange = '$0.40–$1.20';
+      reasoning = `For a PUT scalp targeting +$0.35, 1 strike OTM ($${strike}P) gives you delta 0.40–0.45 without overpaying. At $${price}, this strike should cost $0.40–$1.20. Stop -$0.30 = $30 max risk. Skip if premium over $1.50.`;
+    } else if(setup === 'aplus') {
+      strike = atm;
+      strikeNote = 'ATM — max delta';
+      premiumRange = '$0.80–$2.00';
+      reasoning = `A+ PUT setup — ATM ($${strike}P) for maximum delta on a strong bearish trend. Target +$0.50. If QQQ is breaking down hard, ATM gives the fastest gain. Keep 1 contract only.`;
+    } else { // EOD
+      strike = atm + 1;
+      strikeNote = '1 strike ITM — less theta';
+      premiumRange = '$1.50–$3.50';
+      reasoning = `EOD PUT hold — 1 strike ITM ($${strike}P) to reduce theta decay. Delta 0.55–0.65 moves with QQQ well. Only hold EOD if all 7 EOD detector conditions pass. Hard exit 3:50 PM.`;
+    }
+  }
+
+  const maxCost = parseFloat(premiumRange.split('–')[1].replace('$','')) * 100;
+  const acctRisk = ((30 / 2000) * 100).toFixed(1); // $30 stop = 1.5% of $2,000
+
+  const strikeEl    = document.getElementById('ss-strike');
+  const strikeNoteEl= document.getElementById('ss-strike-note');
+  const premiumEl   = document.getElementById('ss-premium');
+  const costEl      = document.getElementById('ss-cost');
+  const acctRiskEl  = document.getElementById('ss-acct-risk');
+  const reasonEl    = document.getElementById('ss-reasoning');
+
+  if(strikeEl)     strikeEl.textContent = `$${strike}`;
+  if(strikeNoteEl) strikeNoteEl.textContent = strikeNote;
+  if(premiumEl)    premiumEl.textContent = premiumRange;
+  if(costEl)       { costEl.textContent = `$${maxCost}`; costEl.style.color = maxCost > 200 ? 'var(--orange)' : 'var(--green)'; }
+  if(acctRiskEl)   { acctRiskEl.textContent = `${acctRisk}%`; acctRiskEl.style.color = 'var(--green)'; }
+  if(reasonEl)     reasonEl.textContent = reasoning;
+}
+
+// Auto-populate price from live ticker when ticker changes
+document.addEventListener('DOMContentLoaded', () => {
+  ['ss-ticker','ss-type','ss-setup'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('change', () => {
+      const ticker = document.getElementById('ss-ticker')?.value;
+      const livePrice = parseFloat(document.getElementById(`t-${ticker?.toLowerCase()}`)?.textContent?.replace('$',''));
+      const priceEl = document.getElementById('ss-price');
+      if(livePrice && priceEl && !priceEl.value) priceEl.value = livePrice.toFixed(2);
+      runStrikeAssist();
+    });
+  });
+});
+
 // ==================== TODAY'S PLAYBOOK ====================
 function updateTodaysPlaybook() {
   const regimeName = document.getElementById('regime-name')?.textContent || '';
@@ -9088,30 +9222,44 @@ async function runBiasEngine() {
   const facEl  = document.getElementById('be-factors');
   const panel  = document.getElementById('be-verdict-panel');
 
+  // ── BUILD 1: Confidence Level Label ──────────────────────────────
+  const confLevel = confidence>=85?'🔥 EXTREME':confidence>=75?'💪 STRONG':confidence>=65?'✅ MODERATE':confidence>=55?'⚡ WEAK':'❓ INSUFFICIENT';
+  const confLevelColor = confidence>=85?'var(--red)':confidence>=75?'var(--green)':confidence>=65?'var(--accent)':'var(--text3)';
+
   if(verdEl) { verdEl.textContent = verdict; verdEl.style.color = verdictColor; }
-  if(confEl) { 
-    const cl = confidence>=80?'💪 STRONG':confidence>=65?'✅ MODERATE':confidence>=50?'⚡ WEAK':'❓ INSUFFICIENT';
-    confEl.textContent = confidence + '%'; confEl.style.color = verdictColor;
-    confEl.title = `Confidence Level: ${cl}`;
-    const clEl = document.getElementById('be-conf-level');
-    if(clEl) { clEl.textContent = cl; clEl.style.color = verdictColor; }
-  }
+  if(confEl) { confEl.textContent = confidence + '%'; confEl.style.color = verdictColor; }
   if(confBar){ confBar.style.width = confidence + '%'; confBar.style.background = verdictColor; }
   if(regEl)  { regEl.textContent = regime; regEl.style.color = verdictColor; }
+
+  const clEl = document.getElementById('be-conf-level');
+  if(clEl) { clEl.textContent = confLevel; clEl.style.color = confLevelColor; }
+
+  // ── BUILD 2: Conflict Resolution — ONE clean action message ──────
+  // Never show contradictory guidance — pick the single most important message
+  let finalAction = action;
+  if(verdict.includes('CALL DAY') && action.toLowerCase().includes('wait')) {
+    finalAction = action; // session timing — keep it
+  } else if(verdict.includes('LOW CONFIDENCE') || verdict.includes('CHOP') || verdict.includes('NO TRADE')) {
+    finalAction = action; // override — stay flat message takes priority
+  }
   if(entEl)  entEl.textContent = entry;
   if(lvlEl)  lvlEl.textContent = levels;
   if(rskEl)  rskEl.textContent = risk;
-  if(actEl)  { actEl.textContent = action; actEl.style.borderLeftColor = borderColor; actEl.style.color = verdictColor; }
+  if(actEl)  { actEl.textContent = finalAction; actEl.style.borderLeftColor = borderColor; actEl.style.color = verdictColor; }
   if(panel)  panel.style.background = verdictColor.replace('var(--','rgba(').replace(')',',.06)');
   if(pulseEl){ pulseEl.style.background = verdictColor; }
 
-  if(facEl) {
-    const top = [...factors].sort((a,b) => b.pts - a.pts).slice(0,8);
-    facEl.innerHTML = top.map(f => {
-      const c = f.d==='bull'?'var(--green)':f.d==='bear'?'var(--red)':'var(--text3)';
-      return `<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${c.replace('var(--','rgba(').replace(')',',.1)')};color:${c};border:1px solid ${c.replace('var(--','rgba(').replace(')',',.25)')}">${f.t}</span>`;
-    }).join('');
-  }
+  // ── BUILD 3: Probability Summary Card ────────────────────────────
+  const probTotal = bullPts + bearPts;
+  const callsPct = probTotal > 0 ? Math.round(bullPts / probTotal * 100) : 50;
+  const putsPct  = 100 - callsPct;
+  document.getElementById('prob-calls') && (document.getElementById('prob-calls').textContent = callsPct+'%') && (document.getElementById('prob-calls').style.color = callsPct > putsPct ? 'var(--green)' : 'var(--text3)');
+  document.getElementById('prob-puts')  && (document.getElementById('prob-puts').textContent  = putsPct+'%')  && (document.getElementById('prob-puts').style.color  = putsPct > callsPct ? 'var(--red)' : 'var(--text3)');
+  const pv = document.getElementById('prob-verdict');
+  if(pv){ pv.textContent = callsPct>=70?'🟢 CALLS FAVORED':putsPct>=70?'🔴 PUTS FAVORED':'⚡ TOO CLOSE TO CALL'; pv.style.color = callsPct>=70?'var(--green)':putsPct>=70?'var(--red)':'var(--accent)'; }
+  const pc = document.getElementById('prob-confidence-label');
+  if(pc){ pc.textContent=confLevel; pc.style.color=confLevelColor; }
+
   // Auto-update dependent cards
   setTimeout(updateTodaysPlaybook, 500);
 }
