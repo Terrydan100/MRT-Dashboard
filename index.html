@@ -798,6 +798,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
             <div id="be-conf-bar" style="height:100%;width:0%;border-radius:3px;transition:width 0.6s ease;background:var(--text2)"></div>
           </div>
           <div id="be-regime" style="font-size:10px;color:var(--text3);margin-top:4px;text-align:center"></div>
+          <div id="be-conf-level" style="font-size:10px;font-weight:700;margin-top:2px;color:var(--text3)"></div>
         </div>
 
         <!-- RIGHT — Details -->
@@ -822,6 +823,35 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <!-- Signal factors -->
           <div id="be-factors" style="display:flex;flex-wrap:wrap;gap:4px"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- PROBABILITY SUMMARY + TOP 3 REASONS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <!-- Probability Summary -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
+        <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--text2);letter-spacing:2px;margin-bottom:10px">🎲 PROBABILITY SUMMARY</div>
+        <div style="display:flex;gap:10px;margin-bottom:10px">
+          <div style="flex:1;text-align:center;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.25);border-radius:8px;padding:8px">
+            <div style="font-size:9px;color:var(--green);letter-spacing:1px">CALLS</div>
+            <div id="prob-calls" style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:var(--green)">--%</div>
+          </div>
+          <div style="flex:1;text-align:center;background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.25);border-radius:8px;padding:8px">
+            <div style="font-size:9px;color:var(--red);letter-spacing:1px">PUTS</div>
+            <div id="prob-puts" style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:var(--red)">--%</div>
+          </div>
+        </div>
+        <div id="prob-verdict" style="font-size:12px;font-weight:700;text-align:center;padding:6px;border-radius:6px;color:var(--text2);background:rgba(0,0,0,0.2)">Scanning...</div>
+        <div id="prob-confidence-label" style="font-size:10px;text-align:center;color:var(--text3);margin-top:4px"></div>
+      </div>
+      <!-- Top 3 Reasons -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
+        <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--text2);letter-spacing:2px;margin-bottom:10px">🔍 TOP 3 REASONS</div>
+        <div id="top3-reasons" style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:11px;color:var(--text3)">Scanning signals...</div>
+        </div>
+        <!-- What Changed alert -->
+        <div id="what-changed-alert" style="display:none;margin-top:8px;padding:6px 10px;background:rgba(255,109,0,0.1);border:1px solid rgba(255,109,0,0.4);border-radius:6px;font-size:11px;color:var(--orange)"></div>
       </div>
     </div>
 
@@ -7970,10 +8000,23 @@ async function fetchBidAskPressure() {
     if(buyEl)  { buyEl.textContent = buyPressure+'%'; buyEl.style.color = buyColor; }
     if(sellEl) { sellEl.textContent = sellPressure+'%'; sellEl.style.color = sellPressure > 60 ? 'var(--red)' : 'var(--green)'; }
     if(barEl)  barEl.style.width = buyPressure+'%';
-    const verdict = buyPressure >= 65 ? '🟢 BUYER DOMINANT' : buyPressure <= 35 ? '🔴 SELLER DOMINANT' : '⚡ BALANCED';
-    const vColor  = buyPressure >= 65 ? 'var(--green)' : buyPressure <= 35 ? 'var(--red)' : 'var(--accent)';
+    const verdict = buyPressure >= 75 ? '🟢 STRONG BUY PRESSURE' :
+                    buyPressure >= 65 ? '🟢 BUYER DOMINANT' :
+                    buyPressure >= 55 ? '🟡 MILDLY BULLISH' :
+                    buyPressure >= 45 ? '⚡ NEUTRAL — No edge' :
+                    buyPressure >= 35 ? '🟠 MILDLY BEARISH' :
+                    buyPressure >= 25 ? '🔴 SELLER DOMINANT' :
+                                        '🔴 STRONG SELL PRESSURE';
+    const plainEnglish = buyPressure >= 75 ? 'Institutions buying — strong bullish flow' :
+                         buyPressure >= 65 ? 'More buyers than sellers' :
+                         buyPressure >= 55 ? '51-64% means mildly bullish — not a strong signal' :
+                         buyPressure >= 45 ? '45-55% is meaningless — wait for clearer signal' :
+                         buyPressure >= 35 ? 'More sellers than buyers' :
+                         buyPressure >= 25 ? 'Sellers in control' :
+                                             'Unusual selling — possible institutional distribution';
+    const vColor = buyPressure >= 65 ? 'var(--green)' : buyPressure <= 35 ? 'var(--red)' : 'var(--accent)';
     if(verdEl) { verdEl.textContent = verdict; verdEl.style.color = vColor; }
-    if(detEl)  detEl.textContent = `Bid: ${bidSize} · Ask: ${askSize} · Spread: $${spread}`;
+    if(detEl)  detEl.textContent = `Bid: ${bidSize} · Ask: ${askSize} · Spread: $${spread} — ${plainEnglish}`;
     return { buyPressure, sellPressure };
   }
 
@@ -8960,6 +9003,76 @@ async function runBiasEngine() {
     else action = `PUTS bias (${confidence}% confidence). Outside session window — next entry at 2:30 PM Session 2.`;
   }
 
+  // ── CONFLICT RESOLUTION ───────────────────────────────────────────
+  // If shock is active but bias shows bullish/bearish — explain the override
+  const conflictEl = document.getElementById('be-action');
+  if(shockVis && netBull > 0 && confidence >= 55) {
+    verdict = '⚠️ CALL BIAS OVERRIDDEN'; verdictColor = 'var(--orange)'; borderColor = 'var(--orange)';
+    regime = 'Market Shock Active — override in effect';
+    entry = 'Do not enter — shock conditions present';
+    levels = 'No trade during shock';
+    risk = '0 contracts — cash only';
+    action = `CALL BIAS DETECTED (${confidence}%) BUT OVERRIDDEN BY MARKET SHOCK FILTER. Wait for shock to clear before trading.`;
+  } else if(shockVis && netBull <= 0 && confidence >= 55) {
+    verdict = '⚠️ PUT BIAS OVERRIDDEN'; verdictColor = 'var(--orange)'; borderColor = 'var(--orange)';
+    regime = 'Market Shock Active — override in effect';
+    entry = 'Do not enter — shock conditions present';
+    levels = 'No trade during shock';
+    risk = '0 contracts — cash only';
+    action = `PUT BIAS DETECTED (${confidence}%) BUT OVERRIDDEN BY MARKET SHOCK FILTER. Wait for shock to clear before trading.`;
+  }
+
+  // ── PROBABILITY SUMMARY CARD ──────────────────────────────────────
+  const totalPts = bullPts + bearPts + 1;
+  const callsProb = Math.min(Math.max(Math.round((bullPts / totalPts) * 100), 4), 96);
+  const putsProb  = 100 - callsProb;
+  const confLabel = confidence >= 80 ? '💪 STRONG' : confidence >= 65 ? '✅ MODERATE' : confidence >= 50 ? '⚡ WEAK' : '❓ INSUFFICIENT';
+  const confColor = confidence >= 80 ? 'var(--green)' : confidence >= 65 ? 'var(--accent)' : 'var(--text3)';
+
+  const probCallsEl  = document.getElementById('prob-calls');
+  const probPutsEl   = document.getElementById('prob-puts');
+  const probVerdEl   = document.getElementById('prob-verdict');
+  const probConfEl   = document.getElementById('prob-confidence-label');
+  if(probCallsEl) { probCallsEl.textContent = callsProb+'%'; probCallsEl.style.color = callsProb > putsProb ? 'var(--green)' : 'var(--text3)'; }
+  if(probPutsEl)  { probPutsEl.textContent  = putsProb+'%';  probPutsEl.style.color  = putsProb > callsProb ? 'var(--red)'   : 'var(--text3)'; }
+  if(probVerdEl) {
+    if(shockVis) { probVerdEl.textContent='🚨 No Trade — Shock Active'; probVerdEl.style.color='var(--orange)'; }
+    else if(callsProb >= 60) { probVerdEl.textContent=`Highest Probability: CALLS (${callsProb}%)`; probVerdEl.style.color='var(--green)'; }
+    else if(putsProb >= 60)  { probVerdEl.textContent=`Highest Probability: PUTS (${putsProb}%)`; probVerdEl.style.color='var(--red)'; }
+    else { probVerdEl.textContent='No clear edge — wait for alignment'; probVerdEl.style.color='var(--text2)'; }
+  }
+  if(probConfEl) { probConfEl.textContent = `Confidence: ${confLabel} (${confidence}%)`; probConfEl.style.color = confColor; }
+
+  // ── TOP 3 REASONS ────────────────────────────────────────────────
+  const top3El = document.getElementById('top3-reasons');
+  if(top3El && factors.length) {
+    const sorted = [...factors].sort((a,b) => b.pts - a.pts).slice(0,3);
+    top3El.innerHTML = sorted.map((f,i) => {
+      const c = f.d==='bull'?'var(--green)':f.d==='bear'?'var(--red)':'var(--text3)';
+      const icon = f.d==='bull'?'🟢':f.d==='bear'?'🔴':'⚡';
+      return `<div style="display:flex;align-items:center;gap:6px;font-size:11px">
+        <span style="font-size:13px">${icon}</span>
+        <span style="color:${c};font-weight:${i===0?'700':'500'}">${f.t}</span>
+        <span style="color:var(--text3);margin-left:auto;font-size:10px">+${f.pts}pts</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── WHAT CHANGED ─────────────────────────────────────────────────
+  const whatChangedEl = document.getElementById('what-changed-alert');
+  if(whatChangedEl) {
+    const prevDirection = window._lastBiasDirection || '';
+    const currentDirection = netBull > 0 ? 'CALLS' : 'PUTS';
+    if(prevDirection && prevDirection !== currentDirection && confidence >= 55 && !shockVis) {
+      whatChangedEl.style.display = 'block';
+      whatChangedEl.textContent = `⚡ BIAS FLIPPED: ${prevDirection} → ${currentDirection}. Re-evaluate your setup.`;
+      showToast('danger', `Bias Flipped: ${currentDirection}`, `Dashboard switched from ${prevDirection} to ${currentDirection} — check your position`, '⚡', 10000);
+    } else {
+      whatChangedEl.style.display = 'none';
+    }
+    window._lastBiasDirection = confidence >= 55 && !shockVis ? currentDirection : prevDirection;
+  }
+
   // ── RENDER ─────────────────────────────────────────────────────────
   const card = document.getElementById('bias-engine-card');
   if(card) card.style.borderColor = borderColor;
@@ -8976,7 +9089,13 @@ async function runBiasEngine() {
   const panel  = document.getElementById('be-verdict-panel');
 
   if(verdEl) { verdEl.textContent = verdict; verdEl.style.color = verdictColor; }
-  if(confEl) { confEl.textContent = confidence + '%'; confEl.style.color = verdictColor; }
+  if(confEl) { 
+    const cl = confidence>=80?'💪 STRONG':confidence>=65?'✅ MODERATE':confidence>=50?'⚡ WEAK':'❓ INSUFFICIENT';
+    confEl.textContent = confidence + '%'; confEl.style.color = verdictColor;
+    confEl.title = `Confidence Level: ${cl}`;
+    const clEl = document.getElementById('be-conf-level');
+    if(clEl) { clEl.textContent = cl; clEl.style.color = verdictColor; }
+  }
   if(confBar){ confBar.style.width = confidence + '%'; confBar.style.background = verdictColor; }
   if(regEl)  { regEl.textContent = regime; regEl.style.color = verdictColor; }
   if(entEl)  entEl.textContent = entry;
@@ -8993,6 +9112,8 @@ async function runBiasEngine() {
       return `<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${c.replace('var(--','rgba(').replace(')',',.1)')};color:${c};border:1px solid ${c.replace('var(--','rgba(').replace(')',',.25)')}">${f.t}</span>`;
     }).join('');
   }
+  // Auto-update dependent cards
+  setTimeout(updateTodaysPlaybook, 500);
 }
 
 // Auto-run after existing data loads
@@ -9667,7 +9788,9 @@ function runAPlusDetector() {
   if(gradeEl){gradeEl.textContent=grade;gradeEl.style.color=color;}
   if(actionEl) actionEl.textContent=action;
   if(circleEl) circleEl.style.borderColor=color;
-  if(factorsEl) factorsEl.innerHTML=factors.map(f=>`<span style="font-size:10px;padding:2px 8px;border-radius:12px;background:${f.p?'rgba(0,230,118,0.1)':'rgba(255,23,68,0.1)'};color:${f.p?'var(--green)':'var(--red)'};border:1px solid ${f.p?'rgba(0,230,118,0.3)':'rgba(255,23,68,0.3)'}">${f.t}</span>`).join('');
+  // Add confidence level
+  const confLevel = score>=85?'💪 STRONG':score>=70?'✅ MODERATE':score>=50?'⚡ WEAK':'❓ INSUFFICIENT';
+  if(factorsEl) factorsEl.innerHTML=`<div style="font-size:10px;font-weight:700;color:${color};margin-bottom:4px;width:100%">Confidence: ${confLevel}</div>`+factors.map(f=>`<span style="font-size:10px;padding:2px 8px;border-radius:12px;background:${f.p?'rgba(0,230,118,0.1)':'rgba(255,23,68,0.1)'};color:${f.p?'var(--green)':'var(--red)'};border:1px solid ${f.p?'rgba(0,230,118,0.3)':'rgba(255,23,68,0.3)'}">${f.t}</span>`).join('');
 }
 
 // ==================== EVENT PROBABILITY ENGINE (UPGRADED) ====================
