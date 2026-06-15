@@ -8652,21 +8652,27 @@ function updateTodaysPlaybook() {
   const confidence = parseInt(document.getElementById('be-confidence')?.textContent) || 0;
   const aplusScore = parseInt(document.getElementById('aplus-score')?.textContent) || 0;
   const vix = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const qqqChg = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
 
   let regime, strategy, hold, aggression, note, color;
 
-  if(regimeName.includes('SHOCK') || vix > 30) {
+  // Use bias verdict as primary source — more current than regime card
+  const isBullBias = biasVerdict.includes('CALL') && confidence >= 55;
+  const isBearBias = biasVerdict.includes('PUT') && confidence >= 55;
+  const isShock = document.getElementById('shock-alert-banner')?.style.display !== 'none' || vix > 30;
+
+  if(isShock) {
     regime='🚨 Shock Day'; strategy='STAY FLAT'; hold='No trade'; aggression='ZERO'; color='var(--red)';
     note='Market shock active — cash is the best position. Do not trade today.';
-  } else if(regimeName.includes('TREND UP')) {
+  } else if(regimeName.includes('TREND UP') || (isBullBias && Math.abs(qqqChg) >= 0.5)) {
     regime='📈 Trend Day Up'; strategy='CALL PULLBACKS'; hold='15–60 min'; color='var(--green)';
     aggression = aplusScore >= 80 ? 'AGGRESSIVE' : 'NORMAL';
     note = aplusScore >= 80 ? 'A+ trending day — hold runners longer. Move stop to BE at +$0.20. Trail stop.' : 'Trend day — take pullback entries. Target +$0.35 min, hold if momentum continues.';
-  } else if(regimeName.includes('TREND DOWN')) {
+  } else if(regimeName.includes('TREND DOWN') || (isBearBias && Math.abs(qqqChg) >= 0.5)) {
     regime='📉 Trend Day Down'; strategy='PUT BOUNCES'; hold='15–60 min'; color='var(--red)';
     aggression = aplusScore >= 80 ? 'AGGRESSIVE' : 'NORMAL';
     note = aplusScore >= 80 ? 'A+ trending down — hold runners. Sell bounces at VWAP/resistance.' : 'Trend down — sell bounce rejections. Do not fight the tape. Target +$0.35 min.';
-  } else if(regimeName.includes('CHOP') || regimeName.includes('RANGE')) {
+  } else if(regimeName.includes('CHOP') || regimeName.includes('RANGE') || (!isBullBias && !isBearBias)) {
     regime='⚡ Chop/Range Day'; strategy='QUICK SCALPS ONLY'; hold='5–15 min'; aggression='DEFENSIVE'; color='var(--text2)';
     note='Chop day — take profits fast at +$0.20-$0.35. No runners. Skip if signal score under 7/10.';
   } else if(regimeName.includes('VOLATILITY')) {
