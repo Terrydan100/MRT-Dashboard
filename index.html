@@ -1157,7 +1157,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">PRE-MARKET WAR ROOM</div>
           <div id="warroom-time" style="font-size:10px;color:var(--text3)"></div>
         </div>
-        <button onclick="fetchWarRoom()" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+        <button onclick="refreshWarRoom()" id="warroom-refresh-btn" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
       </div>
       <!-- Bias Banner -->
       <div id="warroom-bias" style="border-radius:10px;padding:10px 16px;margin-bottom:12px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid var(--border)">
@@ -9923,6 +9923,24 @@ function showFJAlert(idx) {
       <button onclick="document.getElementById('fj-latest').style.display='none'" class="btn btn-sm" style="font-size:11px">✕ Close</button>
     </div>`;
 }
+function refreshWarRoom() {
+  const btn = document.getElementById('warroom-refresh-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⟳ REFRESHING...';
+    btn.style.opacity = '0.6';
+  }
+  fetchWarRoom().finally(() => {
+    setTimeout(() => {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '🔄 REFRESH';
+        btn.style.opacity = '1';
+      }
+    }, 3000);
+  });
+}
+
 async function fetchWarRoom() {
   const timeEl = document.getElementById('warroom-time');
   if(timeEl) timeEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
