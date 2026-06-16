@@ -398,6 +398,35 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 .gauge-wrap { text-align:center; }
 .gauge-val { font-family:'Orbitron',sans-serif; font-size:28px; font-weight:900; color:var(--accent); }
 .gauge-label { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text2); margin-top:4px; }
+
+/* ==================== MOBILE OPTIMIZATION ====================
+   Only applies below 768px — iMac (and any desktop width) is
+   completely unaffected. Do not add any rule here without the
+   max-width:768px wrapper. */
+@media (max-width:768px) {
+  /* Fixed two-column grids (auto 1fr / 180px 1fr) stack vertically */
+  .mob-grid-stack {
+    grid-template-columns: 1fr !important;
+  }
+  .mob-grid-stack > div:first-child {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Nav tabs scroll horizontally instead of wrapping/shrinking unreadably */
+  .nav-tabs {
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+  .nav-tab {
+    flex-shrink: 0;
+  }
+
+  /* Prevent iOS Safari auto-zoom on input focus (triggers under 16px) */
+  .form-input, select, textarea, input {
+    font-size: 16px !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -803,7 +832,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
 
       <!-- Main Output -->
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:0;align-items:stretch">
+      <div class="mob-grid-stack" style="display:grid;grid-template-columns:auto 1fr;gap:0;align-items:stretch">
 
         <!-- LEFT — Big verdict -->
         <div id="be-verdict-panel" style="padding:20px 24px;text-align:center;border-right:1px solid var(--border);min-width:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,0.2)">
@@ -887,7 +916,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
 
       <!-- Main grid -->
-      <div style="display:grid;grid-template-columns:180px 1fr;gap:0;align-items:stretch">
+      <div class="mob-grid-stack" style="display:grid;grid-template-columns:180px 1fr;gap:0;align-items:stretch">
 
         <!-- LEFT: Verdict -->
         <div id="coach-verdict-panel" style="padding:18px 16px;text-align:center;border-right:1px solid rgba(0,180,255,0.2);background:rgba(0,0,0,0.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
@@ -998,7 +1027,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         </div>
         <button onclick="runAPlusDetector()" style="background:rgba(0,229,255,0.1);border:1px solid var(--cyan);color:var(--cyan);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
       </div>
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center">
+      <div class="mob-grid-stack" style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center">
         <div style="text-align:center;background:rgba(0,0,0,0.4);border:2px solid var(--border);border-radius:50%;width:100px;height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0" id="aplus-circle">
           <div id="aplus-score" style="font-family:Orbitron,sans-serif;font-size:28px;font-weight:900;color:var(--text2)">--</div>
           <div style="font-size:9px;color:var(--text3);letter-spacing:1px">/100</div>
@@ -1094,7 +1123,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           </div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin-bottom:12px">
+      <div class="mob-grid-stack" style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin-bottom:12px">
         <div style="text-align:center;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:10px;padding:10px 16px;min-width:80px">
           <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:2px">SCORE</div>
           <div id="sig-score" style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:var(--text2)">0/10</div>
