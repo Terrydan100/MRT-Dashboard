@@ -771,6 +771,24 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- EARLY MOMENTUM DETECTOR                                   -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div id="momentum-card" style="display:none;margin-bottom:16px;border-radius:14px;border:2px solid var(--accent);overflow:hidden;animation:slideIn 0.3s ease">
+      <div id="momentum-banner" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span id="momentum-icon" style="font-size:24px">🟢</span>
+          <div>
+            <div id="momentum-headline" style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:900;letter-spacing:1px">MOVE STARTING — CALLS</div>
+            <div id="momentum-detail" style="font-size:11px;color:var(--text2);margin-top:2px">QQQ broke VWAP + 5-min high · Volume surge · NQ confirms</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div id="momentum-time" style="font-size:10px;color:var(--text3)">--</div>
+          <button onclick="document.getElementById('momentum-card').style.display='none'" style="background:none;border:1px solid var(--text3);color:var(--text3);padding:2px 10px;border-radius:6px;font-size:10px;cursor:pointer;margin-top:4px">DISMISS</button>
+        </div>
+      </div>
+    </div>
+
     <!-- TRADE BIAS ENGINE — MASTER SIGNAL                        -->
     <!-- ══════════════════════════════════════════════════════════ -->
     <div id="bias-engine-card" style="margin-bottom:16px;border-radius:14px;border:2px solid var(--border);background:linear-gradient(135deg,rgba(0,0,0,0.6),rgba(0,0,0,0.3));overflow:hidden">
@@ -3951,6 +3969,7 @@ async function initDashboard() {
   calcPosition();
   setInterval(updateSessionStatus, 30000);
   setInterval(fetchMarketData, 30000); // refresh every 30 seconds for real-time feel
+  setInterval(runMomentumDetector, 60000); // Early Momentum Detector — 9:30-11:30AM & 2-4PM ET
   setInterval(updateTradingIntelligence, 60000);
   setInterval(fetchCryptoPrices, 120000);
   showDailyPlanReminder();
@@ -4561,6 +4580,143 @@ async function fetchMarketData() {
       }
     }
   } catch(e){}
+}
+
+// ==================== EARLY MOMENTUM DETECTOR ====================
+// Watches QQQ for: VWAP break + 5-min high break + volume surge + NQ confirmation
+// Runs every 60s during 9:30-11:30 AM and 2:00-4:00 PM ET
+let lastMomentumFire = 0; // timestamp ms, prevents re-firing same signal within 10 min
+let momentumState = { lastDirection: null };
+
+function isMomentumWindow() {
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const h = et.getHours(), m = et.getMinutes();
+  const total = h * 60 + m;
+  const morning = total >= 9 * 60 + 30 && total <= 11 * 60 + 30;
+  const afternoon = total >= 14 * 60 && total <= 16 * 60;
+  return morning || afternoon;
+}
+
+async function fetchQQQIntraday() {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/QQQ?interval=1m&range=1d`;
+    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const r = await fetch(proxy);
+    if (!r.ok) return null;
+    const d = await r.json();
+    const result = d?.chart?.result?.[0];
+    if (!result) return null;
+    const quote = result.indicators?.quote?.[0];
+    const timestamps = result.timestamp;
+    if (!quote || !timestamps) return null;
+    return {
+      closes: quote.close,
+      highs: quote.high,
+      volumes: quote.volume,
+      timestamps
+    };
+  } catch (e) { return null; }
+}
+
+function calcVWAP(bars) {
+  // bars: { closes, highs, volumes }
+  let cumPV = 0, cumVol = 0;
+  for (let i = 0; i < bars.closes.length; i++) {
+    const c = bars.closes[i], v = bars.volumes[i];
+    if (c == null || v == null) continue;
+    cumPV += c * v;
+    cumVol += v;
+  }
+  return cumVol > 0 ? cumPV / cumVol : null;
+}
+
+async function runMomentumDetector() {
+  if (!isMomentumWindow()) {
+    const card = document.getElementById('momentum-card');
+    return;
+  }
+  // 10-minute cooldown so we don't spam the same move
+  if (Date.now() - lastMomentumFire < 10 * 60 * 1000) return;
+
+  const bars = await fetchQQQIntraday();
+  if (!bars) return;
+
+  // Filter out null entries (Yahoo sometimes pads with nulls for current incomplete bar)
+  const validIdx = [];
+  for (let i = 0; i < bars.closes.length; i++) {
+    if (bars.closes[i] != null && bars.volumes[i] != null) validIdx.push(i);
+  }
+  if (validIdx.length < 10) return;
+
+  const closes = validIdx.map(i => bars.closes[i]);
+  const highs = validIdx.map(i => bars.highs[i] ?? bars.closes[i]);
+  const volumes = validIdx.map(i => bars.volumes[i]);
+
+  const currentPrice = closes[closes.length - 1];
+  const currentVol = volumes[volumes.length - 1];
+
+  // VWAP across the day so far
+  const vwap = calcVWAP({ closes, highs, volumes });
+  if (vwap == null) return;
+
+  // 5-min high = max close over the last 5 bars EXCLUDING the current bar
+  const lookback = closes.slice(Math.max(0, closes.length - 6), closes.length - 1);
+  const fiveMinHigh = lookback.length ? Math.max(...lookback) : null;
+  const fiveMinLow = lookback.length ? Math.min(...lookback) : null;
+
+  // Volume surge = current bar volume vs avg of last 10 bars (excluding current)
+  const volLookback = volumes.slice(Math.max(0, volumes.length - 11), volumes.length - 1);
+  const avgVol = volLookback.length ? volLookback.reduce((a, b) => a + b, 0) / volLookback.length : null;
+  const volSurge = avgVol ? currentVol / avgVol : null;
+
+  // NQ confirmation — reuse change % already shown on dashboard ticker if present
+  const nqChgEl = document.getElementById('nq-chg');
+  const nqChg = nqChgEl ? parseFloat(nqChgEl.textContent.replace('%', '')) : null;
+
+  if (vwap == null || fiveMinHigh == null || volSurge == null) return;
+
+  const bullBreak = currentPrice > vwap && fiveMinHigh != null && currentPrice > fiveMinHigh && volSurge >= 1.5 && (nqChg == null || nqChg > 0);
+  const bearBreak = currentPrice < vwap && fiveMinLow != null && currentPrice < fiveMinLow && volSurge >= 1.5 && (nqChg == null || nqChg < 0);
+
+  if (!bullBreak && !bearBreak) return;
+
+  const direction = bullBreak ? 'CALLS' : 'PUTS';
+  if (momentumState.lastDirection === direction && Date.now() - lastMomentumFire < 20 * 60 * 1000) return;
+
+  lastMomentumFire = Date.now();
+  momentumState.lastDirection = direction;
+
+  const card = document.getElementById('momentum-card');
+  const icon = document.getElementById('momentum-icon');
+  const headline = document.getElementById('momentum-headline');
+  const detail = document.getElementById('momentum-detail');
+  const timeEl = document.getElementById('momentum-time');
+  const banner = document.getElementById('momentum-banner');
+
+  if (card) card.style.display = 'block';
+  if (banner) banner.style.background = bullBreak
+    ? 'linear-gradient(135deg,rgba(16,185,129,0.18),rgba(0,0,0,0.4))'
+    : 'linear-gradient(135deg,rgba(239,68,68,0.18),rgba(0,0,0,0.4))';
+  if (icon) icon.textContent = bullBreak ? '🟢' : '🔴';
+  if (headline) {
+    headline.textContent = `MOVE STARTING — ${direction}`;
+    headline.style.color = bullBreak ? 'var(--green)' : 'var(--red)';
+  }
+  if (detail) {
+    detail.textContent = `QQQ $${currentPrice.toFixed(2)} ${bullBreak ? 'broke above' : 'broke below'} VWAP ($${vwap.toFixed(2)}) + ${bullBreak ? '5-min high' : '5-min low'} · Vol ${volSurge.toFixed(1)}x avg · NQ ${nqChg != null ? (nqChg >= 0 ? '+' : '') + nqChg.toFixed(2) + '%' : 'n/a'} confirms`;
+  }
+  if (timeEl) timeEl.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  showToast(
+    bullBreak ? 'success' : 'danger',
+    `MOVE STARTING — ${direction}`,
+    `QQQ broke ${bullBreak ? 'VWAP + 5-min high' : 'VWAP + 5-min low'} on volume surge, NQ confirms`,
+    bullBreak ? '🟢' : '🔴',
+    8000
+  );
+
+  if (typeof playMomentumAlertSound === 'function') playMomentumAlertSound();
 }
 
 // ==================== NEWS ====================
