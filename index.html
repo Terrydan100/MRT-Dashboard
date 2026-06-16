@@ -1712,7 +1712,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div class="card" style="text-align:center;padding:12px;border:1px solid rgba(255,100,100,0.2)">
         <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">📊 VIX</div>
         <div style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;margin-bottom:2px" id="vix-num">--</div>
-        <div style="font-size:10px;font-weight:600" id="vix-status">Loading...</div>
+        <div style="font-size:10px;font-weight:600" id="vix-status-mini">Loading...</div>
       </div>
       <div class="card" style="text-align:center;padding:12px;border:1px solid rgba(0,180,255,0.2)">
         <div style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">📈 ES FUTURES</div>
@@ -6614,7 +6614,7 @@ async function fetchMarketStatus() {
     else { el.textContent = '🔴 CLOSED'; el.style.color = 'var(--red)'; }
   }
   // VIX from ticker data
-  const vixEl = document.getElementById('vix-status');
+  const vixEl = document.getElementById('vix-status-mini');
   const vixNumEl = document.getElementById('vix-num');
   const vixVal = document.getElementById('t-vix')?.textContent?.replace('$','');
   if(vixVal && vixVal !== '---') {
@@ -7781,19 +7781,7 @@ async function runSignalCheck() {
 // Auto-run every 2 minutes when on dashboard
 function checkConfluenceSignal() { runSignalCheck(); }
 
-function showToast(msg, duration = 4000) {
-  let toast = document.getElementById('signal-toast');
-  if(!toast) {
-    toast = document.createElement('div');
-    toast.id = 'signal-toast';
-    toast.style.cssText = 'position:fixed;bottom:80px;right:20px;background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:14px 18px;z-index:9999;font-family:Rajdhani,sans-serif;font-size:13px;color:var(--text);max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.5);line-height:1.5;cursor:pointer;animation:slideIn 0.3s ease';
-    toast.onclick = () => toast.style.display = 'none';
-    document.body.appendChild(toast);
-  }
-  toast.innerHTML = msg.split('\n').join('<br>');
-  toast.style.display = 'block';
-  setTimeout(() => { if(toast) toast.style.display = 'none'; }, duration);
-}
+// (duplicate showToast removed — was silently overriding the real toast function above)
 
 // --- P&L Calendar ---
 let plCalYear = new Date().getFullYear();
