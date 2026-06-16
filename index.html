@@ -68,7 +68,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
 /* PIN LOCK */
 #pin-lock { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; }
-.pin-box { background:var(--card); border:1px solid var(--accent); border-radius:20px; padding:40px; text-align:center; width:320px; box-shadow:0 0 60px var(--glow-strong); opacity:1 !important; visibility:visible !important; }
+.pin-box { background:var(--card); border:1px solid var(--accent); border-radius:20px; padding:40px; text-align:center; width:320px; box-shadow:0 0 60px var(--glow-strong); animation: fadeIn 0.5s ease; }
 .pin-logo { font-family:'Orbitron',sans-serif; font-size:16px; color:var(--accent); margin-bottom:8px; letter-spacing:2px; }
 .pin-sub { color:var(--text2); font-size:13px; margin-bottom:24px; }
 .pin-dots { display:flex; justify-content:center; gap:12px; margin-bottom:24px; }
@@ -397,24 +397,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 .gauge-wrap { text-align:center; }
 .gauge-val { font-family:'Orbitron',sans-serif; font-size:28px; font-weight:900; color:var(--accent); }
 .gauge-label { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text2); margin-top:4px; }
-
-/* ==================== MOBILE RESPONSIVE ==================== */
-@media (max-width: 768px) {
-  .nav-bar { padding: 8px 10px; flex-wrap: wrap; gap: 6px; }
-  .nav-tabs { display: flex; overflow-x: auto; gap: 4px; padding-bottom: 4px; }
-  .nav-tab { font-size: 10px; padding: 5px 8px; white-space: nowrap; }
-  .tab-icon { display: none; }
-  .card { padding: 12px; }
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr !important; }
-  .stat-card { padding: 10px; }
-  .stat-val { font-size: 18px !important; }
-  #app { padding: 4px; }
-  .modal { margin: 10px; max-width: calc(100vw - 20px) !important; }
-  #be-verdict-panel, #coach-verdict-panel { border-right: none !important; border-bottom: 1px solid var(--border); }
-  .form-input { font-size: 16px; }
-  button { touch-action: manipulation; }
-  #session-pnl-banner { grid-template-columns: 1fr !important; }
-}
+</style>
 </head>
 <body>
 
@@ -616,7 +599,6 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <button onclick="toggleSound()" id="sound-btn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 10px;border-radius:8px;font-size:14px;cursor:pointer" title="Sound">🔇</button>
         <button onclick="showCmdPalette()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px">⌘ CMD</button>
         <button onclick="toggleHideFigures()" id="hide-figures-btn" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px">👁 HIDE FIGURES</button>
-        <button onclick="toggleSound()" id="sound-toggle-btn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px">🔇 SOUND OFF</button>
         <button onclick="toggleLightMode()" id="light-mode-btn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px">☀️ LIGHT MODE</button>
         <button onclick="lockDashboard()" style="background:rgba(255,23,68,0.1);border:1px solid var(--red);color:var(--red);padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px">🔒 LOCK</button>
         <div class="live-badge" style="cursor:pointer" onclick="fetchMarketData()">● LIVE</div>
@@ -752,17 +734,6 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div id="shock-actions" style="font-size:12px;color:var(--accent)"></div>
           <button onclick="document.getElementById('shock-alert-banner').style.display='none'" style="background:transparent;border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px">DISMISS</button>
         </div>
-      </div>
-    </div>
-
-    <!-- EARLY MOMENTUM DETECTOR ALERT -->
-    <div id="emd-alert" style="display:none;margin-bottom:12px;border-radius:12px;border:2px solid var(--green);background:rgba(0,230,118,0.08);padding:12px 18px;animation:pulse-border 1s infinite">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div>
-          <div id="emd-title" style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:900;color:var(--green)">🟢 MOVE STARTING</div>
-          <div id="emd-detail" style="font-size:12px;color:var(--text);margin-top:4px"></div>
-        </div>
-        <button onclick="document.getElementById('emd-alert').style.display='none'" style="background:transparent;border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px">DISMISS</button>
       </div>
     </div>
 
@@ -950,12 +921,6 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
             <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
               <div style="font-size:8px;color:var(--accent);letter-spacing:1px">POSITION SIZE</div>
               <div id="coach-size" style="font-size:12px;font-weight:700;color:var(--accent)">--</div>
-            </div>
-            <!-- CONTRACT EXPIRATION COUNTDOWN -->
-            <div style="background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.3);border-radius:6px;padding:6px 8px">
-              <div style="font-size:8px;color:var(--cyan);letter-spacing:1px">CONTRACT EXPIRES</div>
-              <div id="coach-expiry" style="font-size:13px;font-weight:700;color:var(--cyan)">--</div>
-              <div id="coach-expiry-note" style="font-size:9px;color:var(--text3);margin-top:2px"></div>
             </div>
           </div>
 
@@ -1169,7 +1134,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">PRE-MARKET WAR ROOM</div>
           <div id="warroom-time" style="font-size:10px;color:var(--text3)"></div>
         </div>
-        <button onclick="refreshWarRoom()" id="warroom-refresh-btn" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+        <button onclick="fetchWarRoom()" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
       </div>
       <!-- Bias Banner -->
       <div id="warroom-bias" style="border-radius:10px;padding:10px 16px;margin-bottom:12px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid var(--border)">
@@ -8488,184 +8453,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ==================== CONTRACT EXPIRATION COUNTDOWN ====================
-function updateContractExpiry() {
-  const now = new Date();
-  const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
-  const h = et.getHours(), m = et.getMinutes();
-  const expiryEl = document.getElementById('coach-expiry');
-  const expiryNote = document.getElementById('coach-expiry-note');
-
-  // 0DTE = expires today at 4:00 PM ET
-  const todayClose = new Date(et);
-  todayClose.setHours(16,0,0,0);
-  const minsLeft = Math.floor((todayClose - et) / 60000);
-
-  // Next Friday for weekly
-  const dayOfWeek = et.getDay();
-  const daysToFriday = dayOfWeek <= 5 ? 5 - dayOfWeek : 6;
-  const nextFriday = new Date(et);
-  nextFriday.setDate(et.getDate() + daysToFriday);
-  nextFriday.setHours(16,0,0,0);
-  const daysToWeekly = Math.ceil((nextFriday - et) / (1000*60*60*24));
-
-  if(expiryEl) {
-    if(minsLeft > 0 && minsLeft < 390) { // market hours
-      const mm = Math.floor(minsLeft/60);
-      const ss = minsLeft % 60;
-      expiryEl.textContent = `${mm}h ${ss}m`;
-      expiryEl.style.color = minsLeft < 60 ? 'var(--red)' : minsLeft < 120 ? 'var(--orange)' : 'var(--cyan)';
-      if(expiryNote) expiryNote.textContent = '0DTE expires today 4PM ET';
-    } else {
-      expiryEl.textContent = `${daysToWeekly}d`;
-      expiryEl.style.color = daysToWeekly <= 1 ? 'var(--orange)' : 'var(--cyan)';
-      if(expiryNote) expiryNote.textContent = `Weekly exp: Friday`;
-    }
-  }
-}
-setInterval(updateContractExpiry, 30000);
-
-// ==================== SOUND ALERTS ====================
-let soundEnabled = false;
-let audioCtx = null;
-
-function initAudio() {
-  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-
-function playAlert(type) {
-  if(!soundEnabled) return;
-  initAudio();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  if(type === 'calls') {
-    osc.frequency.setValueAtTime(523, audioCtx.currentTime); // C5
-    osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.15); // E5
-    osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.3); // G5
-  } else if(type === 'puts') {
-    osc.frequency.setValueAtTime(784, audioCtx.currentTime);
-    osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.15);
-    osc.frequency.setValueAtTime(523, audioCtx.currentTime + 0.3);
-  } else if(type === 'warning') {
-    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-    osc.frequency.setValueAtTime(440, audioCtx.currentTime + 0.1);
-  } else if(type === 'momentum') {
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-    osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.1);
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.2);
-  }
-
-  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-  osc.start(audioCtx.currentTime);
-  osc.stop(audioCtx.currentTime + 0.5);
-}
-
-function toggleSound() {
-  soundEnabled = !soundEnabled;
-  initAudio();
-  const btn = document.getElementById('sound-toggle-btn');
-  if(btn) { btn.textContent = soundEnabled ? '🔊 SOUND ON' : '🔇 SOUND OFF'; btn.style.borderColor = soundEnabled ? 'var(--green)' : 'var(--border)'; btn.style.color = soundEnabled ? 'var(--green)' : 'var(--text2)'; }
-  if(soundEnabled) playAlert('momentum'); // test tone
-}
-
-// ==================== EARLY MOMENTUM DETECTOR ====================
-let lastMomentumAlert = '';
-let momentumCheckCount = 0;
-
-async function checkEarlyMomentum() {
-  const now = new Date();
-  const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
-  const h = et.getHours(), m = et.getMinutes();
-  const totalMin = h * 60 + m;
-
-  // Only check during 9:30-11:30 AM and 2:00-4:00 PM ET
-  const inWindow = (totalMin >= 570 && totalMin <= 690) || (totalMin >= 840 && totalMin <= 960);
-  if(!inWindow) return;
-
-  try {
-    // Get QQQ and NQ data
-    const [qqqR, nqR] = await Promise.all([
-      fetch(`https://finnhub.io/api/v1/quote?symbol=QQQ&token=${FINNHUB_KEY}`),
-      fetch(`https://finnhub.io/api/v1/quote?symbol=NQ1!&token=${FINNHUB_KEY}`)
-    ]);
-
-    if(!qqqR.ok) return;
-    const qqq = await qqqR.json();
-    const nq = nqR.ok ? await nqR.json() : null;
-
-    const qqqPrice = qqq.c;
-    const qqqOpen  = qqq.o;
-    const qqqHigh  = qqq.h;
-    const qqqChg   = qqq.dp || 0;
-    const qqqPMH   = parseFloat(document.getElementById('qqq-pmh')?.textContent?.replace('$','')) || 0;
-    const qqqPML   = parseFloat(document.getElementById('qqq-pml')?.textContent?.replace('$','')) || 0;
-    const nqChg    = nq?.dp || 0;
-
-    // Approximate VWAP from open + current (simple proxy)
-    const vwapProxy = (qqqOpen + qqqHigh + qqq.l + qqqPrice) / 4;
-    const aboveVWAP = qqqPrice > vwapProxy;
-    const belowVWAP = qqqPrice < vwapProxy;
-
-    // Check conditions
-    const breakPMH = qqqPMH > 0 && qqqPrice > qqqPMH;
-    const breakPML = qqqPML > 0 && qqqPrice < qqqPML;
-    const nqConfirm = Math.abs(nqChg) >= 0.2;
-    const strongMomentum = Math.abs(qqqChg) >= 0.5;
-
-    let signal = null;
-
-    // CALLS signal
-    if(aboveVWAP && breakPMH && nqChg > 0 && qqqChg > 0.3) {
-      signal = { type:'calls', title:'🟢 MOVE STARTING — CALLS', detail:`QQQ broke PM high ($${qqqPMH.toFixed(2)}) · Above VWAP · NQ +${nqChg.toFixed(2)}% confirming`, color:'var(--green)' };
-    }
-    // Strong momentum even without PM high break
-    else if(aboveVWAP && strongMomentum && nqChg > 0.2 && qqqChg > 0.5) {
-      signal = { type:'calls', title:'🟢 BULLISH MOMENTUM DETECTED', detail:`QQQ +${qqqChg.toFixed(2)}% above VWAP · NQ confirming · Watch for pullback entry`, color:'var(--green)' };
-    }
-    // PUTS signal
-    else if(belowVWAP && breakPML && nqChg < 0 && qqqChg < -0.3) {
-      signal = { type:'puts', title:'🔴 MOVE STARTING — PUTS', detail:`QQQ broke PM low ($${qqqPML.toFixed(2)}) · Below VWAP · NQ ${nqChg.toFixed(2)}% confirming`, color:'var(--red)' };
-    }
-    else if(belowVWAP && strongMomentum && nqChg < -0.2 && qqqChg < -0.5) {
-      signal = { type:'puts', title:'🔴 BEARISH MOMENTUM DETECTED', detail:`QQQ ${qqqChg.toFixed(2)}% below VWAP · NQ confirming · Watch for bounce rejection`, color:'var(--red)' };
-    }
-
-    const emdEl = document.getElementById('emd-alert');
-    const emdTitle = document.getElementById('emd-title');
-    const emdDetail = document.getElementById('emd-detail');
-
-    if(signal && signal.title !== lastMomentumAlert) {
-      lastMomentumAlert = signal.title;
-      if(emdEl) emdEl.style.display='block';
-      if(emdEl) emdEl.style.borderColor=signal.color;
-      if(emdTitle) { emdTitle.textContent=signal.title; emdTitle.style.color=signal.color; }
-      if(emdDetail) emdDetail.textContent=signal.detail;
-      showToast(signal.type==='calls'?'success':'danger', signal.title, signal.detail, signal.type==='calls'?'🟢':'🔴', 20000);
-      playAlert(signal.type);
-    } else if(!signal && emdEl) {
-      emdEl.style.display='none';
-    }
-  } catch(e) {}
-}
-
-// Run every 60 seconds during market hours
-setInterval(checkEarlyMomentum, 60000);
-setTimeout(checkEarlyMomentum, 15000);
-
-// ==================== PRE-MARKET WAR ROOM REFRESH FIX ====================
-// Ensure fetchWarRoom is called when refresh button is clicked
-function refreshWarRoom() {
-  if(typeof fetchWarRoom === 'function') {
-    fetchWarRoom();
-    const btn = document.querySelector('[onclick="fetchWarRoom()"]');
-    if(btn) { btn.textContent='⟳ REFRESHING...'; setTimeout(()=>{ btn.textContent='🔄 REFRESH'; }, 3000); }
-  }
-}
-
 // ==================== AI TRADE COACH ====================
 // Research database — based on QQQ/SPY 0DTE studies (230K+ trades, Option Alpha research)
 const COACH_RESEARCH_DB = {
@@ -8827,9 +8614,6 @@ async function runAICoach() {
   set('coach-stop','-$0.30','var(--red)');
   set('coach-target',target,'var(--green)');
   set('coach-size',posSize,verdictColor);
-
-  // Contract expiration countdown
-  updateContractExpiry();
   set('coach-research',researchText);
 
   const confBar=document.getElementById('coach-conf-bar');
@@ -8868,27 +8652,21 @@ function updateTodaysPlaybook() {
   const confidence = parseInt(document.getElementById('be-confidence')?.textContent) || 0;
   const aplusScore = parseInt(document.getElementById('aplus-score')?.textContent) || 0;
   const vix = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
-  const qqqChg = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
 
   let regime, strategy, hold, aggression, note, color;
 
-  // Use bias verdict as primary source — more current than regime card
-  const isBullBias = biasVerdict.includes('CALL') && confidence >= 55;
-  const isBearBias = biasVerdict.includes('PUT') && confidence >= 55;
-  const isShock = document.getElementById('shock-alert-banner')?.style.display !== 'none' || vix > 30;
-
-  if(isShock) {
+  if(regimeName.includes('SHOCK') || vix > 30) {
     regime='🚨 Shock Day'; strategy='STAY FLAT'; hold='No trade'; aggression='ZERO'; color='var(--red)';
     note='Market shock active — cash is the best position. Do not trade today.';
-  } else if(regimeName.includes('TREND UP') || (isBullBias && Math.abs(qqqChg) >= 0.5)) {
+  } else if(regimeName.includes('TREND UP')) {
     regime='📈 Trend Day Up'; strategy='CALL PULLBACKS'; hold='15–60 min'; color='var(--green)';
     aggression = aplusScore >= 80 ? 'AGGRESSIVE' : 'NORMAL';
     note = aplusScore >= 80 ? 'A+ trending day — hold runners longer. Move stop to BE at +$0.20. Trail stop.' : 'Trend day — take pullback entries. Target +$0.35 min, hold if momentum continues.';
-  } else if(regimeName.includes('TREND DOWN') || (isBearBias && Math.abs(qqqChg) >= 0.5)) {
+  } else if(regimeName.includes('TREND DOWN')) {
     regime='📉 Trend Day Down'; strategy='PUT BOUNCES'; hold='15–60 min'; color='var(--red)';
     aggression = aplusScore >= 80 ? 'AGGRESSIVE' : 'NORMAL';
     note = aplusScore >= 80 ? 'A+ trending down — hold runners. Sell bounces at VWAP/resistance.' : 'Trend down — sell bounce rejections. Do not fight the tape. Target +$0.35 min.';
-  } else if(regimeName.includes('CHOP') || regimeName.includes('RANGE') || (!isBullBias && !isBearBias)) {
+  } else if(regimeName.includes('CHOP') || regimeName.includes('RANGE')) {
     regime='⚡ Chop/Range Day'; strategy='QUICK SCALPS ONLY'; hold='5–15 min'; aggression='DEFENSIVE'; color='var(--text2)';
     note='Chop day — take profits fast at +$0.20-$0.35. No runners. Skip if signal score under 7/10.';
   } else if(regimeName.includes('VOLATILITY')) {
@@ -9699,7 +9477,6 @@ async function runBiasEngine() {
       whatChangedEl.style.display = 'block';
       whatChangedEl.textContent = `⚡ BIAS FLIPPED: ${prevDirection} → ${currentDirection}. Re-evaluate your setup.`;
       showToast('danger', `Bias Flipped: ${currentDirection}`, `Dashboard switched from ${prevDirection} to ${currentDirection} — check your position`, '⚡', 10000);
-      playAlert('warning');
     } else {
       whatChangedEl.style.display = 'none';
     }
