@@ -941,6 +941,10 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
               <div style="font-size:8px;color:var(--accent);letter-spacing:1px">POSITION SIZE</div>
               <div id="coach-size" style="font-size:12px;font-weight:700;color:var(--accent)">--</div>
             </div>
+            <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:6px;padding:6px 8px">
+              <div style="font-size:8px;color:var(--text3);letter-spacing:1px">EXPIRATION</div>
+              <div id="coach-expiration" style="font-size:13px;font-weight:700;color:var(--text2)">--</div>
+            </div>
           </div>
 
           <!-- Research data -->
@@ -8869,6 +8873,55 @@ async function runAICoach() {
 // Auto-run after bias engine
 setTimeout(()=>{if(typeof runAICoach==='function')runAICoach();},13000);
 setInterval(()=>{if(typeof runAICoach==='function')runAICoach();},180000);
+
+// ==================== CONTRACT EXPIRATION COUNTDOWN ====================
+// During market hours: time left today (0DTE). After hours: days until next Friday expiration.
+function updateExpirationCountdown() {
+  const el = document.getElementById('coach-expiration');
+  if (!el) return;
+
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const h = et.getHours(), m = et.getMinutes(), day = et.getDay(); // day: 0=Sun..6=Sat
+
+  const marketOpenMin = 9 * 60 + 30;
+  const marketCloseMin = 16 * 60;
+  const nowMin = h * 60 + m;
+  const isWeekday = day >= 1 && day <= 5;
+  const duringMarketHours = isWeekday && nowMin >= marketOpenMin && nowMin < marketCloseMin;
+
+  if (duringMarketHours) {
+    // 0DTE — time left until 4:00 PM ET close
+    const minutesLeft = marketCloseMin - nowMin;
+    const hrs = Math.floor(minutesLeft / 60);
+    const mins = minutesLeft % 60;
+    const label = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+    el.textContent = `0DTE · ${label}`;
+    if (minutesLeft < 60) {
+      el.style.color = 'var(--red)';
+    } else if (minutesLeft < 120) {
+      el.style.color = 'var(--orange)';
+    } else {
+      el.style.color = 'var(--text2)';
+    }
+  } else {
+    // After hours / weekend — days until next Friday expiration
+    let daysUntilFriday = (5 - day + 7) % 7;
+    // If it's Friday after close, roll to next Friday (7 days)
+    if (day === 5 && nowMin >= marketCloseMin) daysUntilFriday = 7;
+    // If it's Friday before close, still expiring today
+    if (day === 5 && nowMin < marketCloseMin) {
+      el.textContent = '0DTE · Today';
+      el.style.color = 'var(--orange)';
+      return;
+    }
+    if (daysUntilFriday === 0) daysUntilFriday = 7;
+    el.textContent = `${daysUntilFriday}d to Fri exp`;
+    el.style.color = 'var(--text2)';
+  }
+}
+updateExpirationCountdown();
+setInterval(updateExpirationCountdown, 30000);
 
 // ==================== TODAY'S PLAYBOOK ====================
 function updateTodaysPlaybook() {
