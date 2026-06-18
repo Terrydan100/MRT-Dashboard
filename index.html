@@ -9527,10 +9527,19 @@ async function fetchMarketBreadth() {
 async function runBiasEngine() {
   const updEl = document.getElementById('be-updated');
   const pulseEl = document.getElementById('be-pulse');
-  if(updEl) updEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  if(updEl) updEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + ' (scanning...)';
   if(pulseEl) pulseEl.style.background = 'var(--accent)';
 
-  // ── READ ALL EXISTING DASHBOARD DATA ──────────────────────────────
+  try {
+    await _runBiasEngineInner();
+  } catch(err) {
+    console.error('Bias Engine error:', err);
+    if(updEl) updEl.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + ' (error — see console)';
+    showToast('danger', 'Bias Engine Error', err.message || 'Scan failed — check browser console for details', '⚠️', 8000);
+  }
+}
+
+async function _runBiasEngineInner() {  // ── READ ALL EXISTING DASHBOARD DATA ──────────────────────────────
   const spyChg    = parseFloat(document.getElementById('tc-spy')?.textContent?.replace('%','')) || 0;
   const qqqChg    = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
   const vix       = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
