@@ -9539,7 +9539,9 @@ async function runBiasEngine() {
   }
 }
 
-async function _runBiasEngineInner() {  // ── READ ALL EXISTING DASHBOARD DATA ──────────────────────────────
+async function _runBiasEngineInner() {
+  const pulseEl = document.getElementById('be-pulse');
+  // ── READ ALL EXISTING DASHBOARD DATA ──────────────────────────────
   const spyChg    = parseFloat(document.getElementById('tc-spy')?.textContent?.replace('%','')) || 0;
   const qqqChg    = parseFloat(document.getElementById('tc-qqq')?.textContent?.replace('%','')) || 0;
   const vix       = parseFloat(document.getElementById('t-vix')?.textContent?.replace(/[^0-9.]/g,'')) || 0;
