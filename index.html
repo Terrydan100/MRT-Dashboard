@@ -534,7 +534,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
   <div class="modal" style="max-width:700px;border-color:var(--red);box-shadow:0 0 60px rgba(255,23,68,0.3)">
     <div class="modal-title" style="color:var(--red)">🚨 BREAKING NEWS &amp; EMERGENCY ALERTS <button class="modal-close" onclick="closeModal('emergency-modal')">✕</button></div>
     <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-sm" onclick="fetchBreakingNews()">🔄 Refresh</button>
+      <button class="btn btn-sm" onclick="runWithLoadingState(event, fetchBreakingNews, '⏳ Refreshing...')">🔄 Refresh</button>
       <a href="https://www.cnbc.com/world-news/" target="_blank" class="btn btn-sm">CNBC</a>
       <a href="https://www.reuters.com/news/archive/worldnews" target="_blank" class="btn btn-sm">Reuters</a>
       <a href="https://apnews.com/hub/breaking-news" target="_blank" class="btn btn-sm">AP News</a>
@@ -747,7 +747,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div style="font-size:13px">🚨</div>
       <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--red);letter-spacing:1px;flex:1">MARKET SHOCK DETECTOR</div>
       <div id="shock-status-text" style="font-size:11px;color:var(--text2)">Click to check current conditions</div>
-      <button onclick="checkMarketShock(true)" style="background:rgba(255,23,68,0.15);border:1px solid var(--red);color:var(--red);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-family:Rajdhani,sans-serif;font-weight:700;white-space:nowrap">⚡ CHECK NOW</button>
+      <button onclick="runWithLoadingState(event, () => checkMarketShock(true), '⏳ CHECKING...')" style="background:rgba(255,23,68,0.15);border:1px solid var(--red);color:var(--red);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-family:Rajdhani,sans-serif;font-weight:700;white-space:nowrap">⚡ CHECK NOW</button>
     </div>
 
     <!-- MARKET SHOCK ALERT BANNER (hidden by default) -->
@@ -828,7 +828,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--text2);letter-spacing:2px">🧠 TRADE BIAS ENGINE</div>
           <div id="be-updated" style="font-size:10px;color:var(--text3)"></div>
         </div>
-        <button onclick="runBiasEngine()" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:4px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">⚡ SCAN NOW</button>
+        <button onclick="runWithLoadingState(event, runBiasEngine, '⏳ SCANNING...')" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:4px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">⚡ SCAN NOW</button>
       </div>
 
       <!-- Main Output -->
@@ -912,7 +912,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--blue);letter-spacing:2px">🧠 AI TRADE COACH</div>
           <div id="coach-updated" style="font-size:10px;color:var(--text3)"></div>
         </div>
-        <button onclick="runAICoach()" style="background:rgba(0,180,255,0.15);border:1px solid var(--blue);color:var(--blue);padding:4px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">⚡ ANALYZE</button>
+        <button onclick="runWithLoadingState(event, runAICoach, '⏳ ANALYZING...')" style="background:rgba(0,180,255,0.15);border:1px solid var(--blue);color:var(--blue);padding:4px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">⚡ ANALYZE</button>
       </div>
 
       <!-- Main grid -->
@@ -1025,7 +1025,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <span style="font-size:18px">🏆</span>
           <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--cyan);letter-spacing:2px">A+ DAY DETECTOR</div>
         </div>
-        <button onclick="runAPlusDetector()" style="background:rgba(0,229,255,0.1);border:1px solid var(--cyan);color:var(--cyan);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
+        <button onclick="runWithLoadingState(event, runAPlusDetector, '⏳ SCANNING...')" style="background:rgba(0,229,255,0.1);border:1px solid var(--cyan);color:var(--cyan);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
       </div>
       <div class="mob-grid-stack" style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center">
         <div style="text-align:center;background:rgba(0,0,0,0.4);border:2px solid var(--border);border-radius:50%;width:100px;height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0" id="aplus-circle">
@@ -1048,7 +1048,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--blue);letter-spacing:2px">BID/ASK PRESSURE SCORE</div>
           <div id="bap-updated" style="font-size:10px;color:var(--text3)"></div>
         </div>
-        <button onclick="fetchBidAskPressure()" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+        <button onclick="runWithLoadingState(event, fetchBidAskPressure, '⏳ REFRESHING...')" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
         <!-- SPY -->
@@ -1100,7 +1100,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--blue);letter-spacing:2px">⚡ LIVE SIGNAL ALERT</div>
           <div style="font-size:10px;color:var(--text3)" id="sig-updated">--:--</div>
         </div>
-        <button onclick="runSignalCheck()" style="background:rgba(0,180,255,0.15);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;font-family:Rajdhani,sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px">🔄 REFRESH</button>
+        <button onclick="runWithLoadingState(event, runSignalCheck, '⏳ REFRESHING...')" style="background:rgba(0,180,255,0.15);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;font-family:Rajdhani,sans-serif;font-weight:700;cursor:pointer;letter-spacing:1px">🔄 REFRESH</button>
       </div>
       <div id="sig-direction-banner" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
@@ -1147,7 +1147,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--blue);letter-spacing:2px">OPTIONS FLOW — CALL/PUT RATIO</div>
           <div id="cpr-updated" style="font-size:10px;color:var(--text3)"></div>
         </div>
-        <button onclick="fetchCallPutRatio()" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+        <button onclick="runWithLoadingState(event, fetchCallPutRatio, '⏳ REFRESHING...')" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <!-- SPY -->
@@ -1228,7 +1228,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--blue);letter-spacing:2px">PREVIOUS DAY LEVELS</div>
           <div style="font-size:10px;color:var(--text3)" id="levels-updated">--</div>
         </div>
-        <button onclick="fetchPrevDayLevels()" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+        <button onclick="runWithLoadingState(event, fetchPrevDayLevels, '⏳ REFRESHING...')" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <!-- SPY -->
@@ -1267,7 +1267,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--text2);letter-spacing:2px">🎯 MARKET REGIME</div>
-          <button onclick="detectMarketRegime()" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">🔄</button>
+          <button onclick="runWithLoadingState(event, detectMarketRegime, '⏳')" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">🔄</button>
         </div>
         <div id="regime-badge" style="text-align:center;margin-bottom:10px">
           <div id="regime-name" style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:var(--text2)">SCANNING...</div>
@@ -1280,7 +1280,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px" id="vix-widget">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--text2);letter-spacing:2px">📊 VIX DASHBOARD</div>
-          <button onclick="updateVIXWidget(true)" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">🔄</button>
+          <button onclick="runWithLoadingState(event, () => updateVIXWidget(true), '⏳')" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">🔄</button>
         </div>
         <div style="text-align:center;margin-bottom:10px">
           <div id="vix-level" style="font-family:Orbitron,sans-serif;font-size:36px;font-weight:900;color:var(--text2)">--</div>
@@ -1320,7 +1320,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--text2);letter-spacing:2px">🌊 MARKET BREADTH</div>
-          <button onclick="fetchMarketBreadth()" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">🔄</button>
+          <button onclick="runWithLoadingState(event, fetchMarketBreadth, '⏳')" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px">🔄</button>
         </div>
         <div id="breadth-content" style="display:flex;flex-direction:column;gap:6px">
           <div style="font-size:12px;color:var(--text2);text-align:center;padding:10px">Loading breadth data...</div>
@@ -1338,7 +1338,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--orange);letter-spacing:2px">🌍 POLITICAL & GEOPOLITICAL ALERTS</div>
           <div id="geo-updated" style="font-size:10px;color:var(--text3)"></div>
         </div>
-        <button onclick="fetchGeoAlerts()" style="background:rgba(255,109,0,0.1);border:1px solid var(--orange);color:var(--orange);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
+        <button onclick="runWithLoadingState(event, fetchGeoAlerts, '⏳ SCANNING...')" style="background:rgba(255,109,0,0.1);border:1px solid var(--orange);color:var(--orange);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
       </div>
       <!-- Active alert panel — hidden until triggered -->
       <div id="geo-active-alert" style="display:none;margin-bottom:10px;border-radius:10px;overflow:hidden;border:2px solid var(--orange)">
@@ -1388,7 +1388,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--red);letter-spacing:2px">⚡ FINANCIALJUICE — LIVE HEADLINES</div>
           <div id="fj-updated" style="font-size:10px;color:var(--text3)"></div>
         </div>
-        <button onclick="fetchFinancialJuice()" style="background:rgba(255,23,68,0.1);border:1px solid var(--red);color:var(--red);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
+        <button onclick="runWithLoadingState(event, fetchFinancialJuice, '⏳ REFRESHING...')" style="background:rgba(255,23,68,0.1);border:1px solid var(--red);color:var(--red);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 REFRESH</button>
       </div>
       <!-- Alert strip — scrolling row -->
       <div id="fj-alert-strip" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin">
@@ -1412,7 +1412,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <button onclick="filterNewsIntel('oil')" id="ni-oil" class="btn btn-sm" style="font-size:10px">🛢️ Oil</button>
           <button onclick="filterNewsIntel('tech')" id="ni-tech" class="btn btn-sm" style="font-size:10px">💻 Tech</button>
           <button onclick="filterNewsIntel('geo')" id="ni-geo" class="btn btn-sm" style="font-size:10px">🌍 Geo</button>
-          <button onclick="fetchNewsIntel()" class="btn btn-sm" style="font-size:10px;border-color:var(--green);color:var(--green)">🔄</button>
+          <button onclick="runWithLoadingState(event, fetchNewsIntel, '⏳')" class="btn btn-sm" style="font-size:10px;border-color:var(--green);color:var(--green)">🔄</button>
         </div>
       </div>
       <div id="news-intel-grid" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto">
@@ -1773,7 +1773,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div style="display:flex;gap:6px">
           <button class="btn btn-sm" onclick="fetchSRLevels('SPY')" id="sr-spy-btn" style="font-size:11px;background:var(--accent);color:#000">SPY</button>
           <button class="btn btn-sm" onclick="fetchSRLevels('QQQ')" id="sr-qqq-btn" style="font-size:11px">QQQ</button>
-          <button class="btn btn-sm" onclick="fetchSRLevels(currentSRSym)" style="font-size:11px">🔄</button>
+          <button class="btn btn-sm" onclick="runWithLoadingState(event, () => fetchSRLevels(currentSRSym), '⏳')" style="font-size:11px">🔄</button>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -1985,7 +1985,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="font-size:10px;color:var(--text3)" id="eod-updated"></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button onclick="runEODDetector()" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
+          <button onclick="runWithLoadingState(event, runEODDetector, '⏳ SCANNING...')" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SCAN</button>
           <button onclick="toggleEODRules()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">📋 RULES</button>
           <button onclick="toggleEODTracker()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">📊 TRACKER</button>
         </div>
@@ -2201,7 +2201,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">CONTRACTS</label>
           <input class="form-input" id="tm-contracts" type="number" placeholder="1" value="1" min="1" max="2" style="font-size:12px" oninput="updateTradeManager()"></div>
         <div style="display:flex;align-items:flex-end">
-          <button onclick="updateTradeManager()" class="btn btn-primary" style="width:100%;font-size:12px">ANALYZE</button>
+          <button onclick="runWithLoadingState(event, updateTradeManager, '⏳ ANALYZING...')" class="btn btn-primary" style="width:100%;font-size:12px">ANALYZE</button>
         </div>
       </div>
       <!-- Output panel -->
@@ -2338,7 +2338,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <button class="btn btn-sm" id="calv-week" onclick="setCalendarView('week')">WEEK</button>
         <button class="btn btn-sm btn-primary" id="calv-month" onclick="setCalendarView('month')">MONTH</button>
         <button class="btn btn-sm" id="calv-year" onclick="setCalendarView('year')">YEAR</button>
-        <button class="btn" onclick="fetchEarnings();fetchEconEvents();">🔄 REFRESH</button>
+        <button class="btn" onclick="runWithLoadingState(event, () => { fetchEarnings(); fetchEconEvents(); }, '⏳ REFRESHING...')">🔄 REFRESH</button>
       </div>
     </div>
     <div class="grid-2" style="margin-bottom:16px">
@@ -2713,7 +2713,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div class="section-title">📊 WEEKLY WEALTH REPORT</div>
           <div style="font-size:11px;color:var(--text2);margin-top:2px">Auto-generates every Friday · CEO-level summary</div>
         </div>
-        <button onclick="generateWeeklyReport()" class="btn btn-primary" style="font-size:12px">🔄 GENERATE NOW</button>
+        <button onclick="runWithLoadingState(event, generateWeeklyReport, '⏳ GENERATING...')" class="btn btn-primary" style="font-size:12px">🔄 GENERATE NOW</button>
       </div>
       <div id="weekly-report-content">
         <div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">Click Generate to build your weekly report.</div>
@@ -2745,7 +2745,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div class="section-title">₿ MY HOLDINGS</div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary" onclick="openModal('crypto-modal')">+ ADD HOLDING</button>
-        <button class="btn" onclick="fetchCryptoPrices()">🔄 REFRESH</button>
+        <button class="btn" onclick="runWithLoadingState(event, fetchCryptoPrices, '⏳ REFRESHING...')">🔄 REFRESH</button>
       </div>
     </div>
     <!-- MY HOLDINGS -->
@@ -2755,7 +2755,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div class="section-title">🔥 WHAT'S HOT — TOP MOVERS (24H)</div>
-        <button class="btn btn-sm" onclick="fetchTopMovers()">🔄 REFRESH</button>
+        <button class="btn btn-sm" onclick="runWithLoadingState(event, fetchTopMovers, '⏳ REFRESHING...')">🔄 REFRESH</button>
       </div>
       <div id="top-movers-grid" style="overflow-x:auto">
         <div style="color:var(--text2);text-align:center;padding:20px;font-size:13px">Loading top movers...</div>
@@ -2768,7 +2768,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div class="section-title" style="color:#9945ff">◎ SOLANA HOT MOVERS</div>
         <div style="display:flex;gap:8px;align-items:center">
           <span style="font-size:11px;color:var(--text2)">via Jupiter DEX</span>
-          <button class="btn btn-sm" onclick="fetchSolanaMovers()" style="border-color:#9945ff;color:#9945ff">🔄 REFRESH</button>
+          <button class="btn btn-sm" onclick="runWithLoadingState(event, fetchSolanaMovers, '⏳ REFRESHING...')" style="border-color:#9945ff;color:#9945ff">🔄 REFRESH</button>
         </div>
       </div>
       <div id="sol-movers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
@@ -3111,7 +3111,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div class="section-title" style="color:var(--red)">🚨 LAND ALERT — UNDER BDS$200K · 5,000+ SQ FT · ST. JAMES &amp; CHRIST CHURCH</div>
           <div style="font-size:11px;color:var(--text2);margin-top:2px">Auto-filtered listings matching your criteria — click any to view on map</div>
         </div>
-        <button class="btn btn-sm" onclick="refreshLandAlerts()" style="font-size:11px;border-color:var(--red);color:var(--red)">🔄 REFRESH</button>
+        <button class="btn btn-sm" onclick="runWithLoadingState(event, refreshLandAlerts, '⏳ REFRESHING...')" style="font-size:11px;border-color:var(--red);color:var(--red)">🔄 REFRESH</button>
       </div>
       <div id="land-alerts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px"></div>
     </div>
@@ -3211,7 +3211,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <button class="btn btn-sm" onclick="filterBarbNews('nation')" id="bnews-nation" style="font-size:11px">🗞️ Nation</button>
           <button class="btn btn-sm" onclick="filterBarbNews('today')" id="bnews-today" style="font-size:11px">📱 Bim Today</button>
           <button class="btn btn-sm" onclick="filterBarbNews('cbc')" id="bnews-cbc" style="font-size:11px">📺 CBC</button>
-          <button class="btn btn-sm" onclick="fetchBarbadosNews()" style="font-size:11px">🔄 Refresh</button>
+          <button class="btn btn-sm" onclick="runWithLoadingState(event, fetchBarbadosNews, '⏳ Refreshing...')" style="font-size:11px">🔄 Refresh</button>
         </div>
       </div>
       <div id="barbados-news-grid" style="display:flex;flex-direction:column;gap:8px">
@@ -4791,6 +4791,33 @@ function timeAgo(iso) {
   if(diff<60) return diff+'m ago';
   if(diff<1440) return Math.floor(diff/60)+'h ago';
   return Math.floor(diff/1440)+'d ago';
+}
+
+// ==================== BUTTON LOADING STATE HELPER ====================
+// Wraps any action button: disables it, swaps label to a loading state,
+// runs the real function, then always restores the original label —
+// even if the function throws. Call as: runWithLoadingState(event, fn, 'Scanning...')
+async function runWithLoadingState(evt, fn, loadingLabel) {
+  const btn = evt?.currentTarget;
+  const originalHTML = btn ? btn.innerHTML : null;
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'wait';
+    btn.innerHTML = loadingLabel;
+  }
+  try {
+    await fn();
+  } catch (err) {
+    console.error('Button action error:', err);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+      btn.innerHTML = originalHTML;
+    }
+  }
 }
 
 async function showEmergencyNews() {
