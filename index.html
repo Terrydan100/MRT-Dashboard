@@ -7577,7 +7577,12 @@ async function runSignalCheck() {
   let spyLive = spyPrice;
   try {
     const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=SPY&token=${FINNHUB_KEY}`);
-    if(r.ok) { const d = await r.json(); if(d.c) spyLive = d.c; }
+    if(r.ok) {
+      const d = await r.json();
+      // Sanity check: SPY trades in a known realistic range. Reject obviously
+      // stale/bad data (e.g. a cached quote from years ago) rather than display it.
+      if(d.c && d.c > 300 && d.c < 1200) spyLive = d.c;
+    }
   } catch(e) {}
 
   // ---- 10-POINT CONFLUENCE SCORING ----
@@ -7713,10 +7718,17 @@ async function runSignalCheck() {
   const stopPrice = '-$0.30';
 
   // ---- GRADE ----
+  // Grade must respect the same directional requirement as the verdict above —
+  // a high confluence score with no clear directional bias (callBias/putBias both
+  // false) cannot be graded as a tradeable setup, even if the raw score is high.
+  // This prevents the grade box contradicting the verdict box (e.g. "A+ SETUP"
+  // showing next to "NO SIGNAL").
+  const hasDirection = callBias || putBias;
   let grade = 'NO SIGNAL';
   let gradeColor = 'var(--text3)';
-  if(score >= 9) { grade = 'A+ SETUP'; gradeColor = 'var(--green)'; }
-  else if(score >= 7) { grade = 'A SETUP'; gradeColor = 'var(--green)'; }
+  if(hasDirection && score >= 9) { grade = 'A+ SETUP'; gradeColor = 'var(--green)'; }
+  else if(hasDirection && score >= 7) { grade = 'A SETUP'; gradeColor = 'var(--green)'; }
+  else if(!hasDirection && score >= 7) { grade = 'HIGH SCORE — NO DIRECTION'; gradeColor = 'var(--accent)'; }
   else if(score >= 5) { grade = 'B — WATCH'; gradeColor = 'var(--accent)'; }
   else { grade = 'STAY FLAT'; gradeColor = 'var(--red)'; }
 
