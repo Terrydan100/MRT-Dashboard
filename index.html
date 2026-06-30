@@ -1560,7 +1560,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         </div>
         <div class="chart-container"><canvas id="equityChart"></canvas></div>
       </div>
-      <div class="card" style="background:linear-gradient(135deg,var(--card),var(--card2))">
+      <div class="card" id="log-trade-card" style="background:linear-gradient(135deg,var(--card),var(--card2))">
         <div class="section-title" style="margin-bottom:16px;color:var(--accent)">📝 LOG TRADE</div>
         <div class="form-group">
           <label class="form-label">Date</label>
@@ -1603,6 +1603,11 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
             <option value="VWAP Reclaim">VWAP Reclaim</option>
             <option value="Support Bounce">Support Bounce</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bias Engine Confidence at Entry (%)</label>
+          <input class="form-input" type="number" id="t-confidence-inline" placeholder="e.g. 72" min="0" max="100" step="1">
+          <div style="font-size:10px;color:var(--text3);margin-top:3px">Auto-filled from the Bias Engine's last scan — edit if needed</div>
         </div>
         <button class="btn btn-primary" onclick="logTradeInline()" style="width:100%;font-size:15px;padding:12px;margin-bottom:8px">LOG TRADE</button>
         <button class="btn" onclick="showPreTradeChecklist()" style="width:100%;font-size:13px">🎯 PRE-TRADE CHECKLIST</button>
@@ -2135,7 +2140,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
   <!-- ===================== TRADING TAB ===================== -->
   <div class="tab-content" id="content-trading">
     <!-- STRIKE SELECTION ASSISTANT -->
-    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,229,255,0.25);background:linear-gradient(135deg,rgba(0,229,255,0.04),rgba(0,0,0,0))">
+    <div class="card" id="strike-assist-card" style="margin-bottom:16px;border:1px solid rgba(0,229,255,0.25);background:linear-gradient(135deg,rgba(0,229,255,0.04),rgba(0,0,0,0))">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <span style="font-size:18px">🎯</span>
         <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--cyan);letter-spacing:2px">STRIKE SELECTION ASSISTANT</div>
@@ -4258,18 +4263,31 @@ function logTradeInline() {
   const pnl = parseFloat(document.getElementById('t-pnl-inline').value) || 0;
   const note = document.getElementById('t-note-inline').value;
   const strategy = document.getElementById('t-strategy-inline').value;
+  const confidenceRaw = document.getElementById('t-confidence-inline')?.value;
+  const confidence = confidenceRaw !== '' && confidenceRaw != null ? Math.max(0, Math.min(100, parseInt(confidenceRaw) || 0)) : null;
   const msgEl = document.getElementById('inline-trade-msg');
   if (!date || !ticker) { if(msgEl){ msgEl.textContent='⚠️ Date and ticker required'; msgEl.style.color='var(--red)'; } return; }
-  const trade = { id: Date.now(), date, ticker, type, pnl, note, strategy, timestamp: new Date().toISOString() };
+  const trade = { id: Date.now(), date, ticker, type, pnl, note, strategy, confidence, timestamp: new Date().toISOString() };
   state.trades.unshift(trade);
   saveTrades();
   saveState();
   refreshAllTradeViews();
   document.getElementById('t-note-inline').value = '';
   document.getElementById('t-strategy-inline').value = '';
+  prefillConfidenceField();
   if(msgEl){ msgEl.textContent=`✅ Logged: ${ticker} ${type} ${pnl>=0?'+':''}$${pnl.toFixed(2)}`; msgEl.style.color='var(--green)'; setTimeout(()=>{ msgEl.textContent=''; }, 3000); }
   showToast('success','Trade Logged', `${ticker} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '📝');
   checkDailyGoal();
+}
+
+// Auto-fills the Confidence at Entry field from the Bias Engine's last scan.
+// Only fills if the field is currently empty, so it never overwrites a
+// value Mr. T already typed in manually for the trade he's about to log.
+function prefillConfidenceField() {
+  const field = document.getElementById('t-confidence-inline');
+  if (!field || field.value !== '') return;
+  const liveConf = parseInt(document.getElementById('be-confidence')?.textContent) || null;
+  if (liveConf) field.value = liveConf;
 }
 
 function deleteTrade(id) {
@@ -4419,6 +4437,75 @@ function setGoal(g) {
     if(btn) btn.classList.add('active');
   }
   updateStats(); saveState();
+}
+
+// ==================== DAILY LOSS LIMIT ENFORCEMENT ====================
+// Real enforcement, not just a popup — these helpers are used by the
+// Strike Selection Assistant and Trade Logger to actually block new
+// entries once the -$120 daily loss limit is hit, unless manually
+// overridden (override is logged so it shows up in Analytics).
+let lossLimitOverride = false;
+
+function getTodayPnL() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayTrades = (state.trades || []).filter(t => t.date === today && t.type !== 'WITHDRAWAL' && t.type !== 'DEPOSIT' && t.type !== 'FEES');
+  return todayTrades.reduce((s, t) => s + t.pnl, 0);
+}
+
+function isDailyLossLimitHit() {
+  return getTodayPnL() <= -120;
+}
+
+function enforceLossLimit(containerSelector) {
+  // Returns true if trading should be BLOCKED (limit hit and not overridden).
+  // Also renders/updates the warning banner inside the given container.
+  const hit = isDailyLossLimitHit() && !lossLimitOverride;
+  const container = document.querySelector(containerSelector);
+  if (!container) return hit;
+
+  let banner = container.querySelector('.loss-limit-banner');
+  if (isDailyLossLimitHit()) {
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.className = 'loss-limit-banner';
+      banner.style.cssText = 'background:rgba(255,23,68,0.15);border:2px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--red);font-weight:700;';
+      container.insertBefore(banner, container.firstChild);
+    }
+    const pnl = getTodayPnL();
+    banner.innerHTML = `🛑 DAILY LOSS LIMIT HIT (today: $${pnl.toFixed(2)}) — new entries blocked.
+      <label style="display:block;margin-top:8px;font-weight:600;font-size:11px;cursor:pointer;color:var(--text2)">
+        <input type="checkbox" id="loss-override-${containerSelector.replace(/[^a-zA-Z0-9]/g,'')}" onchange="toggleLossOverride(this)" ${lossLimitOverride ? 'checked' : ''} style="margin-right:6px">
+        I understand the risk — override and allow entry anyway (this is logged)
+      </label>`;
+  } else if (banner) {
+    banner.remove();
+  }
+  return hit;
+}
+
+function toggleLossOverride(checkbox) {
+  lossLimitOverride = checkbox.checked;
+  if (lossLimitOverride) {
+    const today = new Date().toISOString().split('T')[0];
+    const pnl = getTodayPnL();
+    state.trades.unshift({
+      id: Date.now(),
+      date: today,
+      ticker: '—',
+      type: 'OTHER',
+      pnl: 0,
+      note: `⚠️ Daily loss limit override — manually re-enabled trading at $${pnl.toFixed(2)} today`,
+      strategy: '',
+      timestamp: new Date().toISOString()
+    });
+    saveTrades();
+    saveState();
+    showToast('danger', 'Loss Limit Overridden', 'This has been logged in your trade history for review.', '⚠️', 8000);
+  }
+  document.querySelectorAll('.loss-limit-banner').forEach(b => {
+    const cb = b.querySelector('input[type="checkbox"]');
+    if (cb) cb.checked = lossLimitOverride;
+  });
 }
 
 function checkDailyGoal() {
@@ -8675,13 +8762,18 @@ const _origShowTabMOA = window.showTab;
 
 // ==================== STRIKE SELECTION ASSISTANT ====================
 function runStrikeAssist() {
+  const blocked = enforceLossLimit('#strike-assist-card');
+  const outEl = document.getElementById('ss-output');
+  if (blocked) {
+    if (outEl) outEl.style.display = 'none';
+    return;
+  }
   const ticker  = document.getElementById('ss-ticker')?.value || 'QQQ';
   const type    = document.getElementById('ss-type')?.value || 'CALL';
   const price   = parseFloat(document.getElementById('ss-price')?.value) || 0;
   const setup   = document.getElementById('ss-setup')?.value || 'scalp';
   if(!price) return;
 
-  const outEl = document.getElementById('ss-output');
   if(outEl) outEl.style.display = 'block';
 
   // Strike selection logic for $2,000 cash account
@@ -9914,6 +10006,7 @@ async function _runBiasEngineInner() {
 
   // Auto-update dependent cards
   setTimeout(updateTodaysPlaybook, 500);
+  if (typeof prefillConfidenceField === 'function') prefillConfidenceField();
 }
 
 // Auto-run after existing data loads
