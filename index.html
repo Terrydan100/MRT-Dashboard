@@ -4810,6 +4810,11 @@ async function runWithLoadingState(evt, fn, loadingLabel) {
     await fn();
   } catch (err) {
     console.error('Button action error:', err);
+    // Visible error feedback — same pattern as the Bias Engine fix, so a
+    // runtime error never looks like "the button did nothing."
+    if (typeof showToast === 'function') {
+      showToast('danger', 'Action Failed', err?.message || 'Something went wrong — check browser console for details', '⚠️', 7000);
+    }
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -7585,6 +7590,18 @@ async function runSignalCheck() {
     }
   } catch(e) {}
 
+  // Fetch QQQ quote from Finnhub for precise price — the signal can favor
+  // either ticker, so we need both live prices to show the correct one.
+  let qqqLive = qqqPrice;
+  try {
+    const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=QQQ&token=${FINNHUB_KEY}`);
+    if(r.ok) {
+      const d = await r.json();
+      // Sanity check: QQQ trades in a known realistic range.
+      if(d.c && d.c > 300 && d.c < 1200) qqqLive = d.c;
+    }
+  } catch(e) {}
+
   // ---- 10-POINT CONFLUENCE SCORING ----
   let score = 0;
   let factors = [];
@@ -7713,8 +7730,15 @@ async function runSignalCheck() {
   }
 
   // ---- ENTRY / TARGET / STOP ----
-  const entryPrice = spyLive > 0 ? `$${spyLive.toFixed(2)}` : '--';
-  const targetPrice = spyLive > 0 ? `+$0.${score >= 7 ? '50' : '35'}` : '--';
+  // Show whichever ticker has the stronger/clearer move, since the signal
+  // scoring weighs both SPY and QQQ together and the playbook treats them
+  // as interchangeable. Always label which ticker the price belongs to so
+  // it's never ambiguous which one to actually trade.
+  const useQQQ = Math.abs(qqqChg) > Math.abs(spyChg) && qqqLive > 0;
+  const entryTicker = useQQQ ? 'QQQ' : 'SPY';
+  const entryLivePrice = useQQQ ? qqqLive : spyLive;
+  const entryPrice = entryLivePrice > 0 ? `${entryTicker} $${entryLivePrice.toFixed(2)}` : '--';
+  const targetPrice = entryLivePrice > 0 ? `+$0.${score >= 7 ? '50' : '35'}` : '--';
   const stopPrice = '-$0.30';
 
   // ---- GRADE ----
