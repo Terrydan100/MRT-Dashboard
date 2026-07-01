@@ -3487,7 +3487,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
 <!-- TRADE MODAL -->
 <div class="modal-overlay" id="trade-modal">
-  <div class="modal">
+  <div class="modal" id="trade-modal-inner">
     <div class="modal-title" id="trade-modal-title">📝 LOG TRADE <button class="modal-close" onclick="closeModal('trade-modal')">✕</button></div>
     <input type="hidden" id="t-edit-id" value="">
     <div class="form-group">
@@ -4174,6 +4174,8 @@ function openModal(id) {
     document.getElementById('t-note').value = '';
     document.getElementById('trade-modal-title').innerHTML = '📝 LOG TRADE <button class="modal-close" onclick="closeModal(\'trade-modal\')">✕</button>';
     document.getElementById('trade-modal-save-btn').textContent = 'LOG TRADE';
+    // Check loss limit and show banner inside the modal if hit
+    enforceLossLimit('#trade-modal-inner');
   }
   if (id === 'crypto-modal') {
     document.getElementById('cr-edit-id').value = '';
@@ -4212,6 +4214,16 @@ function saveTrade() {
   const pnl = parseFloat(document.getElementById('t-pnl').value) || 0;
   const note = document.getElementById('t-note').value;
   if (!date || !ticker) return showToast('danger','Missing Info','Please fill all required fields','❌');
+
+  // Hard daily loss limit enforcement — blocks NEW trades only (not edits),
+  // and only for real trades (not WITHDRAWAL/DEPOSIT/FEES/OTHER).
+  // Override requires the checkbox in the loss-limit-banner to be checked.
+  const isRealTrade = !['WITHDRAWAL','DEPOSIT','FEES','OTHER'].includes(type);
+  if (!editId && isRealTrade && isDailyLossLimitHit() && !lossLimitOverride) {
+    enforceLossLimit('#trade-modal-inner');
+    showToast('danger', 'Loss Limit Enforced', 'You\'ve hit your -$120 daily limit. Check the override box in the form if you choose to continue.', '🛑', 8000);
+    return;
+  }
 
   if (editId) {
     // EDIT existing trade
@@ -4267,6 +4279,14 @@ function logTradeInline() {
   const confidence = confidenceRaw !== '' && confidenceRaw != null ? Math.max(0, Math.min(100, parseInt(confidenceRaw) || 0)) : null;
   const msgEl = document.getElementById('inline-trade-msg');
   if (!date || !ticker) { if(msgEl){ msgEl.textContent='⚠️ Date and ticker required'; msgEl.style.color='var(--red)'; } return; }
+
+  // Hard daily loss limit enforcement on inline form
+  const isRealTrade = !['WITHDRAWAL','DEPOSIT','FEES','OTHER'].includes(type);
+  if (isRealTrade && isDailyLossLimitHit() && !lossLimitOverride) {
+    if(msgEl){ msgEl.textContent='🛑 Daily loss limit hit (-$120). Override required to log another trade.'; msgEl.style.color='var(--red)'; }
+    showToast('danger', 'Loss Limit Enforced', 'You\'ve hit your -$120 daily limit. Open the trade modal and check the override box to continue.', '🛑', 8000);
+    return;
+  }
   const trade = { id: Date.now(), date, ticker, type, pnl, note, strategy, confidence, timestamp: new Date().toISOString() };
   state.trades.unshift(trade);
   saveTrades();
