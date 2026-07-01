@@ -4893,8 +4893,8 @@ async function fetchSchwabAccount() {
       detailEl.style.display = 'none';
     }
 
-    // Apply Hide Figures if currently active
-    if (window._figuresHidden) applyHideFigures();
+    // Re-apply Hide Figures if currently active
+    if (typeof figuresHidden !== 'undefined' && figuresHidden) applyHideFiguresState(true);
 
     if (dot)   dot.style.background   = 'var(--green)';
     if (label) label.textContent       = 'Connected ✓';
@@ -6540,7 +6540,8 @@ function applyHideFiguresState(hidden) {
     '#snkr-invested, #snkr-profit, #snkr-best, ' +
     '#poke-value, #poke-profit, #poke-best, ' +
     '#bdb-invested, #bdb-value, #bdb-returns, #bdb-roi, #an-winrate, #an-pf, #an-expect, #an-maxdd, #an-avgwin, #an-avgloss, ' +
-    '#aplus-score, #wr-es-val, #wr-nq-val, #pl-cal-month-total'
+    '#aplus-score, #wr-es-val, #wr-nq-val, #pl-cal-month-total, ' +
+    '#schwab-cash, #schwab-bp, #schwab-value, #schwab-day-pnl, #schwab-options-list'
   );
 
   moneyEls.forEach(el => {
