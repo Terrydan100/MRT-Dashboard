@@ -742,6 +742,49 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- SCHWAB LIVE ACCOUNT PANEL ════════════════════════════════ -->
+    <div id="schwab-panel" style="margin-bottom:12px;background:rgba(0,0,0,0.4);border:1px solid rgba(0,180,255,0.3);border-radius:12px;padding:12px 16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="schwab-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+          <span style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--blue);letter-spacing:2px">SCHWAB LIVE ACCOUNT</span>
+          <span id="schwab-status-label" style="font-size:10px;color:var(--text3)">Connecting...</span>
+        </div>
+        <button onclick="runWithLoadingState(event, fetchSchwabAccount, '⏳ SYNCING...')" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:3px 10px;border-radius:6px;font-size:10px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">🔄 SYNC</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px" id="schwab-stats-grid">
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">CASH AVAILABLE</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--green)" id="schwab-cash">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">BUYING POWER</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--accent)" id="schwab-bp">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">ACCOUNT VALUE</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--blue)" id="schwab-value">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">OPEN POSITIONS</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--text2)" id="schwab-positions">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">TODAY OPTIONS P&L</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700" id="schwab-day-pnl">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">LAST SYNC</div>
+          <div style="font-size:11px;color:var(--text3)" id="schwab-last-sync">Never</div>
+        </div>
+      </div>
+      <!-- Open Options Positions detail -->
+      <div id="schwab-options-detail" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+        <div style="font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:6px">OPEN OPTION POSITIONS</div>
+        <div id="schwab-options-list" style="font-size:11px;color:var(--text2);line-height:1.8"></div>
+      </div>
+    </div>
+
     <!-- MARKET SHOCK CHECK BAR — always visible -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;background:rgba(255,23,68,0.06);border:1px solid rgba(255,23,68,0.2);border-radius:10px;padding:8px 14px">
       <div style="font-size:13px">🚨</div>
@@ -4008,6 +4051,8 @@ async function initDashboard() {
   setInterval(updateSessionStatus, 30000);
   setInterval(fetchMarketData, 30000); // refresh every 30 seconds for real-time feel
   setInterval(runMomentumDetector, 60000); // Early Momentum Detector — 9:30-11:30AM & 2-4PM ET
+  setTimeout(fetchSchwabAccount, 3000);    // Schwab account sync — after page settles
+  setInterval(fetchSchwabAccount, 300000); // Refresh every 5 minutes
   setInterval(updateTradingIntelligence, 60000);
   setInterval(fetchCryptoPrices, 120000);
   showDailyPlanReminder();
@@ -4720,6 +4765,96 @@ async function fetchMarketData() {
       }
     }
   } catch(e){}
+}
+
+// ==================== SCHWAB LIVE ACCOUNT SYNC ====================
+const SCHWAB_BACKEND = 'https://schwab.nobossnetwork.xyz/schwab-auth.php';
+
+async function fetchSchwabAccount() {
+  const dot   = document.getElementById('schwab-status-dot');
+  const label = document.getElementById('schwab-status-label');
+  const sync  = document.getElementById('schwab-last-sync');
+
+  try {
+    // 1. Check authentication status first
+    const statusRes = await fetch(SCHWAB_BACKEND);
+    if (!statusRes.ok) throw new Error('Backend unreachable');
+    const status = await statusRes.json();
+
+    if (!status.authenticated) {
+      if (dot)   dot.style.background   = 'var(--red)';
+      if (label) label.textContent       = 'Not connected — visit ?action=login';
+      return;
+    }
+
+    // 2. Pull account data
+    const acctRes = await fetch(`${SCHWAB_BACKEND}?action=account`);
+    if (!acctRes.ok) throw new Error('Account fetch failed');
+    const acct = await acctRes.json();
+
+    if (acct.status !== 'ok' || !acct.data?.[0]) throw new Error('No account data');
+
+    const account  = acct.data[0].securitiesAccount;
+    const balances = account.currentBalances;
+    const positions = account.positions || [];
+
+    // 3. Parse key values — mask account number, show only financial data
+    const cash        = balances.cashAvailableForTrading ?? 0;
+    const buyingPower = balances.cashAvailableForTrading ?? 0; // Cash account = BP equals cash
+    const acctValue   = balances.liquidationValue ?? 0;
+
+    // Options positions only (for trading dashboard context)
+    const optPositions = positions.filter(p => p.instrument?.assetType === 'OPTION');
+    const optDayPnL    = optPositions.reduce((s, p) => s + (p.currentDayProfitLoss ?? 0), 0);
+
+    // 4. Update UI
+    const fmt = v => `$${Math.abs(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+
+    const cashEl  = document.getElementById('schwab-cash');
+    const bpEl    = document.getElementById('schwab-bp');
+    const valEl   = document.getElementById('schwab-value');
+    const posEl   = document.getElementById('schwab-positions');
+    const pnlEl   = document.getElementById('schwab-day-pnl');
+    const detailEl = document.getElementById('schwab-options-detail');
+    const listEl   = document.getElementById('schwab-options-list');
+
+    if (cashEl)  cashEl.textContent  = fmt(cash);
+    if (bpEl)    bpEl.textContent    = fmt(buyingPower);
+    if (valEl)   valEl.textContent   = fmt(acctValue);
+    if (posEl)   posEl.textContent   = `${optPositions.length} option${optPositions.length!==1?'s':''}`;
+    if (pnlEl) {
+      pnlEl.textContent  = (optDayPnL >= 0 ? '+' : '-') + fmt(optDayPnL);
+      pnlEl.style.color  = optDayPnL >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+
+    // Option positions detail list
+    if (optPositions.length > 0 && detailEl && listEl) {
+      detailEl.style.display = 'block';
+      listEl.innerHTML = optPositions.map(p => {
+        const inst = p.instrument;
+        const dayPnL = p.currentDayProfitLoss ?? 0;
+        const openPnL = p.longOpenProfitLoss ?? 0;
+        return `<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <span>${inst.description || inst.symbol}</span>
+          <span>Qty: ${p.longQuantity} &nbsp;|&nbsp; Day: <span style="color:${dayPnL>=0?'var(--green)':'var(--red)'}">${dayPnL>=0?'+':'-'}${fmt(dayPnL)}</span> &nbsp;|&nbsp; Open: <span style="color:${openPnL>=0?'var(--green)':'var(--red)'}">${openPnL>=0?'+':'-'}${fmt(openPnL)}</span></span>
+        </div>`;
+      }).join('');
+    } else if (detailEl) {
+      detailEl.style.display = 'none';
+    }
+
+    // Apply Hide Figures if currently active
+    if (window._figuresHidden) applyHideFigures();
+
+    if (dot)   dot.style.background   = 'var(--green)';
+    if (label) label.textContent       = 'Connected ✓';
+    if (sync)  sync.textContent        = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+
+  } catch (err) {
+    console.error('Schwab account sync error:', err);
+    if (dot)   dot.style.background   = 'var(--red)';
+    if (label) label.textContent       = 'Sync failed — ' + (err.message || 'unknown error');
+  }
 }
 
 // ==================== EARLY MOMENTUM DETECTOR ====================
