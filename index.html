@@ -4769,6 +4769,10 @@ async function fetchMarketData() {
 
 // ==================== SCHWAB LIVE ACCOUNT SYNC ====================
 const SCHWAB_BACKEND = 'https://schwab.nobossnetwork.xyz/schwab-auth.php';
+// API key must match DASHBOARD_API_KEY in schwab-auth.php on Hostinger.
+// If key is ever changed on the server, update it here too.
+const SCHWAB_API_KEY = 'a1494504992b25a7b670ff129727ecdb401d8655974a42a52ee13ba709c90bd8';
+const SCHWAB_HEADERS = { 'X-Dashboard-Key': SCHWAB_API_KEY };
 
 async function fetchSchwabAccount() {
   const dot   = document.getElementById('schwab-status-dot');
@@ -4777,7 +4781,7 @@ async function fetchSchwabAccount() {
 
   try {
     // 1. Check authentication status first
-    const statusRes = await fetch(SCHWAB_BACKEND);
+    const statusRes = await fetch(SCHWAB_BACKEND, { headers: SCHWAB_HEADERS });
     if (!statusRes.ok) throw new Error('Backend unreachable');
     const status = await statusRes.json();
 
@@ -4788,7 +4792,7 @@ async function fetchSchwabAccount() {
     }
 
     // 2. Pull account data
-    const acctRes = await fetch(`${SCHWAB_BACKEND}?action=account`);
+    const acctRes = await fetch(`${SCHWAB_BACKEND}?action=account`, { headers: SCHWAB_HEADERS });
     if (!acctRes.ok) throw new Error('Account fetch failed');
     const acct = await acctRes.json();
 
