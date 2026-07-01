@@ -3745,9 +3745,32 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 <script>
 // ==================== FIREBASE CONFIG ====================
 const FB_URL = 'https://mrtdashboard-f4e8e-default-rtdb.firebaseio.com';
+const FB_API_KEY = 'AIzaSyAZ7T2uEYGSVK47rv-SSLXK40m2Bs12vO4';
 const FINNHUB_KEY = 'd7rm399r01qviakdamfgd7rm399r01qviakdamg0';
 const COINGECKO_KEY = 'CG-a6Vf6T7y8CyZ6X9vsbnvWkxp';
 const NEWS_KEY = '7a15a3dd81504c52812abee6e5a91212';
+
+// ── Firebase Anonymous Auth ───────────────────────────────────────
+// Signs in silently after PIN unlock. Token is attached to all Firebase
+// REST calls so the database rules can require auth. Completely invisible
+// to Mr. T — no extra login, no visible change to the workflow.
+let _fbIdToken = null;
+
+async function firebaseSignInAnonymously() {
+  try {
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FB_API_KEY}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnSecureToken: true }) }
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.idToken) {
+      _fbIdToken = data.idToken;
+      // Token expires in 1 hour — auto-refresh silently
+      setTimeout(firebaseSignInAnonymously, 55 * 60 * 1000);
+    }
+  } catch (e) { console.warn('Firebase auth failed:', e); }
+}
 
 // ==================== STATE ====================
 let state = {
@@ -3825,6 +3848,7 @@ function pinPress(d) {
       if(match) {
         document.getElementById('pin-lock').style.display='none';
         document.getElementById('app').style.display='block';
+        firebaseSignInAnonymously(); // Silent auth — attaches token to all Firebase calls
         initDashboard();
       } else {
         document.getElementById('pin-error').textContent='Incorrect PIN. Try again.';
@@ -3857,10 +3881,32 @@ function changePin() {
 }
 
 // ==================== FIREBASE ====================
-async function fbGet(path) { try{ const r=await fetch(`${FB_URL}/${path}.json`); return r.ok?await r.json():null; }catch(e){return null;} }
-async function fbSet(path, data) { try{ await fetch(`${FB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)}); }catch(e){} }
-async function fbPush(path, data) { try{ const r=await fetch(`${FB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)}); return r.ok?await r.json():null; }catch(e){return null;} }
-async function fbDelete(path) { try{ await fetch(`${FB_URL}/${path}.json`,{method:'DELETE'}); }catch(e){} }
+async function fbGet(path) {
+  try {
+    const url = `${FB_URL}/${path}.json` + (_fbIdToken ? `?auth=${_fbIdToken}` : '');
+    const r = await fetch(url);
+    return r.ok ? await r.json() : null;
+  } catch(e) { return null; }
+}
+async function fbSet(path, data) {
+  try {
+    const url = `${FB_URL}/${path}.json` + (_fbIdToken ? `?auth=${_fbIdToken}` : '');
+    await fetch(url, { method: 'PUT', body: JSON.stringify(data) });
+  } catch(e) {}
+}
+async function fbPush(path, data) {
+  try {
+    const url = `${FB_URL}/${path}.json` + (_fbIdToken ? `?auth=${_fbIdToken}` : '');
+    const r = await fetch(url, { method: 'POST', body: JSON.stringify(data) });
+    return r.ok ? await r.json() : null;
+  } catch(e) { return null; }
+}
+async function fbDelete(path) {
+  try {
+    const url = `${FB_URL}/${path}.json` + (_fbIdToken ? `?auth=${_fbIdToken}` : '');
+    await fetch(url, { method: 'DELETE' });
+  } catch(e) {}
+}
 
 // ==================== BACKUP EXPORT / IMPORT ====================
 function exportBackup() {
