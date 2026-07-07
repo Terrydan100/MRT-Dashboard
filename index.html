@@ -4012,6 +4012,36 @@ function exportBackup() {
   showToast('success','Backup Exported','Save this file somewhere safe. Use it to restore if data is lost.','💾', 6000);
 }
 
+// ── AUTO DAILY BACKUP ─────────────────────────────────────────────
+// Fires silently once per calendar day. Reuses exportBackup() logic
+// but with a quieter toast and a distinct filename prefix so you can
+// tell auto-backups from manual ones. Stored last-run date in
+// localStorage so it survives page refreshes within the same day.
+function runAutoBackup() {
+  const today = new Date().toISOString().split('T')[0];
+  const lastRun = localStorage.getItem('mrt_auto_backup_date');
+  if (lastRun === today) return; // Already backed up today
+
+  // Only auto-backup if there's meaningful data to save
+  if (!state.trades || state.trades.length === 0) return;
+
+  const backup = {
+    version: 'MrTDashboard_V5',
+    exported: new Date().toISOString(),
+    autoBackup: true,
+    state: state
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'MrTDashboard_AutoBackup_' + today + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  localStorage.setItem('mrt_auto_backup_date', today);
+  showToast('success', 'Auto-Backup Complete', `Daily backup saved: MrTDashboard_AutoBackup_${today}.json`, '💾', 5000);
+}
+
 function importBackup(input) {
   const file = input.files[0];
   if (!file) return;
@@ -4188,6 +4218,7 @@ async function initDashboard() {
   setInterval(fetchSchwabAccount, 300000); // Refresh every 5 minutes
   setTimeout(runHealthCheck, 4000);        // Health check — after Schwab sync settles
   setInterval(runHealthCheck, 300000);     // Health check every 5 minutes
+  setTimeout(runAutoBackup, 10000);        // Auto-backup — 10s after load, once per day
   setInterval(updateTradingIntelligence, 60000);
   setInterval(fetchCryptoPrices, 120000);
   showDailyPlanReminder();
