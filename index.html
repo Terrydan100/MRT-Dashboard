@@ -399,7 +399,42 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 .gauge-val { font-family:'Orbitron',sans-serif; font-size:28px; font-weight:900; color:var(--accent); }
 .gauge-label { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text2); margin-top:4px; }
 
-/* ==================== MOBILE OPTIMIZATION ====================
+/* ==================== WORKSPACE THEMES ====================
+   Only override background/border variables. All accent colors
+   (--accent, --green, --red, --blue, etc.) are untouched so every
+   color theme works with every workspace theme. */
+
+/* Midnight Black — current default, preserved exactly */
+.ws-midnight {
+  --bg: #050810; --bg2: #0a0f1e; --bg3: #0f1628;
+  --card: #111827; --card2: #1a2235; --border: #1e2d4a;
+}
+/* Dark Graphite — recommended, easier on eyes than pure black */
+.ws-graphite {
+  --bg: #1A1D21; --bg2: #23272F; --bg3: #2B3038;
+  --card: #23272F; --card2: #2B3038; --border: #373D47;
+}
+/* Slate Gray */
+.ws-slate {
+  --bg: #20242B; --bg2: #2A3038; --bg3: #343B44;
+  --card: #2A3038; --card2: #343B44; --border: #404850;
+}
+/* Deep Navy */
+.ws-navy {
+  --bg: #0F172A; --bg2: #162033; --bg3: #1E293B;
+  --card: #162033; --card2: #1E293B; --border: #2A3F5A;
+}
+/* Carbon Fiber */
+.ws-carbon {
+  --bg: #121212; --bg2: #1C1C1C; --bg3: #262626;
+  --card: #1C1C1C; --card2: #262626; --border: #333333;
+}
+/* Steel Blue */
+.ws-steel {
+  --bg: #1B263B; --bg2: #243447; --bg3: #2E4057;
+  --card: #243447; --card2: #2E4057; --border: #3A5068;
+}
+
    Only applies below 768px — iMac (and any desktop width) is
    completely unaffected. Do not add any rule here without the
    max-width:768px wrapper. */
@@ -495,6 +530,36 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <span class="theme-name">Blaze Orange</span>
     </div>
   </div>
+
+  <!-- WORKSPACE THEMES -->
+  <div class="theme-panel-title" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">🖥️ Workspace Background</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+    <div onclick="setWorkspaceTheme('midnight')" id="ws-midnight" style="cursor:pointer;padding:8px;border-radius:8px;border:1px solid var(--accent);background:rgba(245,197,24,0.1)">
+      <div style="width:100%;height:18px;border-radius:4px;background:#050810;margin-bottom:4px;border:1px solid #1e2d4a"></div>
+      <div style="font-size:10px;color:var(--text2);text-align:center">Midnight Black</div>
+    </div>
+    <div onclick="setWorkspaceTheme('graphite')" id="ws-graphite" style="cursor:pointer;padding:8px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:18px;border-radius:4px;background:#1A1D21;margin-bottom:4px;border:1px solid #2B3038"></div>
+      <div style="font-size:10px;color:var(--text2);text-align:center">Dark Graphite ⭐</div>
+    </div>
+    <div onclick="setWorkspaceTheme('slate')" id="ws-slate" style="cursor:pointer;padding:8px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:18px;border-radius:4px;background:#20242B;margin-bottom:4px;border:1px solid #343B44"></div>
+      <div style="font-size:10px;color:var(--text2);text-align:center">Slate Gray</div>
+    </div>
+    <div onclick="setWorkspaceTheme('navy')" id="ws-navy" style="cursor:pointer;padding:8px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:18px;border-radius:4px;background:#0F172A;margin-bottom:4px;border:1px solid #1E293B"></div>
+      <div style="font-size:10px;color:var(--text2);text-align:center">Deep Navy</div>
+    </div>
+    <div onclick="setWorkspaceTheme('carbon')" id="ws-carbon" style="cursor:pointer;padding:8px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:18px;border-radius:4px;background:#121212;margin-bottom:4px;border:1px solid #262626"></div>
+      <div style="font-size:10px;color:var(--text2);text-align:center">Carbon Fiber</div>
+    </div>
+    <div onclick="setWorkspaceTheme('steel')" id="ws-steel" style="cursor:pointer;padding:8px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:18px;border-radius:4px;background:#1B263B;margin-bottom:4px;border:1px solid #2E4057"></div>
+      <div style="font-size:10px;color:var(--text2);text-align:center">Steel Blue</div>
+    </div>
+  </div>
+
   <div class="theme-panel-title" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">🖌️ Per-Tab Accent Color</div>
   <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
     <div style="font-size:11px;color:var(--text2)">Pick a tab, then choose color:</div>
@@ -7206,14 +7271,44 @@ function toggleThemePanel() {
   document.getElementById('theme-panel').classList.toggle('open');
 }
 function setTheme(cls, name) {
-  document.body.className=cls;
+  // Preserve workspace class when changing accent theme
+  const body = document.body;
+  const wsClass = [...body.classList].find(c => c.startsWith('ws-')) || '';
+  body.className = cls;
+  if (wsClass) body.classList.add(wsClass);
   state.currentTheme=cls; saveState();
   document.querySelectorAll('.theme-option').forEach(el=>el.classList.remove('active'));
   document.getElementById('theme-'+name).classList.add('active');
   document.getElementById('theme-panel').classList.remove('open');
   showToast('success','Theme Changed',name.charAt(0).toUpperCase()+name.slice(1)+' theme applied','🎨',2000);
 }
-function applyTheme(cls) { document.body.className=cls; applyAllTabColors(); }
+function applyTheme(cls) {
+  const wsClass = [...document.body.classList].find(c => c.startsWith('ws-')) || '';
+  document.body.className = cls;
+  if (wsClass) document.body.classList.add(wsClass);
+  applyAllTabColors();
+}
+
+// ── WORKSPACE THEME ───────────────────────────────────────────────
+const WS_THEMES = ['midnight','graphite','slate','navy','carbon','steel'];
+function setWorkspaceTheme(name) {
+  // Remove any existing workspace class
+  WS_THEMES.forEach(t => document.body.classList.remove('ws-' + t));
+  if (name !== 'midnight') document.body.classList.add('ws-' + name); // midnight = default, no class needed
+  localStorage.setItem('mrt_workspace_theme', name);
+  // Update active border on workspace theme tiles
+  WS_THEMES.forEach(t => {
+    const el = document.getElementById('ws-' + t);
+    if (!el) return;
+    el.style.borderColor = t === name ? 'var(--accent)' : 'var(--border)';
+    el.style.background  = t === name ? 'rgba(245,197,24,0.1)' : '';
+  });
+  showToast('success', 'Workspace Changed', name.charAt(0).toUpperCase() + name.slice(1) + ' background applied', '🖥️', 2000);
+}
+function loadWorkspaceTheme() {
+  const saved = localStorage.getItem('mrt_workspace_theme') || 'graphite'; // Dark Graphite default
+  setWorkspaceTheme(saved);
+}
 document.addEventListener('click',e=>{if(!e.target.closest('#theme-panel')&&!e.target.closest('.theme-btn'))document.getElementById('theme-panel').classList.remove('open');});
 
 // Per-tab accent colors
@@ -9958,6 +10053,7 @@ function runStrikeAssist() {
 
 // Auto-populate price from live ticker when ticker changes
 document.addEventListener('DOMContentLoaded', () => {
+  loadWorkspaceTheme(); // Apply saved workspace background before anything renders
   ['ss-ticker','ss-type','ss-setup'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('change', () => {
