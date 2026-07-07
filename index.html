@@ -2566,6 +2566,17 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
   <!-- ===================== OPTIONS TAB ===================== -->
   <div class="tab-content" id="content-options">
+    <!-- ENHANCED OPTIONS CALCULATOR HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">⚡ OPTIONS CALCULATOR — ENHANCED</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <select id="eoc-symbol" class="form-input" style="width:90px;font-size:12px" onchange="pullSchwabPrice()">
+          <option>SPY</option><option>QQQ</option>
+        </select>
+        <button onclick="runWithLoadingState(event, pullSchwabPrice, '⏳')" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">📡 LIVE PRICE</button>
+        <span id="eoc-live-price" style="font-size:11px;color:var(--text3)">--</span>
+      </div>
+    </div>
     <div class="grid-2" style="margin-bottom:16px">
       <div class="card">
         <div class="section-title" style="margin-bottom:12px">⚫ BLACK-SCHOLES CALCULATOR</div>
@@ -2589,15 +2600,25 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <label class="form-label">Risk-Free Rate (%)</label>
           <input class="form-input" type="number" id="bs-rate" value="5.3" oninput="calcBS()">
         </div>
+        <div class="form-group">
+          <label class="form-label">Contracts (max 2)</label>
+          <input class="form-input" type="number" id="bs-contracts" value="1" min="1" max="2" oninput="calcBS()">
+        </div>
       </div>
       <div class="card">
         <div class="section-title" style="margin-bottom:12px">🎯 GREEKS & PRICING</div>
-        <div style="display:flex;flex-direction:column;gap:10px" id="bs-results">
+        <div style="display:flex;flex-direction:column;gap:8px" id="bs-results">
           <div style="display:flex;justify-content:space-between;padding:10px;background:var(--bg2);border-radius:8px">
             <span>CALL Price</span><span style="color:var(--green);font-weight:700" id="bs-call">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;padding:10px;background:var(--bg2);border-radius:8px">
             <span>PUT Price</span><span style="color:var(--red);font-weight:700" id="bs-put">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,230,118,0.08);border-radius:8px;border:1px solid rgba(0,230,118,0.2)">
+            <span>CALL Breakeven</span><span style="color:var(--green);font-weight:700" id="bs-call-be">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,23,68,0.08);border-radius:8px;border:1px solid rgba(255,23,68,0.2)">
+            <span>PUT Breakeven</span><span style="color:var(--red);font-weight:700" id="bs-put-be">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;padding:10px;background:var(--bg2);border-radius:8px">
             <span>Delta (Δ)</span><span style="color:var(--accent);font-weight:700" id="bs-delta">0.00</span>
@@ -2614,7 +2635,36 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="display:flex;justify-content:space-between;padding:10px;background:var(--bg2);border-radius:8px">
             <span>Prob ITM</span><span style="color:var(--cyan);font-weight:700" id="bs-prob">0%</span>
           </div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,165,0,0.08);border-radius:8px;border:1px solid rgba(255,165,0,0.2)">
+            <span>Max Risk (total)</span><span style="color:var(--accent);font-weight:700" id="bs-maxrisk">$0.00</span>
+          </div>
         </div>
+      </div>
+    </div>
+    <!-- P&L SCENARIOS TABLE -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div class="section-title">📊 P&L SCENARIOS — PRICE TABLE</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="setScenarioType('CALL')" id="scenario-call-btn" style="background:rgba(0,230,118,0.15);border:1px solid var(--green);color:var(--green);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">CALL</button>
+          <button onclick="setScenarioType('PUT')" id="scenario-put-btn" style="background:rgba(0,0,0,0.2);border:1px solid var(--border);color:var(--text3);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">PUT</button>
+        </div>
+      </div>
+      <div id="scenario-table-container" style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead>
+            <tr style="background:var(--bg2)">
+              <th style="padding:8px;text-align:left;color:var(--text3);letter-spacing:1px">PRICE AT EXPIRY</th>
+              <th style="padding:8px;text-align:right;color:var(--text3);letter-spacing:1px">MOVE %</th>
+              <th style="padding:8px;text-align:right;color:var(--text3);letter-spacing:1px">OPTION VALUE</th>
+              <th style="padding:8px;text-align:right;color:var(--text3);letter-spacing:1px">P&L / CONTRACT</th>
+              <th style="padding:8px;text-align:right;color:var(--text3);letter-spacing:1px">P&L TOTAL</th>
+            </tr>
+          </thead>
+          <tbody id="scenario-tbody">
+            <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)">Enter values above to see scenarios</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
     <div class="card" style="margin-bottom:16px">
@@ -6005,12 +6055,43 @@ function renderOptionsWatch() {
 function deleteOptionsWatch(id){state.optionsWatch=state.optionsWatch.filter(o=>o.id!==id);saveState();renderOptionsWatch();}
 
 // ==================== BLACK-SCHOLES ====================
+let _scenarioType = 'CALL';
+function setScenarioType(type) {
+  _scenarioType = type;
+  const callBtn = document.getElementById('scenario-call-btn');
+  const putBtn  = document.getElementById('scenario-put-btn');
+  if (callBtn) { callBtn.style.background = type === 'CALL' ? 'rgba(0,230,118,0.15)' : 'rgba(0,0,0,0.2)'; callBtn.style.color = type === 'CALL' ? 'var(--green)' : 'var(--text3)'; callBtn.style.borderColor = type === 'CALL' ? 'var(--green)' : 'var(--border)'; }
+  if (putBtn)  { putBtn.style.background  = type === 'PUT'  ? 'rgba(255,23,68,0.15)'  : 'rgba(0,0,0,0.2)'; putBtn.style.color  = type === 'PUT'  ? 'var(--red)'   : 'var(--text3)'; putBtn.style.borderColor  = type === 'PUT'  ? 'var(--red)'   : 'var(--border)'; }
+  calcBS();
+}
+
+async function pullSchwabPrice() {
+  const sym = document.getElementById('eoc-symbol')?.value || 'QQQ';
+  const liveEl = document.getElementById('eoc-live-price');
+  try {
+    const res = await fetch(`${SCHWAB_BACKEND}?action=quote&symbol=${sym}`, { headers: SCHWAB_HEADERS });
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    const price = data?.data?.[sym]?.quote?.lastPrice || data?.data?.[sym]?.quote?.mark;
+    if (!price || price < 100) throw new Error('bad price');
+    const stockEl = document.getElementById('bs-stock');
+    const strikeEl = document.getElementById('bs-strike');
+    if (stockEl) stockEl.value = price.toFixed(2);
+    if (strikeEl) strikeEl.value = Math.round(price).toFixed(2);
+    if (liveEl) liveEl.textContent = `${sym}: $${price.toFixed(2)} (live)`;
+    calcBS();
+  } catch (e) {
+    if (liveEl) liveEl.textContent = 'Could not fetch — check Schwab connection';
+  }
+}
+
 function calcBS() {
   const S=parseFloat(document.getElementById('bs-stock').value)||0;
   const K=parseFloat(document.getElementById('bs-strike').value)||0;
   const T=parseFloat(document.getElementById('bs-days').value)/365||0;
   const v=parseFloat(document.getElementById('bs-iv').value)/100||0;
   const r=parseFloat(document.getElementById('bs-rate').value)/100||0;
+  const contracts=Math.max(1,Math.min(2,parseInt(document.getElementById('bs-contracts')?.value)||1));
   if(!S||!K||!T||!v) return;
   const d1=(Math.log(S/K)+(r+v*v/2)*T)/(v*Math.sqrt(T));
   const d2=d1-v*Math.sqrt(T);
@@ -6022,13 +6103,47 @@ function calcBS() {
   const gamma=n(d1)/(S*v*Math.sqrt(T));
   const theta=-(S*n(d1)*v/(2*Math.sqrt(T))+r*K*Math.exp(-r*T)*N(d2))/365;
   const vega=S*n(d1)*Math.sqrt(T)/100;
+
+  // Breakeven
+  const callBE = K + call;
+  const putBE  = K - put;
+  const maxRisk = (_scenarioType === 'CALL' ? call : put) * 100 * contracts;
+
   document.getElementById('bs-call').textContent='$'+call.toFixed(2);
   document.getElementById('bs-put').textContent='$'+put.toFixed(2);
+  document.getElementById('bs-call-be').textContent='$'+callBE.toFixed(2);
+  document.getElementById('bs-put-be').textContent='$'+putBE.toFixed(2);
   document.getElementById('bs-delta').textContent=delta.toFixed(4);
   document.getElementById('bs-gamma').textContent=gamma.toFixed(6);
   document.getElementById('bs-theta').textContent='$'+theta.toFixed(4);
   document.getElementById('bs-vega').textContent='$'+vega.toFixed(4);
   document.getElementById('bs-prob').textContent=(N(d2)*100).toFixed(1)+'%';
+  const mrEl = document.getElementById('bs-maxrisk');
+  if (mrEl) { mrEl.textContent = '$' + maxRisk.toFixed(2); mrEl.style.color = maxRisk <= 30 ? 'var(--green)' : maxRisk <= 60 ? 'var(--accent)' : 'var(--red)'; }
+
+  // Scenario table — 11 price points from -5% to +5% around current price
+  const tbody = document.getElementById('scenario-tbody');
+  if (tbody) {
+    const premium = _scenarioType === 'CALL' ? call : put;
+    const pnlRows = [];
+    for (let pct = -5; pct <= 5; pct++) {
+      const price = S * (1 + pct / 100);
+      const intrinsic = _scenarioType === 'CALL' ? Math.max(0, price - K) : Math.max(0, K - price);
+      const pnlPerContract = (intrinsic - premium) * 100;
+      const pnlTotal = pnlPerContract * contracts;
+      const moveColor = pnlTotal > 0 ? 'var(--green)' : pnlTotal < 0 ? 'var(--red)' : 'var(--text3)';
+      const isCurrent = pct === 0;
+      pnlRows.push(`<tr style="background:${isCurrent ? 'rgba(255,255,255,0.05)' : 'transparent'};border-bottom:1px solid rgba(255,255,255,0.04)">
+        <td style="padding:6px 8px;color:${isCurrent ? 'var(--accent)' : 'var(--text)'}">$${price.toFixed(2)}${isCurrent ? ' ◀ NOW' : ''}</td>
+        <td style="padding:6px 8px;text-align:right;color:${pct>0?'var(--green)':pct<0?'var(--red)':'var(--text3)'}">${pct>0?'+':''}${pct}%</td>
+        <td style="padding:6px 8px;text-align:right;color:var(--text2)">$${intrinsic.toFixed(2)}</td>
+        <td style="padding:6px 8px;text-align:right;color:${moveColor}">${pnlPerContract>=0?'+':''}$${pnlPerContract.toFixed(2)}</td>
+        <td style="padding:6px 8px;text-align:right;color:${moveColor};font-weight:700">${pnlTotal>=0?'+':''}$${pnlTotal.toFixed(2)}</td>
+      </tr>`);
+    }
+    tbody.innerHTML = pnlRows.join('');
+  }
+
   drawPayoffChart(S,K,call,put);
 }
 
