@@ -2649,6 +2649,59 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <input type="file" id="backup-import-input" accept=".json" style="display:none" onchange="importBackup(this)">
       <div style="font-size:11px;color:var(--text3)">Save weekly — restores all data in 60 seconds</div>
     </div>
+    <!-- RISK DASHBOARD ══════════════════════════════════════════ -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(255,165,0,0.3);background:linear-gradient(135deg,rgba(255,165,0,0.04),rgba(0,0,0,0.4))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">⚡ RISK DASHBOARD</div>
+        <div id="risk-grade-badge" style="font-family:Orbitron,sans-serif;font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:var(--text3)">GRADE: --</div>
+      </div>
+      <!-- Row 1: Core stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:10px">
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">WIN RATE</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="rd-winrate">--%</div>
+          <div style="font-size:9px;color:var(--text3)" id="rd-wl">0W / 0L</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">PROFIT FACTOR</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="rd-pf">--</div>
+          <div style="font-size:9px;color:var(--text3)">Win$ ÷ Loss$</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">AVG WINNER</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--green)" id="rd-avgwin">$--</div>
+          <div style="font-size:9px;color:var(--text3)" id="rd-largest-win">Best: $--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">AVG LOSER</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--red)" id="rd-avgloss">$--</div>
+          <div style="font-size:9px;color:var(--text3)" id="rd-largest-loss">Worst: $--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">EXPECTANCY</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="rd-expect">$--</div>
+          <div style="font-size:9px;color:var(--text3)">Per trade avg</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">CONSEC. WINS</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--green)" id="rd-consec-wins">--</div>
+          <div style="font-size:9px;color:var(--text3)">Best streak</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">CONSEC. LOSSES</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--red)" id="rd-consec-losses">--</div>
+          <div style="font-size:9px;color:var(--text3)">Worst streak</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">AVG HOLD TIME</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="rd-hold-time">--</div>
+          <div style="font-size:9px;color:var(--text3)">Minutes per trade</div>
+        </div>
+      </div>
+      <!-- Risk assessment bar -->
+      <div id="rd-assessment" style="font-size:11px;color:var(--text2);padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:6px;border-left:3px solid var(--accent)">Log trades to see risk assessment.</div>
+    </div>
+
     <!-- 8 KEY STATS ROW -->
     <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-bottom:16px">
       <div class="stat-card"><div class="stat-label">WIN RATE</div><div class="stat-val neg" id="an-winrate">0%</div><div class="stat-sub" id="an-wl-detail">0W / 0L</div></div>
@@ -6022,7 +6075,100 @@ function updateAllocationChart() {
 
 function filterChart(period) { updateCharts(); }
 
+function renderRiskDashboard(trades) {
+  // Filter to real trades only — exclude WITHDRAWAL/DEPOSIT/FEES/OTHER
+  const real = trades.filter(t => !['WITHDRAWAL','DEPOSIT','FEES','OTHER'].includes(t.type));
+  if (!real.length) return;
+
+  const wins  = real.filter(t => t.pnl > 0);
+  const losses = real.filter(t => t.pnl < 0);
+  const winRate = (wins.length / real.length * 100).toFixed(1);
+  const avgWin  = wins.length  ? wins.reduce((s,t) => s + t.pnl, 0) / wins.length  : 0;
+  const avgLoss = losses.length ? losses.reduce((s,t) => s + t.pnl, 0) / losses.length : 0;
+  const totalWin  = wins.reduce((s,t) => s + t.pnl, 0);
+  const totalLoss = Math.abs(losses.reduce((s,t) => s + t.pnl, 0));
+  const profitFactor = totalLoss > 0 ? (totalWin / totalLoss).toFixed(2) : totalWin > 0 ? '∞' : '0.00';
+  const expectancy  = (real.reduce((s,t) => s + t.pnl, 0) / real.length).toFixed(2);
+  const largestWin  = wins.length  ? Math.max(...wins.map(t => t.pnl))  : 0;
+  const largestLoss = losses.length ? Math.min(...losses.map(t => t.pnl)) : 0;
+
+  // Consecutive streaks
+  let maxWinStreak = 0, maxLossStreak = 0, curWin = 0, curLoss = 0;
+  real.forEach(t => {
+    if (t.pnl > 0) { curWin++; curLoss = 0; maxWinStreak = Math.max(maxWinStreak, curWin); }
+    else if (t.pnl < 0) { curLoss++; curWin = 0; maxLossStreak = Math.max(maxLossStreak, curLoss); }
+    else { curWin = 0; curLoss = 0; }
+  });
+
+  // Avg hold time — uses entry/exit time fields if present, else falls back to note scan
+  const withTime = real.filter(t => t.entryTime && t.exitTime);
+  const avgHold = withTime.length
+    ? Math.round(withTime.reduce((s,t) => {
+        const diff = (new Date('1970-01-01T' + t.exitTime) - new Date('1970-01-01T' + t.entryTime)) / 60000;
+        return s + (diff > 0 ? diff : 0);
+      }, 0) / withTime.length)
+    : null;
+
+  // Risk grade
+  const pf = parseFloat(profitFactor);
+  const wr = parseFloat(winRate);
+  let grade = '--', gradeColor = 'var(--text3)';
+  if (real.length >= 10) {
+    if (pf >= 2.0 && wr >= 60)      { grade = 'A+'; gradeColor = 'var(--green)'; }
+    else if (pf >= 1.5 && wr >= 50) { grade = 'A';  gradeColor = 'var(--green)'; }
+    else if (pf >= 1.2 && wr >= 45) { grade = 'B';  gradeColor = 'var(--accent)'; }
+    else if (pf >= 1.0)              { grade = 'C';  gradeColor = 'var(--accent)'; }
+    else                             { grade = 'D';  gradeColor = 'var(--red)'; }
+  }
+
+  // Risk assessment text
+  let assessment = '';
+  if (real.length < 10) {
+    assessment = `📊 ${real.length} trades logged — need at least 10 for a meaningful risk assessment. Keep logging.`;
+  } else {
+    const issues = [], strengths = [];
+    if (wr >= 55) strengths.push(`win rate ${winRate}%`);
+    else issues.push(`win rate ${winRate}% is below 55% — focus on setup quality`);
+    if (pf >= 1.5) strengths.push(`profit factor ${profitFactor} is strong`);
+    else if (pf < 1.0) issues.push(`profit factor ${profitFactor} — losing more than winning overall`);
+    if (maxLossStreak >= 4) issues.push(`${maxLossStreak}-trade losing streak detected — daily loss limit is your safety net`);
+    if (avgWin > 0 && avgLoss < 0 && Math.abs(avgWin) < Math.abs(avgLoss)) issues.push(`avg loss ($${Math.abs(avgLoss).toFixed(0)}) exceeds avg win ($${avgWin.toFixed(0)}) — tighten stops or let winners run longer`);
+    assessment = issues.length
+      ? `⚠️ Improve: ${issues.join(' · ')}.`
+      : `✅ Strong: ${strengths.join(' · ')}.`;
+  }
+
+  const fmt = v => `$${Math.abs(v).toFixed(2)}`;
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setColor = (id, color) => { const el = document.getElementById(id); if(el) el.style.color = color; };
+
+  set('rd-winrate', winRate + '%');
+  setColor('rd-winrate', wr >= 50 ? 'var(--green)' : 'var(--red)');
+  set('rd-wl', `${wins.length}W / ${losses.length}L`);
+  set('rd-pf', profitFactor);
+  setColor('rd-pf', pf >= 1.5 ? 'var(--green)' : pf >= 1.0 ? 'var(--accent)' : 'var(--red)');
+  set('rd-avgwin', fmt(avgWin));
+  set('rd-largest-win', `Best: ${fmt(largestWin)}`);
+  set('rd-avgloss', fmt(avgLoss));
+  set('rd-largest-loss', `Worst: ${fmt(largestLoss)}`);
+  set('rd-expect', (parseFloat(expectancy) >= 0 ? '+' : '') + '$' + Math.abs(parseFloat(expectancy)).toFixed(2));
+  setColor('rd-expect', parseFloat(expectancy) >= 0 ? 'var(--green)' : 'var(--red)');
+  set('rd-consec-wins', maxWinStreak);
+  set('rd-consec-losses', maxLossStreak);
+  set('rd-hold-time', avgHold !== null ? avgHold + ' min' : 'N/A');
+
+  const badge = document.getElementById('risk-grade-badge');
+  if (badge) { badge.textContent = `GRADE: ${grade}`; badge.style.color = gradeColor; badge.style.borderColor = gradeColor; badge.style.border = `1px solid ${gradeColor}`; }
+
+  const assess = document.getElementById('rd-assessment');
+  if (assess) {
+    assess.textContent = assessment;
+    assess.style.borderLeftColor = issues => gradeColor;
+  }
+}
+
 function renderAnalyticsBreakdown(trades) {
+  renderRiskDashboard(trades);
   // BY TICKER
   const byTicker={};
   trades.forEach(t=>{if(!byTicker[t.ticker])byTicker[t.ticker]={wins:0,total:0,pnl:0};byTicker[t.ticker].total++;byTicker[t.ticker].pnl+=t.pnl;if(t.pnl>0)byTicker[t.ticker].wins++;});
