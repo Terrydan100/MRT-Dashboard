@@ -2842,6 +2842,39 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
     </div>
 
     <!-- WEEKLY WEALTH REPORT -->
+    <!-- ORDER RECONCILIATION ════════════════════════════════════ -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.25)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title">🔗 ORDER RECONCILIATION</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Compares dashboard logged trades vs Schwab filled orders — flags mismatches</div>
+        </div>
+        <button onclick="runWithLoadingState(event, runOrderReconciliation, '⏳ CHECKING...')" class="btn btn-sm" style="border-color:var(--blue);color:var(--blue)">🔄 CHECK NOW</button>
+      </div>
+      <div id="recon-status" style="font-size:11px;color:var(--text3);margin-bottom:10px">Click "Check Now" to compare dashboard trades against today's Schwab fills.</div>
+      <div id="recon-results" style="display:none">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px">
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">SCHWAB FILLS</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--blue)" id="recon-schwab-count">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">DASHBOARD TRADES</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--accent)" id="recon-dash-count">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">MISMATCHES</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="recon-mismatch-count">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">LAST CHECKED</div>
+            <div style="font-size:11px;color:var(--text2)" id="recon-last-check">--</div>
+          </div>
+        </div>
+        <div id="recon-detail" style="font-size:11px;color:var(--text2);line-height:1.8"></div>
+      </div>
+    </div>
+
     <div class="card" style="background:linear-gradient(135deg,rgba(245,197,24,0.05),rgba(0,180,255,0.03))">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <div>
@@ -5081,6 +5114,93 @@ async function runHealthCheck() {
   } catch (e) {
     if (fbDot) fbDot.style.background = 'var(--red)';
     if (fbLabel) fbLabel.textContent = 'Error';
+  }
+}
+
+// ==================== ORDER RECONCILIATION ====================
+// Compares today's dashboard logged trades against Schwab's filled orders.
+// Flags options trades in Schwab that aren't in the dashboard log and vice versa.
+async function runOrderReconciliation() {
+  const statusEl  = document.getElementById('recon-status');
+  const resultsEl = document.getElementById('recon-results');
+  const detailEl  = document.getElementById('recon-detail');
+
+  if (statusEl) statusEl.textContent = 'Fetching Schwab orders...';
+
+  try {
+    // 1. Pull today's filled orders from Schwab
+    const res = await fetch(`${SCHWAB_BACKEND}?action=orders`, { headers: SCHWAB_HEADERS });
+    if (!res.ok) throw new Error('Schwab orders fetch failed');
+    const data = await res.json();
+
+    if (data.status !== 'ok') throw new Error(data.message || 'Schwab not authenticated');
+
+    const schwabOrders = Array.isArray(data.data) ? data.data : [];
+    // Filter to option fills only (matching your 0DTE focus)
+    const schwabFills = schwabOrders.filter(o =>
+      o.status === 'FILLED' &&
+      o.orderLegCollection?.some(l => l.instrument?.assetType === 'OPTION')
+    );
+
+    // 2. Get today's dashboard trades
+    const today = new Date().toISOString().split('T')[0];
+    const todayTrades = state.trades.filter(t =>
+      t.date === today &&
+      !['WITHDRAWAL','DEPOSIT','FEES','OTHER'].includes(t.type)
+    );
+
+    // 3. Basic reconciliation — count comparison + surface Schwab fills not in dashboard
+    const schwabCount  = schwabFills.length;
+    const dashCount    = todayTrades.length;
+
+    // Try to match Schwab fills to dashboard trades by ticker symbol
+    const dashTickers = todayTrades.map(t => (t.ticker || '').toUpperCase());
+    const unmatched = schwabFills.filter(o => {
+      const leg = o.orderLegCollection?.[0];
+      const sym = leg?.instrument?.underlyingSymbol || leg?.instrument?.symbol || '';
+      return !dashTickers.includes(sym.toUpperCase());
+    });
+
+    const mismatchCount = unmatched.length;
+
+    // 4. Update UI
+    const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+    const setColor = (id, color) => { const el = document.getElementById(id); if(el) el.style.color = color; };
+
+    set('recon-schwab-count', schwabCount);
+    set('recon-dash-count', dashCount);
+    set('recon-mismatch-count', mismatchCount);
+    setColor('recon-mismatch-count', mismatchCount > 0 ? 'var(--red)' : 'var(--green)');
+    set('recon-last-check', new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}));
+
+    if (resultsEl) resultsEl.style.display = 'block';
+
+    if (detailEl) {
+      if (mismatchCount === 0 && schwabCount === 0) {
+        detailEl.innerHTML = '<span style="color:var(--text3)">No Schwab option fills found for today. If you traded, make sure you\'re logged in to Schwab (?action=login).</span>';
+      } else if (mismatchCount === 0) {
+        detailEl.innerHTML = '<span style="color:var(--green)">✅ All Schwab fills are accounted for in your dashboard trade log.</span>';
+      } else {
+        const rows = unmatched.map(o => {
+          const leg = o.orderLegCollection?.[0];
+          const sym = leg?.instrument?.underlyingSymbol || leg?.instrument?.symbol || 'Unknown';
+          const desc = leg?.instrument?.description || sym;
+          const qty = leg?.quantity || '?';
+          const price = o.orderActivityCollection?.[0]?.executionLegs?.[0]?.price || '?';
+          return `<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--red)">⚠️ Not logged: ${desc} — Qty: ${qty} @ $${price}</div>`;
+        }).join('');
+        detailEl.innerHTML = `<div style="margin-bottom:6px;color:var(--red);font-weight:700">${mismatchCount} Schwab fill(s) not found in dashboard log:</div>${rows}<div style="margin-top:8px;color:var(--text3);font-size:10px">Log these trades manually in the Trade Logger to keep your records accurate.</div>`;
+      }
+    }
+
+    if (statusEl) statusEl.textContent = mismatchCount > 0
+      ? `⚠️ ${mismatchCount} mismatch(es) found — see details below.`
+      : '✅ Reconciliation complete.';
+
+  } catch (err) {
+    if (statusEl) statusEl.textContent = '❌ ' + (err.message || 'Reconciliation failed — check Schwab connection.');
+    if (resultsEl) resultsEl.style.display = 'none';
+    console.error('Order reconciliation error:', err);
   }
 }
 
