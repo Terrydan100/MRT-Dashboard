@@ -785,6 +785,40 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- SYSTEM STATUS / HEALTH MONITOR ══════════════════════════ -->
+    <div id="system-status-bar" style="margin-bottom:10px;background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:10px;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span style="font-family:Orbitron,sans-serif;font-size:9px;color:var(--text3);letter-spacing:2px">SYSTEM STATUS</span>
+        <!-- Schwab -->
+        <div style="display:flex;align-items:center;gap:5px">
+          <span id="hs-schwab-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+          <span style="font-size:10px;color:var(--text3)">Schwab</span>
+          <span id="hs-schwab-label" style="font-size:9px;color:var(--text3)">--</span>
+        </div>
+        <!-- Firebase -->
+        <div style="display:flex;align-items:center;gap:5px">
+          <span id="hs-firebase-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+          <span style="font-size:10px;color:var(--text3)">Firebase</span>
+          <span id="hs-firebase-label" style="font-size:9px;color:var(--text3)">--</span>
+        </div>
+        <!-- Backend -->
+        <div style="display:flex;align-items:center;gap:5px">
+          <span id="hs-backend-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+          <span style="font-size:10px;color:var(--text3)">Backend</span>
+          <span id="hs-backend-label" style="font-size:9px;color:var(--text3)">--</span>
+        </div>
+        <!-- Trading status -->
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--red);display:inline-block"></span>
+          <span style="font-size:10px;color:var(--red)">Trading Disabled</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:9px;color:var(--text3)">Last check: <span id="hs-last-check">--</span></span>
+        <button onclick="runWithLoadingState(event, runHealthCheck, '⏳')" style="background:none;border:1px solid var(--border);color:var(--text3);padding:2px 8px;border-radius:5px;font-size:9px;cursor:pointer;font-family:Rajdhani,sans-serif">🔄</button>
+      </div>
+    </div>
+
     <!-- MARKET SHOCK CHECK BAR — always visible -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;background:rgba(255,23,68,0.06);border:1px solid rgba(255,23,68,0.2);border-radius:10px;padding:8px 14px">
       <div style="font-size:13px">🚨</div>
@@ -4099,6 +4133,8 @@ async function initDashboard() {
   setInterval(runMomentumDetector, 60000); // Early Momentum Detector — 9:30-11:30AM & 2-4PM ET
   setTimeout(fetchSchwabAccount, 3000);    // Schwab account sync — after page settles
   setInterval(fetchSchwabAccount, 300000); // Refresh every 5 minutes
+  setTimeout(runHealthCheck, 4000);        // Health check — after Schwab sync settles
+  setInterval(runHealthCheck, 300000);     // Health check every 5 minutes
   setInterval(updateTradingIntelligence, 60000);
   setInterval(fetchCryptoPrices, 120000);
   showDailyPlanReminder();
@@ -4904,6 +4940,63 @@ async function fetchSchwabAccount() {
     console.error('Schwab account sync error:', err);
     if (dot)   dot.style.background   = 'var(--red)';
     if (label) label.textContent       = 'Sync failed — ' + (err.message || 'unknown error');
+  }
+}
+
+// ==================== SYSTEM HEALTH MONITOR ====================
+async function runHealthCheck() {
+  const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const lastEl = document.getElementById('hs-last-check');
+  if (lastEl) lastEl.textContent = now;
+
+  // ── 1. Schwab backend + auth status ──────────────────────────
+  const schwabDot   = document.getElementById('hs-schwab-dot');
+  const schwabLabel = document.getElementById('hs-schwab-label');
+  const backendDot   = document.getElementById('hs-backend-dot');
+  const backendLabel = document.getElementById('hs-backend-label');
+
+  try {
+    const res = await fetch(SCHWAB_BACKEND, { headers: SCHWAB_HEADERS });
+    if (res.ok) {
+      const data = await res.json();
+      // Backend is reachable
+      if (backendDot) backendDot.style.background = 'var(--green)';
+      if (backendLabel) backendLabel.textContent = 'OK';
+      // Schwab auth status
+      if (data.authenticated) {
+        if (schwabDot) schwabDot.style.background = 'var(--green)';
+        if (schwabLabel) schwabLabel.textContent = 'Connected';
+      } else {
+        if (schwabDot) schwabDot.style.background = 'var(--red)';
+        if (schwabLabel) schwabLabel.textContent = 'Not authenticated';
+      }
+    } else {
+      throw new Error('Backend returned ' + res.status);
+    }
+  } catch (e) {
+    if (backendDot) backendDot.style.background = 'var(--red)';
+    if (backendLabel) backendLabel.textContent = 'Unreachable';
+    if (schwabDot) schwabDot.style.background = 'var(--red)';
+    if (schwabLabel) schwabLabel.textContent = 'Unknown';
+  }
+
+  // ── 2. Firebase status ────────────────────────────────────────
+  const fbDot   = document.getElementById('hs-firebase-dot');
+  const fbLabel = document.getElementById('hs-firebase-label');
+
+  try {
+    const fbRes = await fbGet('state/goal');
+    if (fbRes !== null && fbRes !== undefined) {
+      if (fbDot) fbDot.style.background = 'var(--green)';
+      if (fbLabel) fbLabel.textContent = 'Connected';
+    } else {
+      // null could mean auth issue or empty node
+      if (fbDot) fbDot.style.background = 'var(--accent)';
+      if (fbLabel) fbLabel.textContent = 'Auth required';
+    }
+  } catch (e) {
+    if (fbDot) fbDot.style.background = 'var(--red)';
+    if (fbLabel) fbLabel.textContent = 'Error';
   }
 }
 
