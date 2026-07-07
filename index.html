@@ -3532,6 +3532,28 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
   <!-- ===================== EDUCATION TAB ===================== -->
   <div class="tab-content" id="content-education">
+    <!-- OPTIONS STRATEGIES LIBRARY ══════════════════════════════ -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(245,197,24,0.25)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="font-size:22px">📚</div>
+        <div>
+          <div style="font-family:Orbitron,sans-serif;font-size:13px;color:var(--accent);letter-spacing:2px">OPTIONS STRATEGIES LIBRARY</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">From Novice to Expert — plain English, payoff diagram, when to use each one.</div>
+        </div>
+      </div>
+      <!-- Filter buttons -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+        <button onclick="filterStrategies('all')" id="strat-all" class="btn btn-sm" style="font-size:10px;background:var(--accent);color:#000">All</button>
+        <button onclick="filterStrategies('novice')" id="strat-novice" class="btn btn-sm" style="font-size:10px">🟢 Novice</button>
+        <button onclick="filterStrategies('intermediate')" id="strat-intermediate" class="btn btn-sm" style="font-size:10px">🟡 Intermediate</button>
+        <button onclick="filterStrategies('advanced')" id="strat-advanced" class="btn btn-sm" style="font-size:10px">🔴 Advanced</button>
+        <button onclick="filterStrategies('bullish')" id="strat-bullish" class="btn btn-sm" style="font-size:10px">📈 Bullish</button>
+        <button onclick="filterStrategies('bearish')" id="strat-bearish" class="btn btn-sm" style="font-size:10px">📉 Bearish</button>
+        <button onclick="filterStrategies('neutral')" id="strat-neutral" class="btn btn-sm" style="font-size:10px">↔️ Neutral</button>
+      </div>
+      <div id="strategies-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
+    </div>
+
     <!-- TRADING LANGUAGE DECODER -->
     <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.25)">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
@@ -4521,7 +4543,7 @@ function showTab(id) {
     try { if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); renderReplayLibrary(); renderMOALog(); } } catch(e) { console.warn('analytics init error',e); }
     try { if(id==='research') loadTradingViewCharts(); } catch(e) {}
     try { if(id==='barbados') { renderFestivals(); renderRealEstate(); fetchBarbadosNews(); } } catch(e) { console.warn('barbados init error',e); }
-    try { if(id==='education') { initTLD(); } } catch(e) { console.warn('education init error',e); }
+    try { if(id==='education') { initTLD(); renderStrategies(); } } catch(e) { console.warn('education init error',e); }
     try { if(id==='sportscards') renderSportsCards(); } catch(e) { console.warn('sportscards init error',e); }
     try { if(id==='snkrs') renderSnkrs && renderSnkrs(); } catch(e) {}
     try { if(id==='pokemon') renderPokemon && renderPokemon(); } catch(e) {}
@@ -5480,6 +5502,161 @@ async function analyzePosition() {
     recEl.innerHTML = rec;
     recEl.style.borderLeftColor = recColor;
   }
+}
+
+// ==================== OPTIONS STRATEGIES LIBRARY ====================
+const OPTIONS_STRATEGIES = [
+  // ── NOVICE ──────────────────────────────────────────────────────
+  { id:'long-call', name:'Long Call', level:'novice', bias:'bullish', tags:['novice','bullish'],
+    desc:'Buy a call option. You profit if the stock rises above your breakeven (strike + premium paid). Maximum loss is the premium paid. Unlimited upside.',
+    when:'You expect the stock to move up significantly before expiry. Best in low-IV environments (options are cheaper).',
+    maxProfit:'Unlimited', maxLoss:'Premium paid', breakeven:'Strike + Premium',
+    diagram: 'call' },
+  { id:'long-put', name:'Long Put', level:'novice', bias:'bearish', tags:['novice','bearish'],
+    desc:'Buy a put option. You profit if the stock falls below your breakeven (strike - premium paid). Maximum loss is the premium paid.',
+    when:'You expect the stock to drop significantly. Good hedge against existing long positions.',
+    maxProfit:'Strike - Premium (if stock goes to 0)', maxLoss:'Premium paid', breakeven:'Strike - Premium',
+    diagram: 'put' },
+  { id:'covered-call', name:'Covered Call', level:'novice', bias:'neutral',  tags:['novice','neutral','income'],
+    desc:'Own 100 shares + sell a call against them. You collect premium income but cap your upside at the strike price.',
+    when:'You own shares and want extra income. Best when you are neutral-to-slightly-bullish and IV is high (premiums are fat).',
+    maxProfit:'Premium + (Strike - Stock Price)', maxLoss:'Stock price - Premium (downside not covered)', breakeven:'Stock price - Premium received',
+    diagram: 'covered-call' },
+  { id:'cash-secured-put', name:'Cash-Secured Put', level:'novice', bias:'neutral', tags:['novice','neutral','income'],
+    desc:'Sell a put while holding cash to buy the stock if assigned. You collect premium and may acquire shares at a discount.',
+    when:'You want to buy a stock at a lower price anyway, or generate income while waiting.',
+    maxProfit:'Premium received', maxLoss:'Strike - Premium (if stock goes to 0)', breakeven:'Strike - Premium received',
+    diagram: 'short-put' },
+
+  // ── INTERMEDIATE ─────────────────────────────────────────────────
+  { id:'bull-call-spread', name:'Bull Call Spread', level:'intermediate', bias:'bullish', tags:['intermediate','bullish'],
+    desc:'Buy a lower-strike call, sell a higher-strike call. Reduces your cost basis but caps your maximum profit at the width of the spread.',
+    when:'Moderately bullish. Lowers cost vs a naked long call. Good when IV is high (selling the upper call offsets high premium cost).',
+    maxProfit:'Width of spread - Net debit', maxLoss:'Net debit paid', breakeven:'Lower strike + Net debit',
+    diagram: 'bull-call-spread' },
+  { id:'bear-put-spread', name:'Bear Put Spread', level:'intermediate', bias:'bearish', tags:['intermediate','bearish'],
+    desc:'Buy a higher-strike put, sell a lower-strike put. Reduces cost but caps maximum profit.',
+    when:'Moderately bearish. Cheaper than a naked long put. Good defined-risk directional play.',
+    maxProfit:'Width of spread - Net debit', maxLoss:'Net debit paid', breakeven:'Higher strike - Net debit',
+    diagram: 'bear-put-spread' },
+  { id:'iron-condor', name:'Iron Condor', level:'intermediate', bias:'neutral', tags:['intermediate','neutral'],
+    desc:'Sell an OTM call spread + sell an OTM put spread simultaneously. Profit if the stock stays inside a defined range until expiry.',
+    when:'Low-volatility environments, or after a big move when you expect the stock to consolidate. High IV helps you collect more premium.',
+    maxProfit:'Net premium collected', maxLoss:'Width of widest spread - Premium received', breakeven:'Two breakeven points (lower and upper)',
+    diagram: 'iron-condor' },
+  { id:'straddle', name:'Long Straddle', level:'intermediate', bias:'neutral', tags:['intermediate','neutral','volatile'],
+    desc:'Buy an ATM call + ATM put same strike and expiry. Profit from a big move in EITHER direction. Lose if the stock stays flat.',
+    when:'You expect a large move (earnings, Fed meeting) but don\'t know the direction. Best when IV is relatively low before the event.',
+    maxProfit:'Unlimited (call side) / Large (put side)', maxLoss:'Total premium paid (both legs)', breakeven:'Strike ± Total premium',
+    diagram: 'straddle' },
+  { id:'strangle', name:'Long Strangle', level:'intermediate', bias:'neutral', tags:['intermediate','neutral','volatile'],
+    desc:'Buy an OTM call + OTM put (different strikes). Cheaper than a straddle but needs a bigger move to profit.',
+    when:'Expecting a large move, want cheaper cost than a straddle. Works well before high-impact events.',
+    maxProfit:'Unlimited (call side) / Large (put side)', maxLoss:'Total premium paid', breakeven:'Call strike + Premium / Put strike - Premium',
+    diagram: 'strangle' },
+
+  // ── ADVANCED ─────────────────────────────────────────────────────
+  { id:'call-broken-wing', name:'Call Broken Wing Butterfly', level:'advanced', bias:'bullish', tags:['advanced','bullish'],
+    desc:'A modified butterfly where the wings are not equidistant — one side is wider than the other. Can be structured for zero or negative cost, creating a risk-free or credit situation on one side.',
+    when:'Moderately bullish with a specific target price in mind. Can be set up for a net credit, meaning you win if the stock goes anywhere except a narrow down-move zone.',
+    maxProfit:'Width of body + Credit received', maxLoss:'Limited to narrow range below lower strike', breakeven:'Depends on structure',
+    diagram: 'butterfly' },
+  { id:'put-broken-wing', name:'Put Broken Wing Butterfly', level:'advanced', bias:'bearish', tags:['advanced','bearish'],
+    desc:'Modified butterfly skewed to the downside. Often structured for a credit — you profit if the stock goes anywhere except a narrow up-move zone.',
+    when:'Moderately bearish with a target price. The asymmetric structure allows for a net credit entry, limiting upside risk.',
+    maxProfit:'Width of body + Credit received', maxLoss:'Limited to narrow range above upper strike', breakeven:'Depends on structure',
+    diagram: 'butterfly' },
+  { id:'calendar-spread', name:'Calendar Spread', level:'advanced', bias:'neutral', tags:['advanced','neutral'],
+    desc:'Sell a near-term option + buy a longer-dated option at the same strike. Profit from time decay of the short leg while the long leg retains value.',
+    when:'Low-volatility environment where you expect the stock to stay near a specific price short-term, then move later.',
+    maxProfit:'At expiry of front-month option, if stock is at the strike', maxLoss:'Net debit paid', breakeven:'Two points around the strike',
+    diagram: 'calendar' },
+];
+
+let _stratFilter = 'all';
+
+function filterStrategies(filter) {
+  _stratFilter = filter;
+  // Update button styles
+  ['all','novice','intermediate','advanced','bullish','bearish','neutral'].forEach(f => {
+    const btn = document.getElementById('strat-' + f);
+    if (!btn) return;
+    if (f === filter) { btn.style.background = 'var(--accent)'; btn.style.color = '#000'; }
+    else { btn.style.background = ''; btn.style.color = ''; }
+  });
+  renderStrategies();
+}
+
+function buildPayoffSVG(type, color1, color2) {
+  const w = 240, h = 80, mid = h/2;
+  let path = '';
+  if (type === 'call') {
+    path = `M0,${mid} L${w*0.5},${mid} L${w},${mid*0.15}`;
+  } else if (type === 'put') {
+    path = `M0,${mid*0.15} L${w*0.5},${mid} L${w},${mid}`;
+  } else if (type === 'covered-call') {
+    path = `M0,${mid*0.4} L${w*0.5},${mid*0.4} L${w},${mid*0.4}`;
+  } else if (type === 'short-put') {
+    path = `M0,${mid*0.4} L${w*0.5},${mid*0.4} L${w},${mid*0.4}`;
+  } else if (type === 'bull-call-spread') {
+    path = `M0,${mid} L${w*0.35},${mid} L${w*0.65},${mid*0.2} L${w},${mid*0.2}`;
+  } else if (type === 'bear-put-spread') {
+    path = `M0,${mid*0.2} L${w*0.35},${mid*0.2} L${w*0.65},${mid} L${w},${mid}`;
+  } else if (type === 'iron-condor') {
+    path = `M0,${mid} L${w*0.2},${mid} L${w*0.3},${mid*0.3} L${w*0.7},${mid*0.3} L${w*0.8},${mid} L${w},${mid}`;
+  } else if (type === 'straddle') {
+    path = `M0,${mid*0.2} L${w*0.5},${mid} L${w},${mid*0.2}`;
+  } else if (type === 'strangle') {
+    path = `M0,${mid*0.15} L${w*0.3},${mid} L${w*0.7},${mid} L${w},${mid*0.15}`;
+  } else if (type === 'butterfly') {
+    path = `M0,${mid} L${w*0.25},${mid} L${w*0.5},${mid*0.1} L${w*0.75},${mid} L${w},${mid}`;
+  } else if (type === 'calendar') {
+    path = `M0,${mid} L${w*0.35},${mid} L${w*0.5},${mid*0.2} L${w*0.65},${mid} L${w},${mid}`;
+  } else {
+    path = `M0,${mid} L${w},${mid}`;
+  }
+
+  const isProfit = ['call','put','straddle','strangle'].includes(type);
+  const lineColor = isProfit ? '#00e676' : ['iron-condor','covered-call','short-put','bull-call-spread','bear-put-spread','butterfly','calendar'].includes(type) ? '#f5c518' : '#00e676';
+
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:60px">
+    <line x1="0" y1="${mid}" x2="${w}" y2="${mid}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <path d="${path}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="2" y="${h-4}" font-size="8" fill="rgba(255,255,255,0.3)">Profit ↑ / Loss ↓</text>
+  </svg>`;
+}
+
+function renderStrategies() {
+  const grid = document.getElementById('strategies-grid');
+  if (!grid) return;
+
+  const filtered = _stratFilter === 'all'
+    ? OPTIONS_STRATEGIES
+    : OPTIONS_STRATEGIES.filter(s => s.tags.includes(_stratFilter));
+
+  const levelColors = { novice: 'var(--green)', intermediate: 'var(--accent)', advanced: 'var(--red)' };
+  const levelLabels = { novice: '🟢 Novice', intermediate: '🟡 Intermediate', advanced: '🔴 Advanced' };
+  const biasColors  = { bullish: 'var(--green)', bearish: 'var(--red)', neutral: 'var(--blue)' };
+
+  grid.innerHTML = filtered.map(s => `
+    <div style="background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+        <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:var(--text)">${s.name}</div>
+        <div style="display:flex;gap:4px">
+          <span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(0,0,0,0.3);color:${levelColors[s.level]};border:1px solid ${levelColors[s.level]}">${levelLabels[s.level]}</span>
+          <span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(0,0,0,0.3);color:${biasColors[s.bias]};border:1px solid ${biasColors[s.bias]}">${s.bias.charAt(0).toUpperCase()+s.bias.slice(1)}</span>
+        </div>
+      </div>
+      ${buildPayoffSVG(s.diagram)}
+      <div style="font-size:11px;color:var(--text2);line-height:1.6">${s.desc}</div>
+      <div style="font-size:10px;color:var(--text3);font-style:italic">${s.when}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">
+        <div style="background:rgba(0,230,118,0.08);border-radius:5px;padding:5px 7px"><span style="color:var(--green)">Max Profit:</span> ${s.maxProfit}</div>
+        <div style="background:rgba(255,23,68,0.08);border-radius:5px;padding:5px 7px"><span style="color:var(--red)">Max Loss:</span> ${s.maxLoss}</div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:5px;padding:5px 7px;grid-column:1/-1"><span style="color:var(--text3)">Breakeven:</span> ${s.breakeven}</div>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ==================== EARLY MOMENTUM DETECTOR ====================
