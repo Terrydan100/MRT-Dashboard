@@ -672,8 +672,8 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
             <div onclick="switchDashboard('dashboard','📊 TRADING','#f5c518','dashboard')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
               <span style="font-size:18px">📊</span>
               <div>
-                <div style="font-weight:700;font-size:13px;color:#f5c518;font-family:'Rajdhani',sans-serif;letter-spacing:1px">TRADING</div>
-                <div style="font-size:10px;color:var(--text2)">Options Scalping Dashboard</div>
+                <div style="font-weight:700;font-size:13px;color:#f5c518;font-family:'Rajdhani',sans-serif;letter-spacing:1px">DASHBOARD <span style="font-size:9px;color:#00e676;letter-spacing:1px">&#9679; HOME</span></div>
+                <div style="font-size:10px;color:var(--text2)">Main Trading Terminal</div>
               </div>
             </div>
             <div onclick="switchDashboard('crypto','₿ CRYPTO','#ff6d00','crypto')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
@@ -10457,12 +10457,14 @@ function updateSessionTimer() {
     label = '⏰ PRE-MARKET'; color = 'var(--text2)'; borderColor = 'var(--border)';
     countdown = fmt(remaining);
     countdownEl && (countdownEl.title = 'Time until Session 1 opens');
+    window._s1ClosingFired = false; // reset flag before S1
   } else if(totalSec >= S1_START && totalSec < S1_END) {
     const remaining = S1_END - totalSec;
     label = '🟢 SESSION 1 LIVE'; color = 'var(--green)'; borderColor = 'rgba(0,230,118,0.4)';
     countdown = fmt(remaining);
     if(remaining <= 900) { color='var(--orange)'; } // last 15 min warning
-    if(remaining <= 300) { // last 5 min
+    if(remaining <= 300 && !window._s1ClosingFired) { // last 5 min — fire ONCE
+      window._s1ClosingFired = true;
       showToast('danger','⏰ Session 1 Closing','5 minutes left in Session 1 — wrap up trades','⏰',10000);
     }
   } else if(totalSec >= S1_END && totalSec < S2_START) {
@@ -10470,12 +10472,14 @@ function updateSessionTimer() {
     label = '🌙 LUNCH — NO TRADES'; color = 'var(--text3)'; borderColor = 'var(--border)';
     countdown = fmt(remaining);
     countdownEl && (countdownEl.title = 'Time until Session 2 opens');
+    window._s2ClosingFired = false; // reset flag before S2
   } else if(totalSec >= S2_START && totalSec < S2_END) {
     const remaining = S2_END - totalSec;
     label = '🟢 SESSION 2 LIVE'; color = 'var(--green)'; borderColor = 'rgba(0,230,118,0.4)';
     countdown = fmt(remaining);
     if(remaining <= 900) { color='var(--orange)'; }
-    if(remaining <= 300) {
+    if(remaining <= 300 && !window._s2ClosingFired) { // last 5 min — fire ONCE
+      window._s2ClosingFired = true;
       showToast('danger','⏰ Session 2 Closing','5 minutes left — close all positions by 3:55','⏰',10000);
     }
   } else if(totalSec >= S2_END) {
