@@ -254,7 +254,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 .toast.success .toast-title { color:var(--green); }
 
 /* THEME SWITCHER */
-.theme-panel { position:fixed; top:60px; right:20px; background:var(--card); border:1px solid var(--accent); border-radius:12px; padding:16px; z-index:500; display:none; min-width:200px; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+.theme-panel { position:fixed; top:60px; right:20px; background:var(--card); border:1px solid var(--accent); border-radius:12px; padding:16px; z-index:500; display:none; min-width:220px; max-width:260px; max-height:82vh; overflow-y:auto; overflow-x:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.5); scrollbar-width:thin; scrollbar-color:var(--accent) transparent; }
 .theme-panel.open { display:block; animation:fadeIn 0.2s ease; }
 .tab-color-swatch { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:all 0.2s; }
 .tab-color-swatch:hover { transform:scale(1.2); border-color:#fff; }
@@ -399,7 +399,55 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 .gauge-val { font-family:'Orbitron',sans-serif; font-size:28px; font-weight:900; color:var(--accent); }
 .gauge-label { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text2); margin-top:4px; }
 
-/* ==================== MOBILE OPTIMIZATION ====================
+/* ==================== ENHANCED READABILITY MODE ====================
+   Applied via body.readability-mode class. Touches ONLY:
+   - --text2 brightness (secondary labels)
+   - --text3 brightness (tertiary hints)
+   - .stat-label font-size (10→11px)
+   - .form-label font-size (11→12px)
+   Zero layout, spacing, width, padding, or component changes. */
+.readability-mode {
+  --text2: #a8b2c8;
+  --text3: #64748b;
+}
+.readability-mode .stat-label { font-size: 11px; }
+.readability-mode .form-label { font-size: 12px; }
+
+   Only override background/border variables. All accent colors
+   (--accent, --green, --red, --blue, etc.) are untouched so every
+   color theme works with every workspace theme. */
+
+/* Midnight Black — current default, preserved exactly */
+.ws-midnight {
+  --bg: #050810; --bg2: #0a0f1e; --bg3: #0f1628;
+  --card: #111827; --card2: #1a2235; --border: #1e2d4a;
+}
+/* Dark Graphite — recommended, easier on eyes than pure black */
+.ws-graphite {
+  --bg: #1A1D21; --bg2: #23272F; --bg3: #2B3038;
+  --card: #23272F; --card2: #2B3038; --border: #373D47;
+}
+/* Slate Gray */
+.ws-slate {
+  --bg: #20242B; --bg2: #2A3038; --bg3: #343B44;
+  --card: #2A3038; --card2: #343B44; --border: #404850;
+}
+/* Deep Navy */
+.ws-navy {
+  --bg: #0F172A; --bg2: #162033; --bg3: #1E293B;
+  --card: #162033; --card2: #1E293B; --border: #2A3F5A;
+}
+/* Carbon Fiber */
+.ws-carbon {
+  --bg: #121212; --bg2: #1C1C1C; --bg3: #262626;
+  --card: #1C1C1C; --card2: #262626; --border: #333333;
+}
+/* Steel Blue */
+.ws-steel {
+  --bg: #1B263B; --bg2: #243447; --bg3: #2E4057;
+  --card: #243447; --card2: #2E4057; --border: #3A5068;
+}
+
    Only applies below 768px — iMac (and any desktop width) is
    completely unaffected. Do not add any rule here without the
    max-width:768px wrapper. */
@@ -495,6 +543,52 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <span class="theme-name">Blaze Orange</span>
     </div>
   </div>
+
+  <!-- WORKSPACE THEMES -->
+  <div class="theme-panel-title" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">🖥️ Workspace Background</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px">
+    <div onclick="setWorkspaceTheme('midnight')" id="ws-midnight" title="Midnight Black — Maximum contrast" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--accent);background:rgba(245,197,24,0.1)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#050810;margin-bottom:5px;border:1px solid #1e2d4a"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Midnight Black</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">Max contrast</div>
+    </div>
+    <div onclick="setWorkspaceTheme('graphite')" id="ws-graphite" title="Dark Graphite — Easy on the eyes ⭐" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#1A1D21;margin-bottom:5px;border:1px solid #2B3038"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Dark Graphite ⭐</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">Easy on the eyes</div>
+    </div>
+    <div onclick="setWorkspaceTheme('slate')" id="ws-slate" title="Slate Gray — Neutral workspace" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#20242B;margin-bottom:5px;border:1px solid #343B44"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Slate Gray</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">Neutral workspace</div>
+    </div>
+    <div onclick="setWorkspaceTheme('navy')" id="ws-navy" title="Deep Navy — Blue-tinted professional" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#0F172A;margin-bottom:5px;border:1px solid #1E293B"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Deep Navy</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">Blue-tinted pro</div>
+    </div>
+    <div onclick="setWorkspaceTheme('carbon')" id="ws-carbon" title="Carbon Fiber — High contrast" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#121212;margin-bottom:5px;border:1px solid #262626"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Carbon Fiber</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">High contrast</div>
+    </div>
+    <div onclick="setWorkspaceTheme('steel')" id="ws-steel" title="Steel Blue — Cool modern look" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#1B263B;margin-bottom:5px;border:1px solid #2E4057"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Steel Blue</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">Cool modern look</div>
+    </div>
+  </div>
+
+  <!-- ENHANCED READABILITY MODE -->
+  <div class="theme-panel-title" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">👁️ Readability</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border)">
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--text2)">Enhanced Readability</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:2px">Brighter labels, slightly larger text</div>
+    </div>
+    <button onclick="toggleReadabilityMode()" id="readability-btn" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);color:var(--text3);padding:4px 12px;border-radius:6px;font-size:10px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:1px;min-width:50px">OFF</button>
+  </div>
+
   <div class="theme-panel-title" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">🖌️ Per-Tab Accent Color</div>
   <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
     <div style="font-size:11px;color:var(--text2)">Pick a tab, then choose color:</div>
@@ -578,8 +672,8 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
             <div onclick="switchDashboard('dashboard','📊 TRADING','#f5c518','dashboard')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
               <span style="font-size:18px">📊</span>
               <div>
-                <div style="font-weight:700;font-size:13px;color:#f5c518;font-family:'Rajdhani',sans-serif;letter-spacing:1px">TRADING</div>
-                <div style="font-size:10px;color:var(--text2)">Options Scalping Dashboard</div>
+                <div style="font-weight:700;font-size:13px;color:#f5c518;font-family:'Rajdhani',sans-serif;letter-spacing:1px">DASHBOARD <span style="font-size:9px;color:#00e676;letter-spacing:1px">&#9679; HOME</span></div>
+                <div style="font-size:10px;color:var(--text2)">Main Trading Terminal</div>
               </div>
             </div>
             <div onclick="switchDashboard('crypto','₿ CRYPTO','#ff6d00','crypto')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
@@ -785,6 +879,40 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       </div>
     </div>
 
+    <!-- SYSTEM STATUS / HEALTH MONITOR ══════════════════════════ -->
+    <div id="system-status-bar" style="margin-bottom:10px;background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:10px;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span style="font-family:Orbitron,sans-serif;font-size:9px;color:var(--text3);letter-spacing:2px">SYSTEM STATUS</span>
+        <!-- Schwab -->
+        <div style="display:flex;align-items:center;gap:5px">
+          <span id="hs-schwab-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+          <span style="font-size:10px;color:var(--text3)">Schwab</span>
+          <span id="hs-schwab-label" style="font-size:9px;color:var(--text3)">--</span>
+        </div>
+        <!-- Firebase -->
+        <div style="display:flex;align-items:center;gap:5px">
+          <span id="hs-firebase-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+          <span style="font-size:10px;color:var(--text3)">Firebase</span>
+          <span id="hs-firebase-label" style="font-size:9px;color:var(--text3)">--</span>
+        </div>
+        <!-- Backend -->
+        <div style="display:flex;align-items:center;gap:5px">
+          <span id="hs-backend-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+          <span style="font-size:10px;color:var(--text3)">Backend</span>
+          <span id="hs-backend-label" style="font-size:9px;color:var(--text3)">--</span>
+        </div>
+        <!-- Trading status -->
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--red);display:inline-block"></span>
+          <span style="font-size:10px;color:var(--red)">Trading Disabled</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:9px;color:var(--text3)">Last check: <span id="hs-last-check">--</span></span>
+        <button onclick="runWithLoadingState(event, runHealthCheck, '⏳')" style="background:none;border:1px solid var(--border);color:var(--text3);padding:2px 8px;border-radius:5px;font-size:9px;cursor:pointer;font-family:Rajdhani,sans-serif">🔄</button>
+      </div>
+    </div>
+
     <!-- MARKET SHOCK CHECK BAR — always visible -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;background:rgba(255,23,68,0.06);border:1px solid rgba(255,23,68,0.2);border-radius:10px;padding:8px 14px">
       <div style="font-size:13px">🚨</div>
@@ -866,11 +994,10 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
     <div id="bias-engine-card" style="margin-bottom:16px;border-radius:14px;border:2px solid var(--border);background:linear-gradient(135deg,rgba(0,0,0,0.6),rgba(0,0,0,0.3));overflow:hidden">
       <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:10px">
           <span id="be-pulse" style="width:10px;height:10px;border-radius:50%;background:var(--text3);display:inline-block"></span>
           <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--text2);letter-spacing:2px">🧠 TRADE BIAS ENGINE</div>
           <div id="be-updated" style="font-size:10px;color:var(--text3)"></div>
-          <div id="engine-sync-indicator" style="font-size:9px;display:none;padding:2px 7px;border-radius:4px;border:1px solid var(--orange);color:var(--orange)">⚠️ Coach out of sync — re-analyze</div>
         </div>
         <button onclick="runWithLoadingState(event, runBiasEngine, '⏳ SCANNING...')" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:4px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">⚡ SCAN NOW</button>
       </div>
@@ -1948,7 +2075,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <table class="data-table" id="trade-table">
           <thead>
             <tr>
-              <th>DATE</th><th>TICKER</th><th>TYPE</th><th>P&L</th><th>RUNNING BAL</th><th>CONF%</th><th>STRATEGY</th><th>NOTE</th><th>ACTIONS</th>
+              <th>DATE</th><th>TICKER</th><th>TYPE</th><th>P&L</th><th>RUNNING BAL</th><th>NOTE</th><th>ACTIONS</th>
             </tr>
           </thead>
           <tbody id="trade-tbody">
@@ -2183,6 +2310,92 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
   </div>
   <!-- ===================== TRADING TAB ===================== -->
   <div class="tab-content" id="content-trading">
+    <!-- POSITION ANALYZER ════════════════════════════════════════ -->
+    <div class="card" style="margin-bottom:16px;border:2px solid rgba(245,197,24,0.4);background:linear-gradient(135deg,rgba(245,197,24,0.05),rgba(0,0,0,0.4))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">📊</span>
+          <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">POSITION ANALYZER</div>
+          <div style="font-size:11px;color:var(--text3)">— Live trade management</div>
+        </div>
+        <button onclick="runWithLoadingState(event, analyzePosition, '⏳ ANALYZING...')" style="background:rgba(245,197,24,0.1);border:1px solid var(--accent);color:var(--accent);padding:5px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">⚡ ANALYZE</button>
+      </div>
+      <!-- Inputs -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px">
+        <div>
+          <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">TICKER</label>
+          <select class="form-input" id="pa-ticker" style="font-size:12px"><option>QQQ</option><option>SPY</option></select>
+        </div>
+        <div>
+          <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">TYPE</label>
+          <select class="form-input" id="pa-type" style="font-size:12px"><option>CALL</option><option>PUT</option></select>
+        </div>
+        <div>
+          <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">ENTRY PRICE ($)</label>
+          <input class="form-input" id="pa-entry" type="number" placeholder="1.15" step="0.01" style="font-size:12px">
+        </div>
+        <div>
+          <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">STRIKE</label>
+          <input class="form-input" id="pa-strike" type="number" placeholder="730" step="0.5" style="font-size:12px">
+        </div>
+        <div>
+          <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">CONTRACTS</label>
+          <select class="form-input" id="pa-contracts" style="font-size:12px"><option>1</option><option>2</option></select>
+        </div>
+        <div>
+          <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">IV (%)</label>
+          <input class="form-input" id="pa-iv" type="number" placeholder="28" step="1" style="font-size:12px">
+        </div>
+      </div>
+      <!-- Output -->
+      <div id="pa-output" style="display:none">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px">
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">CURRENT PRICE</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700" id="pa-live-price">$--</div>
+            <div style="font-size:9px;color:var(--text3)" id="pa-live-label">live from Schwab</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">CURRENT P&L</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700" id="pa-pnl">$--</div>
+            <div style="font-size:9px;color:var(--text3)" id="pa-pnl-pct">--%</div>
+          </div>
+          <div style="background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--green);letter-spacing:1px;margin-bottom:3px">TARGET EXIT</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:var(--green)" id="pa-target">$--</div>
+            <div style="font-size:9px;color:var(--text3)" id="pa-target-gain">+$--</div>
+          </div>
+          <div style="background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.3);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--red);letter-spacing:1px;margin-bottom:3px">STOP PRICE</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:var(--red)" id="pa-stop">$--</div>
+            <div style="font-size:9px;color:var(--text3)" id="pa-stop-loss">-$--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">THETA / DAY</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:var(--red)" id="pa-theta">$--</div>
+            <div style="font-size:9px;color:var(--text3)" id="pa-theta-warn">decay remaining</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">PROB OF PROFIT</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700" id="pa-pop">--%</div>
+            <div style="font-size:9px;color:var(--text3)">at expiry</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">TIME TO EXPIRY</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700" id="pa-expiry">--</div>
+            <div style="font-size:9px;color:var(--text3)">0DTE</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">BREAKEVEN AT</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700" id="pa-be">$--</div>
+            <div style="font-size:9px;color:var(--text3)" id="pa-be-dist">-- away</div>
+          </div>
+        </div>
+        <!-- Recommendation -->
+        <div id="pa-recommendation" style="padding:12px 14px;border-radius:8px;border-left:4px solid var(--accent);background:rgba(0,0,0,0.3);font-size:12px;line-height:1.7"></div>
+      </div>
+    </div>
+
     <!-- STRIKE SELECTION ASSISTANT -->
     <div class="card" id="strike-assist-card" style="margin-bottom:16px;border:1px solid rgba(0,229,255,0.25);background:linear-gradient(135deg,rgba(0,229,255,0.04),rgba(0,0,0,0))">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
@@ -2533,6 +2746,17 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
   <!-- ===================== OPTIONS TAB ===================== -->
   <div class="tab-content" id="content-options">
+    <!-- ENHANCED OPTIONS CALCULATOR HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">⚡ OPTIONS CALCULATOR — ENHANCED</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <select id="eoc-symbol" class="form-input" style="width:90px;font-size:12px" onchange="pullSchwabPrice()">
+          <option>SPY</option><option>QQQ</option>
+        </select>
+        <button onclick="runWithLoadingState(event, pullSchwabPrice, '⏳')" style="background:rgba(0,180,255,0.1);border:1px solid var(--blue);color:var(--blue);padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">📡 LIVE PRICE</button>
+        <span id="eoc-live-price" style="font-size:11px;color:var(--text3)">--</span>
+      </div>
+    </div>
     <div class="grid-2" style="margin-bottom:16px">
       <div class="card">
         <div class="section-title" style="margin-bottom:12px">⚫ BLACK-SCHOLES CALCULATOR</div>
@@ -2556,15 +2780,25 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <label class="form-label">Risk-Free Rate (%)</label>
           <input class="form-input" type="number" id="bs-rate" value="5.3" oninput="calcBS()">
         </div>
+        <div class="form-group">
+          <label class="form-label">Contracts (max 2)</label>
+          <input class="form-input" type="number" id="bs-contracts" value="1" min="1" max="2" oninput="calcBS()">
+        </div>
       </div>
       <div class="card">
         <div class="section-title" style="margin-bottom:12px">🎯 GREEKS & PRICING</div>
-        <div style="display:flex;flex-direction:column;gap:10px" id="bs-results">
+        <div style="display:flex;flex-direction:column;gap:8px" id="bs-results">
           <div style="display:flex;justify-content:space-between;padding:10px;background:var(--bg2);border-radius:8px">
             <span>CALL Price</span><span style="color:var(--green);font-weight:700" id="bs-call">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;padding:10px;background:var(--bg2);border-radius:8px">
             <span>PUT Price</span><span style="color:var(--red);font-weight:700" id="bs-put">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,230,118,0.08);border-radius:8px;border:1px solid rgba(0,230,118,0.2)">
+            <span>CALL Breakeven</span><span style="color:var(--green);font-weight:700" id="bs-call-be">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,23,68,0.08);border-radius:8px;border:1px solid rgba(255,23,68,0.2)">
+            <span>PUT Breakeven</span><span style="color:var(--red);font-weight:700" id="bs-put-be">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;padding:10px;background:var(--bg2);border-radius:8px">
             <span>Delta (Δ)</span><span style="color:var(--accent);font-weight:700" id="bs-delta">0.00</span>
@@ -2581,7 +2815,36 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           <div style="display:flex;justify-content:space-between;padding:10px;background:var(--bg2);border-radius:8px">
             <span>Prob ITM</span><span style="color:var(--cyan);font-weight:700" id="bs-prob">0%</span>
           </div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,165,0,0.08);border-radius:8px;border:1px solid rgba(255,165,0,0.2)">
+            <span>Max Risk (total)</span><span style="color:var(--accent);font-weight:700" id="bs-maxrisk">$0.00</span>
+          </div>
         </div>
+      </div>
+    </div>
+    <!-- P&L SCENARIOS TABLE -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div class="section-title">📊 P&L SCENARIOS — PRICE TABLE</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="setScenarioType('CALL')" id="scenario-call-btn" style="background:rgba(0,230,118,0.15);border:1px solid var(--green);color:var(--green);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">CALL</button>
+          <button onclick="setScenarioType('PUT')" id="scenario-put-btn" style="background:rgba(0,0,0,0.2);border:1px solid var(--border);color:var(--text3);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">PUT</button>
+        </div>
+      </div>
+      <div id="scenario-table-container" style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead>
+            <tr style="background:var(--bg2)">
+              <th style="padding:8px;text-align:left;color:var(--text3);letter-spacing:1px">PRICE AT EXPIRY</th>
+              <th style="padding:8px;text-align:right;color:var(--text3);letter-spacing:1px">MOVE %</th>
+              <th style="padding:8px;text-align:right;color:var(--text3);letter-spacing:1px">OPTION VALUE</th>
+              <th style="padding:8px;text-align:right;color:var(--text3);letter-spacing:1px">P&L / CONTRACT</th>
+              <th style="padding:8px;text-align:right;color:var(--text3);letter-spacing:1px">P&L TOTAL</th>
+            </tr>
+          </thead>
+          <tbody id="scenario-tbody">
+            <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)">Enter values above to see scenarios</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
     <div class="card" style="margin-bottom:16px">
@@ -2616,6 +2879,59 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <input type="file" id="backup-import-input" accept=".json" style="display:none" onchange="importBackup(this)">
       <div style="font-size:11px;color:var(--text3)">Save weekly — restores all data in 60 seconds</div>
     </div>
+    <!-- RISK DASHBOARD ══════════════════════════════════════════ -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(255,165,0,0.3);background:linear-gradient(135deg,rgba(255,165,0,0.04),rgba(0,0,0,0.4))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">⚡ RISK DASHBOARD</div>
+        <div id="risk-grade-badge" style="font-family:Orbitron,sans-serif;font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:var(--text3)">GRADE: --</div>
+      </div>
+      <!-- Row 1: Core stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:10px">
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">WIN RATE</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="rd-winrate">--%</div>
+          <div style="font-size:9px;color:var(--text3)" id="rd-wl">0W / 0L</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">PROFIT FACTOR</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="rd-pf">--</div>
+          <div style="font-size:9px;color:var(--text3)">Win$ ÷ Loss$</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">AVG WINNER</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--green)" id="rd-avgwin">$--</div>
+          <div style="font-size:9px;color:var(--text3)" id="rd-largest-win">Best: $--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">AVG LOSER</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--red)" id="rd-avgloss">$--</div>
+          <div style="font-size:9px;color:var(--text3)" id="rd-largest-loss">Worst: $--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">EXPECTANCY</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="rd-expect">$--</div>
+          <div style="font-size:9px;color:var(--text3)">Per trade avg</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">CONSEC. WINS</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--green)" id="rd-consec-wins">--</div>
+          <div style="font-size:9px;color:var(--text3)">Best streak</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">CONSEC. LOSSES</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--red)" id="rd-consec-losses">--</div>
+          <div style="font-size:9px;color:var(--text3)">Worst streak</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">AVG HOLD TIME</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="rd-hold-time">--</div>
+          <div style="font-size:9px;color:var(--text3)">Minutes per trade</div>
+        </div>
+      </div>
+      <!-- Risk assessment bar -->
+      <div id="rd-assessment" style="font-size:11px;color:var(--text2);padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:6px;border-left:3px solid var(--accent)">Log trades to see risk assessment.</div>
+    </div>
+
     <!-- 8 KEY STATS ROW -->
     <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-bottom:16px">
       <div class="stat-card"><div class="stat-label">WIN RATE</div><div class="stat-val neg" id="an-winrate">0%</div><div class="stat-sub" id="an-wl-detail">0W / 0L</div></div>
@@ -2756,6 +3072,39 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
     </div>
 
     <!-- WEEKLY WEALTH REPORT -->
+    <!-- ORDER RECONCILIATION ════════════════════════════════════ -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.25)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title">🔗 ORDER RECONCILIATION</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Compares dashboard logged trades vs Schwab filled orders — flags mismatches</div>
+        </div>
+        <button onclick="runWithLoadingState(event, runOrderReconciliation, '⏳ CHECKING...')" class="btn btn-sm" style="border-color:var(--blue);color:var(--blue)">🔄 CHECK NOW</button>
+      </div>
+      <div id="recon-status" style="font-size:11px;color:var(--text3);margin-bottom:10px">Click "Check Now" to compare dashboard trades against today's Schwab fills.</div>
+      <div id="recon-results" style="display:none">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px">
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">SCHWAB FILLS</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--blue)" id="recon-schwab-count">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">DASHBOARD TRADES</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--accent)" id="recon-dash-count">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">MISMATCHES</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:700" id="recon-mismatch-count">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">LAST CHECKED</div>
+            <div style="font-size:11px;color:var(--text2)" id="recon-last-check">--</div>
+          </div>
+        </div>
+        <div id="recon-detail" style="font-size:11px;color:var(--text2);line-height:1.8"></div>
+      </div>
+    </div>
+
     <div class="card" style="background:linear-gradient(135deg,rgba(245,197,24,0.05),rgba(0,180,255,0.03))">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <div>
@@ -3277,6 +3626,28 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
   <!-- ===================== EDUCATION TAB ===================== -->
   <div class="tab-content" id="content-education">
+    <!-- OPTIONS STRATEGIES LIBRARY ══════════════════════════════ -->
+    <div class="card" style="margin-bottom:16px;border:1px solid rgba(245,197,24,0.25)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="font-size:22px">📚</div>
+        <div>
+          <div style="font-family:Orbitron,sans-serif;font-size:13px;color:var(--accent);letter-spacing:2px">OPTIONS STRATEGIES LIBRARY</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">From Novice to Expert — plain English, payoff diagram, when to use each one.</div>
+        </div>
+      </div>
+      <!-- Filter buttons -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+        <button onclick="filterStrategies('all')" id="strat-all" class="btn btn-sm" style="font-size:10px;background:var(--accent);color:#000">All</button>
+        <button onclick="filterStrategies('novice')" id="strat-novice" class="btn btn-sm" style="font-size:10px">🟢 Novice</button>
+        <button onclick="filterStrategies('intermediate')" id="strat-intermediate" class="btn btn-sm" style="font-size:10px">🟡 Intermediate</button>
+        <button onclick="filterStrategies('advanced')" id="strat-advanced" class="btn btn-sm" style="font-size:10px">🔴 Advanced</button>
+        <button onclick="filterStrategies('bullish')" id="strat-bullish" class="btn btn-sm" style="font-size:10px">📈 Bullish</button>
+        <button onclick="filterStrategies('bearish')" id="strat-bearish" class="btn btn-sm" style="font-size:10px">📉 Bearish</button>
+        <button onclick="filterStrategies('neutral')" id="strat-neutral" class="btn btn-sm" style="font-size:10px">↔️ Neutral</button>
+      </div>
+      <div id="strategies-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
+    </div>
+
     <!-- TRADING LANGUAGE DECODER -->
     <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,180,255,0.25)">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
@@ -3534,6 +3905,47 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
   <div class="modal" id="trade-modal-inner">
     <div class="modal-title" id="trade-modal-title">📝 LOG TRADE <button class="modal-close" onclick="closeModal('trade-modal')">✕</button></div>
     <input type="hidden" id="t-edit-id" value="">
+    <!-- HIDDEN SNAPSHOT FIELDS — auto-populated on modal open -->
+    <input type="hidden" id="t-snap-id" value="">
+    <input type="hidden" id="t-snap-time" value="">
+    <input type="hidden" id="t-snap-bias-verdict" value="">
+    <input type="hidden" id="t-snap-bias-conf" value="">
+    <input type="hidden" id="t-snap-coach" value="">
+    <input type="hidden" id="t-snap-vix" value="">
+    <input type="hidden" id="t-snap-shock" value="">
+    <input type="hidden" id="t-snap-session" value="">
+
+    <!-- DASHBOARD SNAPSHOT BANNER -->
+    <div id="t-snap-banner" style="background:rgba(0,180,255,0.06);border:1px solid rgba(0,180,255,0.25);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px">
+      <div style="font-family:Orbitron,sans-serif;font-size:9px;color:var(--blue);letter-spacing:2px;margin-bottom:6px">📸 DASHBOARD SNAPSHOT AT ENTRY</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px" id="t-snap-display">
+        <div style="background:rgba(0,0,0,0.2);border-radius:5px;padding:5px 8px">
+          <div style="font-size:9px;color:var(--text3)">TIME</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text)" id="t-snap-show-time">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:5px;padding:5px 8px">
+          <div style="font-size:9px;color:var(--text3)">BIAS</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text)" id="t-snap-show-bias">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:5px;padding:5px 8px">
+          <div style="font-size:9px;color:var(--text3)">CONFIDENCE</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text)" id="t-snap-show-conf">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:5px;padding:5px 8px">
+          <div style="font-size:9px;color:var(--text3)">VIX</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text)" id="t-snap-show-vix">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:5px;padding:5px 8px">
+          <div style="font-size:9px;color:var(--text3)">CONDITION</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text)" id="t-snap-show-shock">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:5px;padding:5px 8px">
+          <div style="font-size:9px;color:var(--text3)">SESSION</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text)" id="t-snap-show-session">--</div>
+        </div>
+      </div>
+    </div>
+
     <div class="form-group">
       <label class="form-label">Date</label>
       <input class="form-input" type="date" id="t-date">
@@ -3926,6 +4338,36 @@ function exportBackup() {
   showToast('success','Backup Exported','Save this file somewhere safe. Use it to restore if data is lost.','💾', 6000);
 }
 
+// ── AUTO DAILY BACKUP ─────────────────────────────────────────────
+// Fires silently once per calendar day. Reuses exportBackup() logic
+// but with a quieter toast and a distinct filename prefix so you can
+// tell auto-backups from manual ones. Stored last-run date in
+// localStorage so it survives page refreshes within the same day.
+function runAutoBackup() {
+  const today = new Date().toISOString().split('T')[0];
+  const lastRun = localStorage.getItem('mrt_auto_backup_date');
+  if (lastRun === today) return; // Already backed up today
+
+  // Only auto-backup if there's meaningful data to save
+  if (!state.trades || state.trades.length === 0) return;
+
+  const backup = {
+    version: 'MrTDashboard_V5',
+    exported: new Date().toISOString(),
+    autoBackup: true,
+    state: state
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'MrTDashboard_AutoBackup_' + today + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  localStorage.setItem('mrt_auto_backup_date', today);
+  showToast('success', 'Auto-Backup Complete', `Daily backup saved: MrTDashboard_AutoBackup_${today}.json`, '💾', 5000);
+}
+
 function importBackup(input) {
   const file = input.files[0];
   if (!file) return;
@@ -4100,6 +4542,9 @@ async function initDashboard() {
   setInterval(runMomentumDetector, 60000); // Early Momentum Detector — 9:30-11:30AM & 2-4PM ET
   setTimeout(fetchSchwabAccount, 3000);    // Schwab account sync — after page settles
   setInterval(fetchSchwabAccount, 300000); // Refresh every 5 minutes
+  setTimeout(runHealthCheck, 4000);        // Health check — after Schwab sync settles
+  setInterval(runHealthCheck, 300000);     // Health check every 5 minutes
+  setTimeout(runAutoBackup, 10000);        // Auto-backup — 10s after load, once per day
   setInterval(updateTradingIntelligence, 60000);
   setInterval(fetchCryptoPrices, 120000);
   showDailyPlanReminder();
@@ -4233,7 +4678,7 @@ function showTab(id) {
     try { if(id==='analytics') { tryInitAnalyticsCharts(); renderViolations(); renderReplayLibrary(); renderMOALog(); } } catch(e) { console.warn('analytics init error',e); }
     try { if(id==='research') loadTradingViewCharts(); } catch(e) {}
     try { if(id==='barbados') { renderFestivals(); renderRealEstate(); fetchBarbadosNews(); } } catch(e) { console.warn('barbados init error',e); }
-    try { if(id==='education') { initTLD(); } } catch(e) { console.warn('education init error',e); }
+    try { if(id==='education') { initTLD(); renderStrategies(); } } catch(e) { console.warn('education init error',e); }
     try { if(id==='sportscards') renderSportsCards(); } catch(e) { console.warn('sportscards init error',e); }
     try { if(id==='snkrs') renderSnkrs && renderSnkrs(); } catch(e) {}
     try { if(id==='pokemon') renderPokemon && renderPokemon(); } catch(e) {}
@@ -4268,6 +4713,59 @@ function openModal(id) {
     document.getElementById('trade-modal-save-btn').textContent = 'LOG TRADE';
     // Check loss limit and show banner inside the modal if hit
     enforceLossLimit('#trade-modal-inner');
+
+    // ── DASHBOARD SNAPSHOT ──────────────────────────────────────
+    // Capture everything the dashboard shows RIGHT NOW so the trade
+    // record reflects actual market conditions at entry, not memory.
+    const snapNow     = new Date();
+    const snapTime    = snapNow.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    const snapDate    = snapNow.toISOString().split('T')[0];
+    const snapId      = 'snap_' + snapNow.getTime();
+    const biasVerdict = document.getElementById('be-verdict')?.textContent?.trim() || '--';
+    const biasConf    = document.getElementById('be-confidence')?.textContent?.trim() || '--';
+    const coachVerdict= document.getElementById('coach-verdict')?.textContent?.trim() || '--';
+    const vix         = document.getElementById('t-vix')?.textContent?.trim() || '--';
+    const shockBanner = document.getElementById('shock-alert-banner');
+    const shockActive = shockBanner && shockBanner.style.display !== 'none';
+    const shock       = shockActive ? 'SHOCK' : parseFloat(vix) > 25 ? 'HIGH VIX' : 'NORMAL';
+    const sessionEl   = document.getElementById('session-label');
+    const session     = sessionEl?.textContent?.trim() || '--';
+
+    // Store in hidden fields
+    const setHidden = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+    setHidden('t-snap-id',           snapId);
+    setHidden('t-snap-time',         `${snapDate} ${snapTime}`);
+    setHidden('t-snap-bias-verdict', biasVerdict);
+    setHidden('t-snap-bias-conf',    biasConf);
+    setHidden('t-snap-coach',        coachVerdict);
+    setHidden('t-snap-vix',          vix);
+    setHidden('t-snap-shock',        shock);
+    setHidden('t-snap-session',      session);
+
+    // Update display banner
+    const setSnap = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+    setSnap('t-snap-show-time',    snapTime);
+    setSnap('t-snap-show-bias',    biasVerdict);
+    setSnap('t-snap-show-conf',    biasConf);
+    setSnap('t-snap-show-vix',     vix);
+    setSnap('t-snap-show-shock',   shock);
+    setSnap('t-snap-show-session', session);
+
+    // Color-code confidence
+    const confEl = document.getElementById('t-snap-show-conf');
+    if (confEl) {
+      const confNum = parseInt(biasConf);
+      confEl.style.color = confNum >= 70 ? 'var(--green)' : confNum >= 55 ? 'var(--accent)' : 'var(--red)';
+    }
+    // Color-code condition
+    const shockEl = document.getElementById('t-snap-show-shock');
+    if (shockEl) {
+      shockEl.style.color = shock === 'SHOCK' ? 'var(--red)' : shock === 'HIGH VIX' ? 'var(--orange)' : 'var(--green)';
+    }
+
+    // Hide snapshot banner when editing an existing trade (not relevant for edits)
+    const banner = document.getElementById('t-snap-banner');
+    if (banner) banner.style.display = 'block';
   }
   if (id === 'crypto-modal') {
     document.getElementById('cr-edit-id').value = '';
@@ -4325,8 +4823,36 @@ function saveTrade() {
       showToast('success','Trade Updated', `${ticker.toUpperCase()} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '✏️');
     }
   } else {
-    // ADD new trade
-    const trade = { id: Date.now(), date, ticker: ticker.toUpperCase(), type, pnl, note, timestamp: new Date().toISOString() };
+    // ADD new trade — include full dashboard snapshot captured at modal open
+    const snapId      = document.getElementById('t-snap-id')?.value || '';
+    const snapTime    = document.getElementById('t-snap-time')?.value || '';
+    const snapBias    = document.getElementById('t-snap-bias-verdict')?.value || '';
+    const snapConf    = document.getElementById('t-snap-bias-conf')?.value || '';
+    const snapCoach   = document.getElementById('t-snap-coach')?.value || '';
+    const snapVix     = document.getElementById('t-snap-vix')?.value || '';
+    const snapShock   = document.getElementById('t-snap-shock')?.value || '';
+    const snapSession = document.getElementById('t-snap-session')?.value || '';
+    // Parse confidence from snapshot (e.g. "74%" → 74)
+    const snapConfNum = snapConf ? parseInt(snapConf) : null;
+
+    const trade = {
+      id: Date.now(),
+      date,
+      ticker: ticker.toUpperCase(),
+      type,
+      pnl,
+      note,
+      timestamp: new Date().toISOString(),
+      // Dashboard snapshot fields
+      snapshotId:      snapId,
+      entryTime:       snapTime,
+      confidence:      snapConfNum,
+      biasVerdict:     snapBias,
+      coachVerdict:    snapCoach,
+      vixAtEntry:      snapVix,
+      marketCondition: snapShock,
+      sessionAtEntry:  snapSession,
+    };
     state.trades.unshift(trade);
     showToast('success','Trade Logged', `${ticker.toUpperCase()} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '📝');
   }
@@ -4357,6 +4883,9 @@ function editTrade(id) {
   document.getElementById('t-note').value = t.note || '';
   document.getElementById('trade-modal-title').innerHTML = '✏️ EDIT TRADE <button class="modal-close" onclick="closeModal(\'trade-modal\')">✕</button>';
   document.getElementById('trade-modal-save-btn').textContent = 'SAVE CHANGES';
+  // Hide snapshot banner — not relevant when editing existing trades
+  const banner = document.getElementById('t-snap-banner');
+  if (banner) banner.style.display = 'none';
   document.getElementById('trade-modal').classList.add('open');
 }
 
@@ -4425,7 +4954,7 @@ function refreshAllTradeViews() {
 function renderTrades() {
   const tbody = document.getElementById('trade-tbody');
   if (!state.trades || !state.trades.length) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text2);padding:30px">No trades logged yet. Click + LOG TRADE to begin.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:30px">No trades logged yet. Click + LOG TRADE to begin.</td></tr>';
     return;
   }
   let running = state.startBalance;
@@ -4437,25 +4966,13 @@ function renderTrades() {
     else if (t.type==='WITHDRAWAL') running -= Math.abs(t.pnl);
     const pnlCls = t.pnl > 0 ? 'pos' : t.pnl < 0 ? 'neg' : '';
     const typeBadge = t.type==='CALL'?'badge-green':t.type==='PUT'?'badge-red':t.type==='WITHDRAWAL'||t.type==='DEPOSIT'?'badge-blue':'badge-yellow';
-    // Confidence display — color-coded by strength
-    const conf = t.confidence != null && t.confidence !== '' ? parseInt(t.confidence) : null;
-    const confDisplay = conf !== null
-      ? `<span style="font-size:11px;font-weight:700;color:${conf>=70?'var(--green)':conf>=55?'var(--accent)':'var(--red)'}">${conf}%</span>`
-      : '<span style="color:var(--text3);font-size:11px">—</span>';
-    // Strategy tag display
-    const strat = t.strategy && t.strategy !== 'none' && t.strategy !== '--None--' ? t.strategy : '—';
-    const stratDisplay = strat !== '—'
-      ? `<span style="font-size:10px;color:var(--blue);background:rgba(0,180,255,0.1);padding:2px 6px;border-radius:4px;white-space:nowrap">${strat}</span>`
-      : '<span style="color:var(--text3);font-size:11px">—</span>';
     return `<tr>
       <td>${t.date}</td>
       <td style="font-weight:700;color:var(--accent)">${t.ticker}</td>
       <td><span class="badge ${typeBadge}">${t.type}</span></td>
       <td class="hide-money ${pnlCls}" style="font-weight:700">${t.pnl>0?'+':''}$${t.pnl.toFixed(2)}</td>
       <td class="hide-money" style="color:var(--text2)">$${running.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-      <td style="text-align:center">${confDisplay}</td>
-      <td>${stratDisplay}</td>
-      <td style="color:var(--text2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.note||'—'}</td>
+      <td style="color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.note||'—'}</td>
       <td style="display:flex;gap:6px">
         <button class="btn btn-sm" onclick="editTrade(${t.id})" style="border-color:var(--accent);color:var(--accent)">EDIT</button>
         <button class="btn btn-sm btn-danger" onclick="deleteTrade(${t.id})">DEL</button>
@@ -4846,7 +5363,7 @@ async function fetchSchwabAccount() {
 
     if (!status.authenticated) {
       if (dot)   dot.style.background   = 'var(--red)';
-      if (label) label.innerHTML = 'Not connected — <a href="https://schwab.nobossnetwork.xyz/schwab-auth.php?action=login" target="_blank" style="color:var(--accent);text-decoration:underline;cursor:pointer">click to reconnect ↗</a>';
+      if (label) label.textContent       = 'Not connected — visit ?action=login';
       return;
     }
 
@@ -4920,32 +5437,445 @@ async function fetchSchwabAccount() {
   }
 }
 
-// ==================== ENGINE SYNC CHECKER ====================
-// Shows a warning if Bias Engine and AI Coach timestamps are more
-// than 5 minutes apart — means they may be reading different market moments.
-function checkEngineSync() {
-  const beText    = document.getElementById('be-updated')?.textContent || '';
-  const coachText = document.getElementById('coach-updated')?.textContent || '';
-  const indicator = document.getElementById('engine-sync-indicator');
-  if (!indicator || !beText || !coachText) return;
+// ==================== SYSTEM HEALTH MONITOR ====================
+async function runHealthCheck() {
+  const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const lastEl = document.getElementById('hs-last-check');
+  if (lastEl) lastEl.textContent = now;
 
-  // Parse HH:MM time strings from the timestamp labels
-  const parseTime = str => {
-    const m = str.match(/(\d{1,2}):(\d{2})/);
-    if (!m) return null;
-    return parseInt(m[1]) * 60 + parseInt(m[2]);
-  };
-  const beMin    = parseTime(beText);
-  const coachMin = parseTime(coachText);
-  if (beMin === null || coachMin === null) { indicator.style.display = 'none'; return; }
+  // ── 1. Schwab backend + auth status ──────────────────────────
+  const schwabDot   = document.getElementById('hs-schwab-dot');
+  const schwabLabel = document.getElementById('hs-schwab-label');
+  const backendDot   = document.getElementById('hs-backend-dot');
+  const backendLabel = document.getElementById('hs-backend-label');
 
-  const diffMin = Math.abs(beMin - coachMin);
-  if (diffMin >= 5) {
-    indicator.style.display = 'inline-block';
-    indicator.textContent = `⚠️ Coach is ${diffMin}m behind Bias Engine — re-analyze`;
-  } else {
-    indicator.style.display = 'none';
+  try {
+    const res = await fetch(SCHWAB_BACKEND, { headers: SCHWAB_HEADERS });
+    if (res.ok) {
+      const data = await res.json();
+      // Backend is reachable
+      if (backendDot) backendDot.style.background = 'var(--green)';
+      if (backendLabel) backendLabel.textContent = 'OK';
+      // Schwab auth status
+      if (data.authenticated) {
+        if (schwabDot) schwabDot.style.background = 'var(--green)';
+        if (schwabLabel) schwabLabel.textContent = 'Connected';
+      } else {
+        if (schwabDot) schwabDot.style.background = 'var(--red)';
+        if (schwabLabel) schwabLabel.textContent = 'Not authenticated';
+      }
+    } else {
+      throw new Error('Backend returned ' + res.status);
+    }
+  } catch (e) {
+    if (backendDot) backendDot.style.background = 'var(--red)';
+    if (backendLabel) backendLabel.textContent = 'Unreachable';
+    if (schwabDot) schwabDot.style.background = 'var(--red)';
+    if (schwabLabel) schwabLabel.textContent = 'Unknown';
   }
+
+  // ── 2. Firebase status ────────────────────────────────────────
+  const fbDot   = document.getElementById('hs-firebase-dot');
+  const fbLabel = document.getElementById('hs-firebase-label');
+
+  try {
+    const fbRes = await fbGet('state/goal');
+    if (fbRes !== null && fbRes !== undefined) {
+      if (fbDot) fbDot.style.background = 'var(--green)';
+      if (fbLabel) fbLabel.textContent = 'Connected';
+    } else {
+      // null could mean auth issue or empty node
+      if (fbDot) fbDot.style.background = 'var(--accent)';
+      if (fbLabel) fbLabel.textContent = 'Auth required';
+    }
+  } catch (e) {
+    if (fbDot) fbDot.style.background = 'var(--red)';
+    if (fbLabel) fbLabel.textContent = 'Error';
+  }
+}
+
+// ==================== ORDER RECONCILIATION ====================
+// Compares today's dashboard logged trades against Schwab's filled orders.
+// Flags options trades in Schwab that aren't in the dashboard log and vice versa.
+async function runOrderReconciliation() {
+  const statusEl  = document.getElementById('recon-status');
+  const resultsEl = document.getElementById('recon-results');
+  const detailEl  = document.getElementById('recon-detail');
+
+  if (statusEl) statusEl.textContent = 'Fetching Schwab orders...';
+
+  try {
+    // 1. Pull today's filled orders from Schwab
+    const res = await fetch(`${SCHWAB_BACKEND}?action=orders`, { headers: SCHWAB_HEADERS });
+    if (!res.ok) throw new Error('Schwab orders fetch failed');
+    const data = await res.json();
+
+    if (data.status !== 'ok') throw new Error(data.message || 'Schwab not authenticated');
+
+    const schwabOrders = Array.isArray(data.data) ? data.data : [];
+    // Filter to option fills only (matching your 0DTE focus)
+    const schwabFills = schwabOrders.filter(o =>
+      o.status === 'FILLED' &&
+      o.orderLegCollection?.some(l => l.instrument?.assetType === 'OPTION')
+    );
+
+    // 2. Get today's dashboard trades
+    const today = new Date().toISOString().split('T')[0];
+    const todayTrades = state.trades.filter(t =>
+      t.date === today &&
+      !['WITHDRAWAL','DEPOSIT','FEES','OTHER'].includes(t.type)
+    );
+
+    // 3. Basic reconciliation — count comparison + surface Schwab fills not in dashboard
+    const schwabCount  = schwabFills.length;
+    const dashCount    = todayTrades.length;
+
+    // Try to match Schwab fills to dashboard trades by ticker symbol
+    const dashTickers = todayTrades.map(t => (t.ticker || '').toUpperCase());
+    const unmatched = schwabFills.filter(o => {
+      const leg = o.orderLegCollection?.[0];
+      const sym = leg?.instrument?.underlyingSymbol || leg?.instrument?.symbol || '';
+      return !dashTickers.includes(sym.toUpperCase());
+    });
+
+    const mismatchCount = unmatched.length;
+
+    // 4. Update UI
+    const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+    const setColor = (id, color) => { const el = document.getElementById(id); if(el) el.style.color = color; };
+
+    set('recon-schwab-count', schwabCount);
+    set('recon-dash-count', dashCount);
+    set('recon-mismatch-count', mismatchCount);
+    setColor('recon-mismatch-count', mismatchCount > 0 ? 'var(--red)' : 'var(--green)');
+    set('recon-last-check', new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}));
+
+    if (resultsEl) resultsEl.style.display = 'block';
+
+    if (detailEl) {
+      if (mismatchCount === 0 && schwabCount === 0) {
+        detailEl.innerHTML = '<span style="color:var(--text3)">No Schwab option fills found for today. If you traded, make sure you\'re logged in to Schwab (?action=login).</span>';
+      } else if (mismatchCount === 0) {
+        detailEl.innerHTML = '<span style="color:var(--green)">✅ All Schwab fills are accounted for in your dashboard trade log.</span>';
+      } else {
+        const rows = unmatched.map(o => {
+          const leg = o.orderLegCollection?.[0];
+          const sym = leg?.instrument?.underlyingSymbol || leg?.instrument?.symbol || 'Unknown';
+          const desc = leg?.instrument?.description || sym;
+          const qty = leg?.quantity || '?';
+          const price = o.orderActivityCollection?.[0]?.executionLegs?.[0]?.price || '?';
+          return `<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--red)">⚠️ Not logged: ${desc} — Qty: ${qty} @ $${price}</div>`;
+        }).join('');
+        detailEl.innerHTML = `<div style="margin-bottom:6px;color:var(--red);font-weight:700">${mismatchCount} Schwab fill(s) not found in dashboard log:</div>${rows}<div style="margin-top:8px;color:var(--text3);font-size:10px">Log these trades manually in the Trade Logger to keep your records accurate.</div>`;
+      }
+    }
+
+    if (statusEl) statusEl.textContent = mismatchCount > 0
+      ? `⚠️ ${mismatchCount} mismatch(es) found — see details below.`
+      : '✅ Reconciliation complete.';
+
+  } catch (err) {
+    if (statusEl) statusEl.textContent = '❌ ' + (err.message || 'Reconciliation failed — check Schwab connection.');
+    if (resultsEl) resultsEl.style.display = 'none';
+    console.error('Order reconciliation error:', err);
+  }
+}
+
+// ==================== POSITION ANALYZER ====================
+async function analyzePosition() {
+  const ticker    = document.getElementById('pa-ticker')?.value || 'QQQ';
+  const type      = document.getElementById('pa-type')?.value || 'CALL';
+  const entry     = parseFloat(document.getElementById('pa-entry')?.value) || 0;
+  const strike    = parseFloat(document.getElementById('pa-strike')?.value) || 0;
+  const contracts = parseInt(document.getElementById('pa-contracts')?.value) || 1;
+  const iv        = parseFloat(document.getElementById('pa-iv')?.value) / 100 || 0.28;
+
+  if (!entry || !strike) {
+    showToast('warning', 'Position Analyzer', 'Enter entry price and strike to analyze.', '⚠️', 4000);
+    return;
+  }
+
+  const output = document.getElementById('pa-output');
+  if (output) output.style.display = 'block';
+
+  // ── 1. Pull live underlying price from Schwab ─────────────────
+  let livePrice = 0;
+  try {
+    const res = await fetch(`${SCHWAB_BACKEND}?action=quote&symbol=${ticker}`, { headers: SCHWAB_HEADERS });
+    if (res.ok) {
+      const data = await res.json();
+      livePrice = data?.data?.[ticker]?.quote?.lastPrice || data?.data?.[ticker]?.quote?.mark || 0;
+    }
+  } catch(e) {}
+
+  // Fall back to dashboard ticker if Schwab unavailable
+  if (!livePrice || livePrice < 100) {
+    const tickerEl = document.getElementById(ticker === 'QQQ' ? 'tc-qqq-price' : 'tc-spy-price');
+    livePrice = parseFloat(tickerEl?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  }
+
+  const livePriceEl = document.getElementById('pa-live-price');
+  const liveLabelEl = document.getElementById('pa-live-label');
+  if (livePriceEl) livePriceEl.textContent = livePrice > 0 ? `$${livePrice.toFixed(2)}` : 'Unavailable';
+  if (liveLabelEl) liveLabelEl.textContent = livePrice > 0 ? 'live from Schwab' : 'Schwab offline';
+
+  // ── 2. Black-Scholes for current option value ─────────────────
+  const T = 1 / 365; // 0DTE — 1 day
+  const r = 0.053;
+  const S = livePrice > 0 ? livePrice : strike; // fallback to ATM if no price
+  const K = strike;
+  const v = iv;
+
+  const d1 = (Math.log(S/K) + (r + v*v/2)*T) / (v * Math.sqrt(T));
+  const d2 = d1 - v * Math.sqrt(T);
+  const N  = x => { const a1=0.4361836,a2=-0.1201676,a3=0.9372980,t=1/(1+0.33267*Math.abs(x)),n=Math.exp(-x*x/2)/Math.sqrt(2*Math.PI); return x>=0?1-n*(a1*t+a2*t*t+a3*t*t*t):n*(a1*t+a2*t*t+a3*t*t*t); };
+  const n  = x => Math.exp(-x*x/2) / Math.sqrt(2*Math.PI);
+
+  const callVal = S*N(d1) - K*Math.exp(-r*T)*N(d2);
+  const putVal  = K*Math.exp(-r*T)*N(-d2) - S*N(-d1);
+  const currentOptionVal = type === 'CALL' ? callVal : putVal;
+  const theta = -(S*n(d1)*v/(2*Math.sqrt(T)) + r*K*Math.exp(-r*T)*N(d2)) / 365;
+  const probITM = type === 'CALL' ? N(d2) : N(-d2);
+  const breakeven = type === 'CALL' ? K + entry : K - entry;
+
+  // ── 3. P&L calculations ───────────────────────────────────────
+  const pnlPerContract = (currentOptionVal - entry) * 100;
+  const pnlTotal       = pnlPerContract * contracts;
+  const pnlPct         = ((currentOptionVal - entry) / entry * 100);
+
+  // Rule-based targets and stops
+  const targetPrice = entry + 0.35; // standard target
+  const aplusTarget = entry + 0.50;
+  const stopPrice   = entry - 0.30;
+  const bePriceOpt  = entry + 0.20; // move stop to BE at +$0.20
+
+  const targetGain  = (targetPrice - entry) * 100 * contracts;
+  const stopLoss    = (stopPrice - entry) * 100 * contracts;
+
+  // ── 4. Time to close (0DTE countdown) ────────────────────────
+  const now = new Date();
+  const et  = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const closeHr = 16, closeMn = 0;
+  const minsLeft = (closeHr - et.getHours()) * 60 + (closeMn - et.getMinutes());
+  const expiryStr = minsLeft > 0
+    ? `${Math.floor(minsLeft/60)}h ${minsLeft%60}m`
+    : 'EXPIRED / AH';
+  const expiryColor = minsLeft < 60 ? 'var(--red)' : minsLeft < 120 ? 'var(--orange)' : 'var(--text)';
+
+  // Breakeven distance
+  const beDistance = livePrice > 0 ? Math.abs(livePrice - breakeven).toFixed(2) : '--';
+  const beDir      = livePrice > 0 ? (livePrice > breakeven ? '✅ past BE' : `$${beDistance} to BE`) : '--';
+
+  // ── 5. Update UI ─────────────────────────────────────────────
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setColor = (id, c) => { const el = document.getElementById(id); if(el) el.style.color = c; };
+
+  const pnlColor = pnlTotal >= 0 ? 'var(--green)' : 'var(--red)';
+  set('pa-pnl', (pnlTotal >= 0 ? '+' : '') + '$' + Math.abs(pnlTotal).toFixed(2));
+  setColor('pa-pnl', pnlColor);
+  set('pa-pnl-pct', (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(1) + '%');
+  setColor('pa-pnl-pct', pnlColor);
+
+  set('pa-target', '$' + targetPrice.toFixed(2));
+  set('pa-target-gain', '+$' + targetGain.toFixed(2) + ' gain');
+  set('pa-stop', '$' + stopPrice.toFixed(2));
+  set('pa-stop-loss', '$' + Math.abs(stopLoss).toFixed(2) + ' loss');
+  set('pa-theta', '$' + Math.abs(theta * 100).toFixed(2));
+  set('pa-theta-warn', minsLeft > 0 ? `${minsLeft} min left` : 'market closed');
+  set('pa-pop', (probITM * 100).toFixed(1) + '%');
+  setColor('pa-pop', probITM > 0.5 ? 'var(--green)' : 'var(--red)');
+  set('pa-expiry', expiryStr);
+  setColor('pa-expiry', expiryColor);
+  set('pa-be', '$' + breakeven.toFixed(2));
+  set('pa-be-dist', beDir);
+
+  // ── 6. Recommendation ─────────────────────────────────────────
+  let rec = '', recColor = 'var(--accent)';
+
+  if (pnlPct >= 43) { // at or near +$0.50 A+ target
+    rec = `🎯 <strong>TAKE PROFIT — A+ TARGET HIT.</strong> Option up ${pnlPct.toFixed(0)}%. Lock in +$${Math.abs(pnlTotal).toFixed(0)}. Don't give it back.`;
+    recColor = 'var(--green)';
+  } else if (pnlPct >= 30) { // near +$0.35 standard target
+    rec = `✅ <strong>NEAR TARGET.</strong> Option up ${pnlPct.toFixed(0)}%. Standard target is ${type === 'CALL' ? '+$0.35' : '+$0.35'}. Consider taking profit or tightening stop.`;
+    recColor = 'var(--green)';
+  } else if (currentOptionVal >= bePriceOpt && pnlPct > 0) { // past +$0.20 — move stop to BE
+    rec = `📌 <strong>MOVE STOP TO BREAKEVEN.</strong> Up +${pnlPct.toFixed(0)}% — past the +$0.20 rule. Move stop to $${entry.toFixed(2)} (your entry). Let it run toward $${targetPrice.toFixed(2)} target.`;
+    recColor = 'var(--accent)';
+  } else if (pnlPct > 0) { // small gain, not yet at +$0.20
+    rec = `⏳ <strong>HOLD — watching.</strong> Up +${pnlPct.toFixed(0)}%. Not yet at the +$0.20 breakeven-move trigger. Keep original stop at $${stopPrice.toFixed(2)}.`;
+    recColor = 'var(--accent)';
+  } else if (pnlPct <= -26) { // at or near -$0.30 stop
+    rec = `🛑 <strong>STOP — EXIT NOW.</strong> Down ${pnlPct.toFixed(0)}%. At or near your -$0.30 stop. Do not average down. Close the position.`;
+    recColor = 'var(--red)';
+  } else { // losing but not at stop yet
+    rec = `⚠️ <strong>MONITOR CLOSELY.</strong> Down ${pnlPct.toFixed(0)}%. Stop is $${stopPrice.toFixed(2)} (${Math.abs(((stopPrice - currentOptionVal)/currentOptionVal*100)).toFixed(0)}% lower). Do not move stop down.`;
+    recColor = 'var(--orange, #ff6d00)';
+  }
+
+  if (minsLeft < 30 && minsLeft > 0) {
+    rec += ` <strong style="color:var(--red)"> ⚠️ Less than 30 min to close — consider exiting regardless of P&L.</strong>`;
+  }
+
+  const recEl = document.getElementById('pa-recommendation');
+  if (recEl) {
+    recEl.innerHTML = rec;
+    recEl.style.borderLeftColor = recColor;
+  }
+}
+
+// ==================== OPTIONS STRATEGIES LIBRARY ====================
+const OPTIONS_STRATEGIES = [
+  // ── NOVICE ──────────────────────────────────────────────────────
+  { id:'long-call', name:'Long Call', level:'novice', bias:'bullish', tags:['novice','bullish'],
+    desc:'Buy a call option. You profit if the stock rises above your breakeven (strike + premium paid). Maximum loss is the premium paid. Unlimited upside.',
+    when:'You expect the stock to move up significantly before expiry. Best in low-IV environments (options are cheaper).',
+    maxProfit:'Unlimited', maxLoss:'Premium paid', breakeven:'Strike + Premium',
+    diagram: 'call' },
+  { id:'long-put', name:'Long Put', level:'novice', bias:'bearish', tags:['novice','bearish'],
+    desc:'Buy a put option. You profit if the stock falls below your breakeven (strike - premium paid). Maximum loss is the premium paid.',
+    when:'You expect the stock to drop significantly. Good hedge against existing long positions.',
+    maxProfit:'Strike - Premium (if stock goes to 0)', maxLoss:'Premium paid', breakeven:'Strike - Premium',
+    diagram: 'put' },
+  { id:'covered-call', name:'Covered Call', level:'novice', bias:'neutral',  tags:['novice','neutral','income'],
+    desc:'Own 100 shares + sell a call against them. You collect premium income but cap your upside at the strike price.',
+    when:'You own shares and want extra income. Best when you are neutral-to-slightly-bullish and IV is high (premiums are fat).',
+    maxProfit:'Premium + (Strike - Stock Price)', maxLoss:'Stock price - Premium (downside not covered)', breakeven:'Stock price - Premium received',
+    diagram: 'covered-call' },
+  { id:'cash-secured-put', name:'Cash-Secured Put', level:'novice', bias:'neutral', tags:['novice','neutral','income'],
+    desc:'Sell a put while holding cash to buy the stock if assigned. You collect premium and may acquire shares at a discount.',
+    when:'You want to buy a stock at a lower price anyway, or generate income while waiting.',
+    maxProfit:'Premium received', maxLoss:'Strike - Premium (if stock goes to 0)', breakeven:'Strike - Premium received',
+    diagram: 'short-put' },
+
+  // ── INTERMEDIATE ─────────────────────────────────────────────────
+  { id:'bull-call-spread', name:'Bull Call Spread', level:'intermediate', bias:'bullish', tags:['intermediate','bullish'],
+    desc:'Buy a lower-strike call, sell a higher-strike call. Reduces your cost basis but caps your maximum profit at the width of the spread.',
+    when:'Moderately bullish. Lowers cost vs a naked long call. Good when IV is high (selling the upper call offsets high premium cost).',
+    maxProfit:'Width of spread - Net debit', maxLoss:'Net debit paid', breakeven:'Lower strike + Net debit',
+    diagram: 'bull-call-spread' },
+  { id:'bear-put-spread', name:'Bear Put Spread', level:'intermediate', bias:'bearish', tags:['intermediate','bearish'],
+    desc:'Buy a higher-strike put, sell a lower-strike put. Reduces cost but caps maximum profit.',
+    when:'Moderately bearish. Cheaper than a naked long put. Good defined-risk directional play.',
+    maxProfit:'Width of spread - Net debit', maxLoss:'Net debit paid', breakeven:'Higher strike - Net debit',
+    diagram: 'bear-put-spread' },
+  { id:'iron-condor', name:'Iron Condor', level:'intermediate', bias:'neutral', tags:['intermediate','neutral'],
+    desc:'Sell an OTM call spread + sell an OTM put spread simultaneously. Profit if the stock stays inside a defined range until expiry.',
+    when:'Low-volatility environments, or after a big move when you expect the stock to consolidate. High IV helps you collect more premium.',
+    maxProfit:'Net premium collected', maxLoss:'Width of widest spread - Premium received', breakeven:'Two breakeven points (lower and upper)',
+    diagram: 'iron-condor' },
+  { id:'straddle', name:'Long Straddle', level:'intermediate', bias:'neutral', tags:['intermediate','neutral','volatile'],
+    desc:'Buy an ATM call + ATM put same strike and expiry. Profit from a big move in EITHER direction. Lose if the stock stays flat.',
+    when:'You expect a large move (earnings, Fed meeting) but don\'t know the direction. Best when IV is relatively low before the event.',
+    maxProfit:'Unlimited (call side) / Large (put side)', maxLoss:'Total premium paid (both legs)', breakeven:'Strike ± Total premium',
+    diagram: 'straddle' },
+  { id:'strangle', name:'Long Strangle', level:'intermediate', bias:'neutral', tags:['intermediate','neutral','volatile'],
+    desc:'Buy an OTM call + OTM put (different strikes). Cheaper than a straddle but needs a bigger move to profit.',
+    when:'Expecting a large move, want cheaper cost than a straddle. Works well before high-impact events.',
+    maxProfit:'Unlimited (call side) / Large (put side)', maxLoss:'Total premium paid', breakeven:'Call strike + Premium / Put strike - Premium',
+    diagram: 'strangle' },
+
+  // ── ADVANCED ─────────────────────────────────────────────────────
+  { id:'call-broken-wing', name:'Call Broken Wing Butterfly', level:'advanced', bias:'bullish', tags:['advanced','bullish'],
+    desc:'A modified butterfly where the wings are not equidistant — one side is wider than the other. Can be structured for zero or negative cost, creating a risk-free or credit situation on one side.',
+    when:'Moderately bullish with a specific target price in mind. Can be set up for a net credit, meaning you win if the stock goes anywhere except a narrow down-move zone.',
+    maxProfit:'Width of body + Credit received', maxLoss:'Limited to narrow range below lower strike', breakeven:'Depends on structure',
+    diagram: 'butterfly' },
+  { id:'put-broken-wing', name:'Put Broken Wing Butterfly', level:'advanced', bias:'bearish', tags:['advanced','bearish'],
+    desc:'Modified butterfly skewed to the downside. Often structured for a credit — you profit if the stock goes anywhere except a narrow up-move zone.',
+    when:'Moderately bearish with a target price. The asymmetric structure allows for a net credit entry, limiting upside risk.',
+    maxProfit:'Width of body + Credit received', maxLoss:'Limited to narrow range above upper strike', breakeven:'Depends on structure',
+    diagram: 'butterfly' },
+  { id:'calendar-spread', name:'Calendar Spread', level:'advanced', bias:'neutral', tags:['advanced','neutral'],
+    desc:'Sell a near-term option + buy a longer-dated option at the same strike. Profit from time decay of the short leg while the long leg retains value.',
+    when:'Low-volatility environment where you expect the stock to stay near a specific price short-term, then move later.',
+    maxProfit:'At expiry of front-month option, if stock is at the strike', maxLoss:'Net debit paid', breakeven:'Two points around the strike',
+    diagram: 'calendar' },
+];
+
+let _stratFilter = 'all';
+
+function filterStrategies(filter) {
+  _stratFilter = filter;
+  // Update button styles
+  ['all','novice','intermediate','advanced','bullish','bearish','neutral'].forEach(f => {
+    const btn = document.getElementById('strat-' + f);
+    if (!btn) return;
+    if (f === filter) { btn.style.background = 'var(--accent)'; btn.style.color = '#000'; }
+    else { btn.style.background = ''; btn.style.color = ''; }
+  });
+  renderStrategies();
+}
+
+function buildPayoffSVG(type, color1, color2) {
+  const w = 240, h = 80, mid = h/2;
+  let path = '';
+  if (type === 'call') {
+    path = `M0,${mid} L${w*0.5},${mid} L${w},${mid*0.15}`;
+  } else if (type === 'put') {
+    path = `M0,${mid*0.15} L${w*0.5},${mid} L${w},${mid}`;
+  } else if (type === 'covered-call') {
+    path = `M0,${mid*0.4} L${w*0.5},${mid*0.4} L${w},${mid*0.4}`;
+  } else if (type === 'short-put') {
+    path = `M0,${mid*0.4} L${w*0.5},${mid*0.4} L${w},${mid*0.4}`;
+  } else if (type === 'bull-call-spread') {
+    path = `M0,${mid} L${w*0.35},${mid} L${w*0.65},${mid*0.2} L${w},${mid*0.2}`;
+  } else if (type === 'bear-put-spread') {
+    path = `M0,${mid*0.2} L${w*0.35},${mid*0.2} L${w*0.65},${mid} L${w},${mid}`;
+  } else if (type === 'iron-condor') {
+    path = `M0,${mid} L${w*0.2},${mid} L${w*0.3},${mid*0.3} L${w*0.7},${mid*0.3} L${w*0.8},${mid} L${w},${mid}`;
+  } else if (type === 'straddle') {
+    path = `M0,${mid*0.2} L${w*0.5},${mid} L${w},${mid*0.2}`;
+  } else if (type === 'strangle') {
+    path = `M0,${mid*0.15} L${w*0.3},${mid} L${w*0.7},${mid} L${w},${mid*0.15}`;
+  } else if (type === 'butterfly') {
+    path = `M0,${mid} L${w*0.25},${mid} L${w*0.5},${mid*0.1} L${w*0.75},${mid} L${w},${mid}`;
+  } else if (type === 'calendar') {
+    path = `M0,${mid} L${w*0.35},${mid} L${w*0.5},${mid*0.2} L${w*0.65},${mid} L${w},${mid}`;
+  } else {
+    path = `M0,${mid} L${w},${mid}`;
+  }
+
+  const isProfit = ['call','put','straddle','strangle'].includes(type);
+  const lineColor = isProfit ? '#00e676' : ['iron-condor','covered-call','short-put','bull-call-spread','bear-put-spread','butterfly','calendar'].includes(type) ? '#f5c518' : '#00e676';
+
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:60px">
+    <line x1="0" y1="${mid}" x2="${w}" y2="${mid}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <path d="${path}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="2" y="${h-4}" font-size="8" fill="rgba(255,255,255,0.3)">Profit ↑ / Loss ↓</text>
+  </svg>`;
+}
+
+function renderStrategies() {
+  const grid = document.getElementById('strategies-grid');
+  if (!grid) return;
+
+  const filtered = _stratFilter === 'all'
+    ? OPTIONS_STRATEGIES
+    : OPTIONS_STRATEGIES.filter(s => s.tags.includes(_stratFilter));
+
+  const levelColors = { novice: 'var(--green)', intermediate: 'var(--accent)', advanced: 'var(--red)' };
+  const levelLabels = { novice: '🟢 Novice', intermediate: '🟡 Intermediate', advanced: '🔴 Advanced' };
+  const biasColors  = { bullish: 'var(--green)', bearish: 'var(--red)', neutral: 'var(--blue)' };
+
+  grid.innerHTML = filtered.map(s => `
+    <div style="background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+        <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:var(--text)">${s.name}</div>
+        <div style="display:flex;gap:4px">
+          <span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(0,0,0,0.3);color:${levelColors[s.level]};border:1px solid ${levelColors[s.level]}">${levelLabels[s.level]}</span>
+          <span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(0,0,0,0.3);color:${biasColors[s.bias]};border:1px solid ${biasColors[s.bias]}">${s.bias.charAt(0).toUpperCase()+s.bias.slice(1)}</span>
+        </div>
+      </div>
+      ${buildPayoffSVG(s.diagram)}
+      <div style="font-size:11px;color:var(--text2);line-height:1.6">${s.desc}</div>
+      <div style="font-size:10px;color:var(--text3);font-style:italic">${s.when}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">
+        <div style="background:rgba(0,230,118,0.08);border-radius:5px;padding:5px 7px"><span style="color:var(--green)">Max Profit:</span> ${s.maxProfit}</div>
+        <div style="background:rgba(255,23,68,0.08);border-radius:5px;padding:5px 7px"><span style="color:var(--red)">Max Loss:</span> ${s.maxLoss}</div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:5px;padding:5px 7px;grid-column:1/-1"><span style="color:var(--text3)">Breakeven:</span> ${s.breakeven}</div>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ==================== EARLY MOMENTUM DETECTOR ====================
@@ -5749,12 +6679,43 @@ function renderOptionsWatch() {
 function deleteOptionsWatch(id){state.optionsWatch=state.optionsWatch.filter(o=>o.id!==id);saveState();renderOptionsWatch();}
 
 // ==================== BLACK-SCHOLES ====================
+let _scenarioType = 'CALL';
+function setScenarioType(type) {
+  _scenarioType = type;
+  const callBtn = document.getElementById('scenario-call-btn');
+  const putBtn  = document.getElementById('scenario-put-btn');
+  if (callBtn) { callBtn.style.background = type === 'CALL' ? 'rgba(0,230,118,0.15)' : 'rgba(0,0,0,0.2)'; callBtn.style.color = type === 'CALL' ? 'var(--green)' : 'var(--text3)'; callBtn.style.borderColor = type === 'CALL' ? 'var(--green)' : 'var(--border)'; }
+  if (putBtn)  { putBtn.style.background  = type === 'PUT'  ? 'rgba(255,23,68,0.15)'  : 'rgba(0,0,0,0.2)'; putBtn.style.color  = type === 'PUT'  ? 'var(--red)'   : 'var(--text3)'; putBtn.style.borderColor  = type === 'PUT'  ? 'var(--red)'   : 'var(--border)'; }
+  calcBS();
+}
+
+async function pullSchwabPrice() {
+  const sym = document.getElementById('eoc-symbol')?.value || 'QQQ';
+  const liveEl = document.getElementById('eoc-live-price');
+  try {
+    const res = await fetch(`${SCHWAB_BACKEND}?action=quote&symbol=${sym}`, { headers: SCHWAB_HEADERS });
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    const price = data?.data?.[sym]?.quote?.lastPrice || data?.data?.[sym]?.quote?.mark;
+    if (!price || price < 100) throw new Error('bad price');
+    const stockEl = document.getElementById('bs-stock');
+    const strikeEl = document.getElementById('bs-strike');
+    if (stockEl) stockEl.value = price.toFixed(2);
+    if (strikeEl) strikeEl.value = Math.round(price).toFixed(2);
+    if (liveEl) liveEl.textContent = `${sym}: $${price.toFixed(2)} (live)`;
+    calcBS();
+  } catch (e) {
+    if (liveEl) liveEl.textContent = 'Could not fetch — check Schwab connection';
+  }
+}
+
 function calcBS() {
   const S=parseFloat(document.getElementById('bs-stock').value)||0;
   const K=parseFloat(document.getElementById('bs-strike').value)||0;
   const T=parseFloat(document.getElementById('bs-days').value)/365||0;
   const v=parseFloat(document.getElementById('bs-iv').value)/100||0;
   const r=parseFloat(document.getElementById('bs-rate').value)/100||0;
+  const contracts=Math.max(1,Math.min(2,parseInt(document.getElementById('bs-contracts')?.value)||1));
   if(!S||!K||!T||!v) return;
   const d1=(Math.log(S/K)+(r+v*v/2)*T)/(v*Math.sqrt(T));
   const d2=d1-v*Math.sqrt(T);
@@ -5766,13 +6727,47 @@ function calcBS() {
   const gamma=n(d1)/(S*v*Math.sqrt(T));
   const theta=-(S*n(d1)*v/(2*Math.sqrt(T))+r*K*Math.exp(-r*T)*N(d2))/365;
   const vega=S*n(d1)*Math.sqrt(T)/100;
+
+  // Breakeven
+  const callBE = K + call;
+  const putBE  = K - put;
+  const maxRisk = (_scenarioType === 'CALL' ? call : put) * 100 * contracts;
+
   document.getElementById('bs-call').textContent='$'+call.toFixed(2);
   document.getElementById('bs-put').textContent='$'+put.toFixed(2);
+  document.getElementById('bs-call-be').textContent='$'+callBE.toFixed(2);
+  document.getElementById('bs-put-be').textContent='$'+putBE.toFixed(2);
   document.getElementById('bs-delta').textContent=delta.toFixed(4);
   document.getElementById('bs-gamma').textContent=gamma.toFixed(6);
   document.getElementById('bs-theta').textContent='$'+theta.toFixed(4);
   document.getElementById('bs-vega').textContent='$'+vega.toFixed(4);
   document.getElementById('bs-prob').textContent=(N(d2)*100).toFixed(1)+'%';
+  const mrEl = document.getElementById('bs-maxrisk');
+  if (mrEl) { mrEl.textContent = '$' + maxRisk.toFixed(2); mrEl.style.color = maxRisk <= 30 ? 'var(--green)' : maxRisk <= 60 ? 'var(--accent)' : 'var(--red)'; }
+
+  // Scenario table — 11 price points from -5% to +5% around current price
+  const tbody = document.getElementById('scenario-tbody');
+  if (tbody) {
+    const premium = _scenarioType === 'CALL' ? call : put;
+    const pnlRows = [];
+    for (let pct = -5; pct <= 5; pct++) {
+      const price = S * (1 + pct / 100);
+      const intrinsic = _scenarioType === 'CALL' ? Math.max(0, price - K) : Math.max(0, K - price);
+      const pnlPerContract = (intrinsic - premium) * 100;
+      const pnlTotal = pnlPerContract * contracts;
+      const moveColor = pnlTotal > 0 ? 'var(--green)' : pnlTotal < 0 ? 'var(--red)' : 'var(--text3)';
+      const isCurrent = pct === 0;
+      pnlRows.push(`<tr style="background:${isCurrent ? 'rgba(255,255,255,0.05)' : 'transparent'};border-bottom:1px solid rgba(255,255,255,0.04)">
+        <td style="padding:6px 8px;color:${isCurrent ? 'var(--accent)' : 'var(--text)'}">$${price.toFixed(2)}${isCurrent ? ' ◀ NOW' : ''}</td>
+        <td style="padding:6px 8px;text-align:right;color:${pct>0?'var(--green)':pct<0?'var(--red)':'var(--text3)'}">${pct>0?'+':''}${pct}%</td>
+        <td style="padding:6px 8px;text-align:right;color:var(--text2)">$${intrinsic.toFixed(2)}</td>
+        <td style="padding:6px 8px;text-align:right;color:${moveColor}">${pnlPerContract>=0?'+':''}$${pnlPerContract.toFixed(2)}</td>
+        <td style="padding:6px 8px;text-align:right;color:${moveColor};font-weight:700">${pnlTotal>=0?'+':''}$${pnlTotal.toFixed(2)}</td>
+      </tr>`);
+    }
+    tbody.innerHTML = pnlRows.join('');
+  }
+
   drawPayoffChart(S,K,call,put);
 }
 
@@ -5970,7 +6965,100 @@ function updateAllocationChart() {
 
 function filterChart(period) { updateCharts(); }
 
+function renderRiskDashboard(trades) {
+  // Filter to real trades only — exclude WITHDRAWAL/DEPOSIT/FEES/OTHER
+  const real = trades.filter(t => !['WITHDRAWAL','DEPOSIT','FEES','OTHER'].includes(t.type));
+  if (!real.length) return;
+
+  const wins  = real.filter(t => t.pnl > 0);
+  const losses = real.filter(t => t.pnl < 0);
+  const winRate = (wins.length / real.length * 100).toFixed(1);
+  const avgWin  = wins.length  ? wins.reduce((s,t) => s + t.pnl, 0) / wins.length  : 0;
+  const avgLoss = losses.length ? losses.reduce((s,t) => s + t.pnl, 0) / losses.length : 0;
+  const totalWin  = wins.reduce((s,t) => s + t.pnl, 0);
+  const totalLoss = Math.abs(losses.reduce((s,t) => s + t.pnl, 0));
+  const profitFactor = totalLoss > 0 ? (totalWin / totalLoss).toFixed(2) : totalWin > 0 ? '∞' : '0.00';
+  const expectancy  = (real.reduce((s,t) => s + t.pnl, 0) / real.length).toFixed(2);
+  const largestWin  = wins.length  ? Math.max(...wins.map(t => t.pnl))  : 0;
+  const largestLoss = losses.length ? Math.min(...losses.map(t => t.pnl)) : 0;
+
+  // Consecutive streaks
+  let maxWinStreak = 0, maxLossStreak = 0, curWin = 0, curLoss = 0;
+  real.forEach(t => {
+    if (t.pnl > 0) { curWin++; curLoss = 0; maxWinStreak = Math.max(maxWinStreak, curWin); }
+    else if (t.pnl < 0) { curLoss++; curWin = 0; maxLossStreak = Math.max(maxLossStreak, curLoss); }
+    else { curWin = 0; curLoss = 0; }
+  });
+
+  // Avg hold time — uses entry/exit time fields if present, else falls back to note scan
+  const withTime = real.filter(t => t.entryTime && t.exitTime);
+  const avgHold = withTime.length
+    ? Math.round(withTime.reduce((s,t) => {
+        const diff = (new Date('1970-01-01T' + t.exitTime) - new Date('1970-01-01T' + t.entryTime)) / 60000;
+        return s + (diff > 0 ? diff : 0);
+      }, 0) / withTime.length)
+    : null;
+
+  // Risk grade
+  const pf = parseFloat(profitFactor);
+  const wr = parseFloat(winRate);
+  let grade = '--', gradeColor = 'var(--text3)';
+  if (real.length >= 10) {
+    if (pf >= 2.0 && wr >= 60)      { grade = 'A+'; gradeColor = 'var(--green)'; }
+    else if (pf >= 1.5 && wr >= 50) { grade = 'A';  gradeColor = 'var(--green)'; }
+    else if (pf >= 1.2 && wr >= 45) { grade = 'B';  gradeColor = 'var(--accent)'; }
+    else if (pf >= 1.0)              { grade = 'C';  gradeColor = 'var(--accent)'; }
+    else                             { grade = 'D';  gradeColor = 'var(--red)'; }
+  }
+
+  // Risk assessment text
+  let assessment = '';
+  if (real.length < 10) {
+    assessment = `📊 ${real.length} trades logged — need at least 10 for a meaningful risk assessment. Keep logging.`;
+  } else {
+    const issues = [], strengths = [];
+    if (wr >= 55) strengths.push(`win rate ${winRate}%`);
+    else issues.push(`win rate ${winRate}% is below 55% — focus on setup quality`);
+    if (pf >= 1.5) strengths.push(`profit factor ${profitFactor} is strong`);
+    else if (pf < 1.0) issues.push(`profit factor ${profitFactor} — losing more than winning overall`);
+    if (maxLossStreak >= 4) issues.push(`${maxLossStreak}-trade losing streak detected — daily loss limit is your safety net`);
+    if (avgWin > 0 && avgLoss < 0 && Math.abs(avgWin) < Math.abs(avgLoss)) issues.push(`avg loss ($${Math.abs(avgLoss).toFixed(0)}) exceeds avg win ($${avgWin.toFixed(0)}) — tighten stops or let winners run longer`);
+    assessment = issues.length
+      ? `⚠️ Improve: ${issues.join(' · ')}.`
+      : `✅ Strong: ${strengths.join(' · ')}.`;
+  }
+
+  const fmt = v => `$${Math.abs(v).toFixed(2)}`;
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setColor = (id, color) => { const el = document.getElementById(id); if(el) el.style.color = color; };
+
+  set('rd-winrate', winRate + '%');
+  setColor('rd-winrate', wr >= 50 ? 'var(--green)' : 'var(--red)');
+  set('rd-wl', `${wins.length}W / ${losses.length}L`);
+  set('rd-pf', profitFactor);
+  setColor('rd-pf', pf >= 1.5 ? 'var(--green)' : pf >= 1.0 ? 'var(--accent)' : 'var(--red)');
+  set('rd-avgwin', fmt(avgWin));
+  set('rd-largest-win', `Best: ${fmt(largestWin)}`);
+  set('rd-avgloss', fmt(avgLoss));
+  set('rd-largest-loss', `Worst: ${fmt(largestLoss)}`);
+  set('rd-expect', (parseFloat(expectancy) >= 0 ? '+' : '') + '$' + Math.abs(parseFloat(expectancy)).toFixed(2));
+  setColor('rd-expect', parseFloat(expectancy) >= 0 ? 'var(--green)' : 'var(--red)');
+  set('rd-consec-wins', maxWinStreak);
+  set('rd-consec-losses', maxLossStreak);
+  set('rd-hold-time', avgHold !== null ? avgHold + ' min' : 'N/A');
+
+  const badge = document.getElementById('risk-grade-badge');
+  if (badge) { badge.textContent = `GRADE: ${grade}`; badge.style.color = gradeColor; badge.style.borderColor = gradeColor; badge.style.border = `1px solid ${gradeColor}`; }
+
+  const assess = document.getElementById('rd-assessment');
+  if (assess) {
+    assess.textContent = assessment;
+    assess.style.borderLeftColor = issues => gradeColor;
+  }
+}
+
 function renderAnalyticsBreakdown(trades) {
+  renderRiskDashboard(trades);
   // BY TICKER
   const byTicker={};
   trades.forEach(t=>{if(!byTicker[t.ticker])byTicker[t.ticker]={wins:0,total:0,pnl:0};byTicker[t.ticker].total++;byTicker[t.ticker].pnl+=t.pnl;if(t.pnl>0)byTicker[t.ticker].wins++;});
@@ -6337,14 +7425,80 @@ function toggleThemePanel() {
   document.getElementById('theme-panel').classList.toggle('open');
 }
 function setTheme(cls, name) {
-  document.body.className=cls;
+  // Preserve workspace class when changing accent theme
+  const body = document.body;
+  const wsClass = [...body.classList].find(c => c.startsWith('ws-')) || '';
+  body.className = cls;
+  if (wsClass) body.classList.add(wsClass);
   state.currentTheme=cls; saveState();
   document.querySelectorAll('.theme-option').forEach(el=>el.classList.remove('active'));
   document.getElementById('theme-'+name).classList.add('active');
   document.getElementById('theme-panel').classList.remove('open');
   showToast('success','Theme Changed',name.charAt(0).toUpperCase()+name.slice(1)+' theme applied','🎨',2000);
 }
-function applyTheme(cls) { document.body.className=cls; applyAllTabColors(); }
+function applyTheme(cls) {
+  const wsClass = [...document.body.classList].find(c => c.startsWith('ws-')) || '';
+  document.body.className = cls;
+  if (wsClass) document.body.classList.add(wsClass);
+  applyAllTabColors();
+}
+
+// ── WORKSPACE THEME ───────────────────────────────────────────────
+const WS_THEMES = ['midnight','graphite','slate','navy','carbon','steel'];
+function setWorkspaceTheme(name) {
+  WS_THEMES.forEach(t => document.body.classList.remove('ws-' + t));
+  if (name !== 'midnight') document.body.classList.add('ws-' + name);
+  localStorage.setItem('mrt_workspace_theme', name);
+  // Update active state on all workspace tiles
+  WS_THEMES.forEach(t => {
+    const el = document.getElementById('ws-' + t);
+    if (!el) return;
+    const isActive = t === name;
+    el.style.borderColor = isActive ? 'var(--green)' : 'var(--border)';
+    el.style.borderWidth = isActive ? '2px' : '1px';
+    el.style.background  = isActive ? 'rgba(0,230,118,0.08)' : '';
+    // Add or remove ACTIVE badge
+    const existing = el.querySelector('.ws-active-badge');
+    if (isActive && !existing) {
+      const badge = document.createElement('div');
+      badge.className = 'ws-active-badge';
+      badge.textContent = '✓ ACTIVE';
+      badge.style.cssText = 'font-size:9px;color:var(--green);text-align:center;font-weight:700;margin-top:2px;letter-spacing:1px';
+      el.appendChild(badge);
+    } else if (!isActive && existing) {
+      existing.remove();
+    }
+  });
+  showToast('success', 'Workspace Changed', name.charAt(0).toUpperCase() + name.slice(1) + ' background applied', '🖥️', 2000);
+}
+function loadWorkspaceTheme() {
+  const saved = localStorage.getItem('mrt_workspace_theme') || 'graphite'; // Dark Graphite default
+  setWorkspaceTheme(saved);
+}
+
+// ── ENHANCED READABILITY MODE ─────────────────────────────────────
+// Touches ONLY --text2, --text3 brightness and stat-label/form-label
+// font-size (+1px each). Zero layout, spacing, or component changes.
+function toggleReadabilityMode() {
+  const active = document.body.classList.toggle('readability-mode');
+  localStorage.setItem('mrt_readability_mode', active ? '1' : '0');
+  updateReadabilityBtn(active);
+  showToast('success', 'Readability Mode', active ? 'Enhanced readability ON — brighter labels, slightly larger text.' : 'Enhanced readability OFF — default text restored.', '👁️', 2500);
+}
+function updateReadabilityBtn(active) {
+  const btn = document.getElementById('readability-btn');
+  if (!btn) return;
+  btn.textContent = active ? 'ON' : 'OFF';
+  btn.style.background  = active ? 'rgba(0,230,118,0.15)' : 'rgba(0,0,0,0.3)';
+  btn.style.borderColor = active ? 'var(--green)' : 'var(--border)';
+  btn.style.color       = active ? 'var(--green)' : 'var(--text3)';
+}
+function loadReadabilityMode() {
+  const saved = localStorage.getItem('mrt_readability_mode') === '1';
+  if (saved) document.body.classList.add('readability-mode');
+  updateReadabilityBtn(saved);
+}
+
 document.addEventListener('click',e=>{if(!e.target.closest('#theme-panel')&&!e.target.closest('.theme-btn'))document.getElementById('theme-panel').classList.remove('open');});
 
 // Per-tab accent colors
@@ -9089,6 +10243,8 @@ function runStrikeAssist() {
 
 // Auto-populate price from live ticker when ticker changes
 document.addEventListener('DOMContentLoaded', () => {
+  loadWorkspaceTheme(); // Apply saved workspace background before anything renders
+  loadReadabilityMode(); // Apply saved readability mode
   ['ss-ticker','ss-type','ss-setup'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('change', () => {
@@ -9286,13 +10442,12 @@ async function runAICoach() {
   }
 
   // Auto-update after bias engine runs
-  setTimeout(updateTodaysPlaybook, 300);
-  setTimeout(checkEngineSync, 500); // Check sync after bias engine updates
+  setTimeout(updateTodaysPlaybook,300);
 }
 
 // Auto-run after bias engine
 setTimeout(()=>{if(typeof runAICoach==='function')runAICoach();},13000);
-setInterval(()=>{if(typeof runAICoach==='function'){runAICoach().then(()=>setTimeout(checkEngineSync,300));}},180000);
+setInterval(()=>{if(typeof runAICoach==='function')runAICoach();},180000);
 
 // ==================== CONTRACT EXPIRATION COUNTDOWN ====================
 // During market hours: time left today (0DTE). After hours: days until next Friday expiration.
@@ -9427,12 +10582,14 @@ function updateSessionTimer() {
     label = '⏰ PRE-MARKET'; color = 'var(--text2)'; borderColor = 'var(--border)';
     countdown = fmt(remaining);
     countdownEl && (countdownEl.title = 'Time until Session 1 opens');
+    window._s1ClosingFired = false; // reset flag before S1
   } else if(totalSec >= S1_START && totalSec < S1_END) {
     const remaining = S1_END - totalSec;
     label = '🟢 SESSION 1 LIVE'; color = 'var(--green)'; borderColor = 'rgba(0,230,118,0.4)';
     countdown = fmt(remaining);
     if(remaining <= 900) { color='var(--orange)'; } // last 15 min warning
-    if(remaining <= 300) { // last 5 min
+    if(remaining <= 300 && !window._s1ClosingFired) { // last 5 min — fire ONCE
+      window._s1ClosingFired = true;
       showToast('danger','⏰ Session 1 Closing','5 minutes left in Session 1 — wrap up trades','⏰',10000);
     }
   } else if(totalSec >= S1_END && totalSec < S2_START) {
@@ -9440,12 +10597,14 @@ function updateSessionTimer() {
     label = '🌙 LUNCH — NO TRADES'; color = 'var(--text3)'; borderColor = 'var(--border)';
     countdown = fmt(remaining);
     countdownEl && (countdownEl.title = 'Time until Session 2 opens');
+    window._s2ClosingFired = false; // reset flag before S2
   } else if(totalSec >= S2_START && totalSec < S2_END) {
     const remaining = S2_END - totalSec;
     label = '🟢 SESSION 2 LIVE'; color = 'var(--green)'; borderColor = 'rgba(0,230,118,0.4)';
     countdown = fmt(remaining);
     if(remaining <= 900) { color='var(--orange)'; }
-    if(remaining <= 300) {
+    if(remaining <= 300 && !window._s2ClosingFired) { // last 5 min — fire ONCE
+      window._s2ClosingFired = true;
       showToast('danger','⏰ Session 2 Closing','5 minutes left — close all positions by 3:55','⏰',10000);
     }
   } else if(totalSec >= S2_END) {
