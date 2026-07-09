@@ -4603,9 +4603,11 @@ function renderTrades() {
       <td style="text-align:center">${confDisplay}</td>
       <td>${stratDisplay}</td>
       <td style="color:var(--text2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.note||'—'}</td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-sm" onclick="editTrade(${t.id})" style="border-color:var(--accent);color:var(--accent)">EDIT</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteTrade(${t.id})">DEL</button>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="editTrade(${t.id})" style="border-color:var(--accent);color:var(--accent)">EDIT</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTrade(${t.id})">DEL</button>
+        </div>
       </td>
     </tr>`;
   }).reverse().join('');
