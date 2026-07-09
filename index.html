@@ -660,7 +660,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <div>
           <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:var(--accent);letter-spacing:2px;line-height:1;text-shadow:0 0 20px var(--glow)" id="main-dashboard-title">MR. T TRADING DASHBOARD</div>
-          <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--text2);letter-spacing:3px;text-transform:uppercase;margin-top:4px">AUSTIN WEALTH VENTURES LLC &nbsp;·&nbsp; OPTIONS SCALPING</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--text2);letter-spacing:3px;text-transform:uppercase;margin-top:4px">AUSTIN WEALTH VENTURES LLC &nbsp;·&nbsp; OPTIONS SCALPING &nbsp;<span style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:none;cursor:default" title="MrT Dashboard v1.1 — Build: July 2026 — Last Updated: July 9, 2026">v1.1</span></div>
         </div>
         <!-- DASHBOARD SWITCHER DROPDOWN -->
         <div style="position:relative" id="dash-switcher-wrap">
@@ -3898,6 +3898,11 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 </div>
 
 <script>
+// ==================== VERSION ====================
+const DASHBOARD_VERSION = 'v1.1';
+const DASHBOARD_BUILD_DATE = '2026-07-09';
+console.log(`MrT Dashboard ${DASHBOARD_VERSION} — Build ${DASHBOARD_BUILD_DATE}`);
+
 // ==================== FIREBASE CONFIG ====================
 const FB_URL = 'https://mrtdashboard-f4e8e-default-rtdb.firebaseio.com';
 const FB_API_KEY = 'AIzaSyAZ7T2uEYGSVK47rv-SSLXK40m2Bs12vO4';
@@ -4511,6 +4516,27 @@ function showToast(type, title, msg, icon='ℹ️', duration=5000) {
 
 // ==================== TRADE LOGGER ====================
 // ==================== TRADE SAVE (ADD + EDIT) ====================
+// ==================== TRADE SAVE CORE (shared by modal + inline form) ====================
+// Both saveTrade() (modal) and logTradeInline() (inline form) build a trade
+// data object from their own fields, then hand it here. This is the ONLY
+// place that writes to state.trades, persists, and refreshes views — so the
+// two entry points can never drift out of sync again (they did once, with
+// CONF%/STRATEGY, before this refactor).
+function saveTradeCore(tradeData, editId) {
+  if (editId) {
+    const idx = state.trades.findIndex(t => String(t.id) === String(editId));
+    if (idx > -1) {
+      state.trades[idx] = { ...state.trades[idx], ...tradeData };
+    }
+  } else {
+    state.trades.unshift({ id: Date.now(), timestamp: new Date().toISOString(), ...tradeData });
+  }
+  saveTrades();
+  saveState();
+  refreshAllTradeViews();
+  checkDailyGoal();
+}
+
 function saveTrade() {
   const editId = document.getElementById('t-edit-id').value;
   const date = document.getElementById('t-date').value;
@@ -4536,11 +4562,8 @@ function saveTrade() {
 
   if (editId) {
     // EDIT existing trade — snapshot fields are left untouched (not relevant for edits)
-    const idx = state.trades.findIndex(t => String(t.id) === String(editId));
-    if (idx > -1) {
-      state.trades[idx] = { ...state.trades[idx], date, ticker: ticker.toUpperCase(), type, pnl, note, strategy, confidence };
-      showToast('success','Trade Updated', `${ticker.toUpperCase()} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '✏️');
-    }
+    saveTradeCore({ date, ticker: ticker.toUpperCase(), type, pnl, note, strategy, confidence }, editId);
+    showToast('success','Trade Updated', `${ticker.toUpperCase()} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '✏️');
   } else {
     // ADD new trade — include full dashboard snapshot captured at modal open
     const snapId      = document.getElementById('t-snap-id')?.value || '';
@@ -4551,9 +4574,8 @@ function saveTrade() {
     const snapShock    = document.getElementById('t-snap-shock')?.value || '';
     const snapSession  = document.getElementById('t-snap-session')?.value || '';
 
-    const trade = {
-      id: Date.now(), date, ticker: ticker.toUpperCase(), type, pnl, note, strategy, confidence,
-      timestamp: new Date().toISOString(),
+    saveTradeCore({
+      date, ticker: ticker.toUpperCase(), type, pnl, note, strategy, confidence,
       // Dashboard snapshot fields
       snapshotId:      snapId,
       entryTime:       snapTime,
@@ -4562,15 +4584,10 @@ function saveTrade() {
       vixAtEntry:      snapVix,
       marketCondition: snapShock,
       sessionAtEntry:  snapSession,
-    };
-    state.trades.unshift(trade);
+    }, null);
     showToast('success','Trade Logged', `${ticker.toUpperCase()} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '📝');
   }
 
-  // Save trades immediately to both localStorage and Firebase (dedicated path)
-  saveTrades();
-  saveState(); // also save full state for settings
-  refreshAllTradeViews();
   document.getElementById('t-edit-id').value = '';
   document.getElementById('t-pnl').value = '';
   document.getElementById('t-note').value = '';
@@ -4578,7 +4595,6 @@ function saveTrade() {
   document.getElementById('t-confidence').value = '';
   document.getElementById('trade-modal-title').innerHTML = '📝 LOG TRADE <button class="modal-close" onclick="closeModal(\'trade-modal\')">✕</button>';
   document.getElementById('trade-modal-save-btn').textContent = 'LOG TRADE';
-  checkDailyGoal();
 }
 
 // Keep logTrade as alias for backward compat
@@ -4622,17 +4638,14 @@ function logTradeInline() {
     showToast('danger', 'Loss Limit Enforced', 'You\'ve hit your -$120 daily limit. Open the trade modal and check the override box to continue.', '🛑', 8000);
     return;
   }
-  const trade = { id: Date.now(), date, ticker, type, pnl, note, strategy, confidence, timestamp: new Date().toISOString() };
-  state.trades.unshift(trade);
-  saveTrades();
-  saveState();
-  refreshAllTradeViews();
+  // Inline form never captures a dashboard snapshot (no banner here) — same
+  // core writer as the modal, just without the snapshot fields.
+  saveTradeCore({ date, ticker, type, pnl, note, strategy, confidence }, null);
   document.getElementById('t-note-inline').value = '';
   document.getElementById('t-strategy-inline').value = '';
   prefillConfidenceField();
   if(msgEl){ msgEl.textContent=`✅ Logged: ${ticker} ${type} ${pnl>=0?'+':''}$${pnl.toFixed(2)}`; msgEl.style.color='var(--green)'; setTimeout(()=>{ msgEl.textContent=''; }, 3000); }
   showToast('success','Trade Logged', `${ticker} ${type}: ${pnl>=0?'+':''}$${pnl.toFixed(2)}`, '📝');
-  checkDailyGoal();
 }
 
 // Auto-fills the Confidence at Entry field from the Bias Engine's last scan.
@@ -4875,20 +4888,6 @@ function toggleLossOverride(checkbox) {
     const cb = b.querySelector('input[type="checkbox"]');
     if (cb) cb.checked = lossLimitOverride;
   });
-}
-
-function checkDailyGoal() {
-  const today=new Date().toISOString().split('T')[0];
-  const todayTrades=state.trades.filter(t=>t.date===today&&t.type!=='WITHDRAWAL'&&t.type!=='DEPOSIT'&&t.type!=='FEES');
-  const todayPnl=todayTrades.reduce((s,t)=>s+t.pnl,0);
-  const dailyGoal=state.goal/252;
-  if(todayPnl>=dailyGoal) {
-    showPlanPopup('🎯','DAILY GOAL HIT!',`You've hit your daily goal of $${dailyGoal.toFixed(0)}! Your rules say: CLOSE THINKORSWIM NOW. Lock in the win!`,
-      ['Close ThinkorSwim immediately','Log your trades','Review what worked today','Rest and prepare for tomorrow']);
-  } else if(todayPnl<=-120) {
-    showPlanPopup('🛑','DAILY LOSS LIMIT HIT',`You've hit your -$120 daily loss limit. STOP TRADING NOW. Live to trade another day.`,
-      ['Stop all trading immediately','Close all positions','Do not revenge trade','Review what went wrong tonight']);
-  }
 }
 
 // ==================== PLAN POPUP ====================
@@ -6565,17 +6564,6 @@ async function researchSymbol() {
 
 function loadChart(sym) { document.getElementById('research-symbol').value=sym; researchSymbol(); }
 function openTradingView() { window.open(`https://www.tradingview.com/chart/?symbol=${state.tvSymbol||'SPY'}`, '_blank'); }
-function switchResearchSym(sym) {
-  document.getElementById('research-symbol').value=sym;
-  researchSymbol();
-  updateResearchChart(sym);
-}
-function updateResearchChart(sym) {
-  const iframe=document.getElementById('research-tv-iframe');
-  const interval=document.getElementById('tv-interval-select')?.value||'5';
-  const s=sym||document.getElementById('research-symbol').value.trim().toUpperCase()||'SPY';
-  if(iframe) iframe.src=`https://www.tradingview.com/widgetembed/?frameElementId=research-tv-iframe&symbol=${s}&interval=${interval}&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=131722&studies=RSI%40tv-basicstudies%1FVWAP%40tv-basicstudies%1FEMAExp%40tv-basicstudies&theme=dark&style=1&timezone=America%2FNew_York&withdateranges=1&showpopupbutton=1`;
-}
 
 // ==================== THEME ====================
 function toggleThemePanel() {
@@ -11783,8 +11771,8 @@ function dismissAlertStrip() {
   hideAlertStrip();
 }
 
-// Hook into checkDailyGoal to also fire strip
-const _origCheckDailyGoal = checkDailyGoal;
+// checkDailyGoal — fires the plan popup + alert strip when the daily
+// goal or loss limit is hit. Sole definition (previously duplicated).
 function checkDailyGoal() {
   const today = new Date().toISOString().split('T')[0];
   const todayTrades = state.trades.filter(t=>t.date===today&&t.type!=='WITHDRAWAL'&&t.type!=='DEPOSIT'&&t.type!=='FEES');
