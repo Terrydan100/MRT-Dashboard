@@ -254,7 +254,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 .toast.success .toast-title { color:var(--green); }
 
 /* THEME SWITCHER */
-.theme-panel { position:fixed; top:60px; right:20px; background:var(--card); border:1px solid var(--accent); border-radius:12px; padding:16px; z-index:500; display:none; min-width:200px; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+.theme-panel { position:fixed; top:60px; right:20px; background:var(--card); border:1px solid var(--accent); border-radius:12px; padding:16px; z-index:500; display:none; min-width:220px; max-width:260px; max-height:82vh; overflow-y:auto; overflow-x:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.5); scrollbar-width:thin; scrollbar-color:var(--accent) transparent; }
 .theme-panel.open { display:block; animation:fadeIn 0.2s ease; }
 .tab-color-swatch { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:all 0.2s; }
 .tab-color-swatch:hover { transform:scale(1.2); border-color:#fff; }
@@ -329,6 +329,56 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
 /* SECTION DIVIDER */
 .divider { height:1px; background:linear-gradient(90deg, transparent, var(--border), transparent); margin:20px 0; }
+
+/* ==================== WORKSPACE THEMES ====================
+   Only override background/border variables. All accent colors
+   (--accent, --green, --red, --blue, etc.) are untouched so every
+   color theme works with every workspace theme. */
+
+/* Midnight Black — current default, preserved exactly */
+.ws-midnight {
+  --bg: #050810; --bg2: #0a0f1e; --bg3: #0f1628;
+  --card: #111827; --card2: #1a2235; --border: #1e2d4a;
+}
+/* Dark Graphite — recommended, easier on eyes than pure black */
+.ws-graphite {
+  --bg: #1A1D21; --bg2: #23272F; --bg3: #2B3038;
+  --card: #23272F; --card2: #2B3038; --border: #373D47;
+}
+/* Slate Gray */
+.ws-slate {
+  --bg: #20242B; --bg2: #2A3038; --bg3: #343B44;
+  --card: #2A3038; --card2: #343B44; --border: #404850;
+}
+/* Deep Navy */
+.ws-navy {
+  --bg: #0F172A; --bg2: #162033; --bg3: #1E293B;
+  --card: #162033; --card2: #1E293B; --border: #2A3F5A;
+}
+/* Carbon Fiber */
+.ws-carbon {
+  --bg: #121212; --bg2: #1C1C1C; --bg3: #262626;
+  --card: #1C1C1C; --card2: #262626; --border: #333333;
+}
+/* Steel Blue */
+.ws-steel {
+  --bg: #1B263B; --bg2: #243447; --bg3: #2E4057;
+  --card: #243447; --card2: #2E4057; --border: #3A5068;
+}
+
+/* ==================== ENHANCED READABILITY MODE ====================
+   Applied via body.readability-mode class. Touches ONLY:
+   - --text2 brightness (secondary labels)
+   - --text3 brightness (tertiary hints)
+   - .stat-label font-size (10→11px)
+   - .form-label font-size (11→12px)
+   Zero layout, spacing, width, padding, or component changes. */
+.readability-mode {
+  --text2: #a8b2c8;
+  --text3: #64748b;
+}
+.readability-mode .stat-label { font-size: 11px; }
+.readability-mode .form-label { font-size: 12px; }
 
 /* INVESTMENT CARD */
 .invest-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
@@ -495,6 +545,52 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <span class="theme-name">Blaze Orange</span>
     </div>
   </div>
+
+  <!-- WORKSPACE THEMES -->
+  <div class="theme-panel-title" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">🖥️ Workspace Background</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px">
+    <div onclick="setWorkspaceTheme('midnight')" id="ws-midnight" title="Midnight Black — Maximum contrast" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--accent);background:rgba(245,197,24,0.1)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#050810;margin-bottom:5px;border:1px solid #1e2d4a"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Midnight Black</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">Max contrast</div>
+    </div>
+    <div onclick="setWorkspaceTheme('graphite')" id="ws-graphite" title="Dark Graphite — Easy on the eyes ⭐" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#1A1D21;margin-bottom:5px;border:1px solid #2B3038"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Dark Graphite ⭐</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">Easy on the eyes</div>
+    </div>
+    <div onclick="setWorkspaceTheme('slate')" id="ws-slate" title="Slate Gray — Neutral workspace" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#20242B;margin-bottom:5px;border:1px solid #343B44"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Slate Gray</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">Neutral workspace</div>
+    </div>
+    <div onclick="setWorkspaceTheme('navy')" id="ws-navy" title="Deep Navy — Blue-tinted professional" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#0F172A;margin-bottom:5px;border:1px solid #1E293B"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Deep Navy</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">Blue-tinted pro</div>
+    </div>
+    <div onclick="setWorkspaceTheme('carbon')" id="ws-carbon" title="Carbon Fiber — High contrast" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#121212;margin-bottom:5px;border:1px solid #262626"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Carbon Fiber</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">High contrast</div>
+    </div>
+    <div onclick="setWorkspaceTheme('steel')" id="ws-steel" title="Steel Blue — Cool modern look" style="cursor:pointer;padding:9px;border-radius:8px;border:1px solid var(--border)">
+      <div style="width:100%;height:22px;border-radius:5px;background:#1B263B;margin-bottom:5px;border:1px solid #2E4057"></div>
+      <div style="font-size:11px;color:var(--text2);text-align:center;font-weight:600">Steel Blue</div>
+      <div style="font-size:9px;color:var(--text3);text-align:center">Cool modern look</div>
+    </div>
+  </div>
+
+  <!-- ENHANCED READABILITY MODE -->
+  <div class="theme-panel-title" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">👁️ Readability</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border)">
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--text2)">Enhanced Readability</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:2px">Brighter labels, slightly larger text</div>
+    </div>
+    <button onclick="toggleReadabilityMode()" id="readability-btn" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);color:var(--text3);padding:4px 12px;border-radius:6px;font-size:10px;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:1px;min-width:50px">OFF</button>
+  </div>
+
   <div class="theme-panel-title" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">🖌️ Per-Tab Accent Color</div>
   <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
     <div style="font-size:11px;color:var(--text2)">Pick a tab, then choose color:</div>
@@ -6486,14 +6582,79 @@ function toggleThemePanel() {
   document.getElementById('theme-panel').classList.toggle('open');
 }
 function setTheme(cls, name) {
-  document.body.className=cls;
+  // Preserve workspace class when changing accent theme
+  const body = document.body;
+  const wsClass = [...body.classList].find(c => c.startsWith('ws-')) || '';
+  body.className = cls;
+  if (wsClass) body.classList.add(wsClass);
   state.currentTheme=cls; saveState();
   document.querySelectorAll('.theme-option').forEach(el=>el.classList.remove('active'));
   document.getElementById('theme-'+name).classList.add('active');
   document.getElementById('theme-panel').classList.remove('open');
   showToast('success','Theme Changed',name.charAt(0).toUpperCase()+name.slice(1)+' theme applied','🎨',2000);
 }
-function applyTheme(cls) { document.body.className=cls; applyAllTabColors(); }
+function applyTheme(cls) {
+  const wsClass = [...document.body.classList].find(c => c.startsWith('ws-')) || '';
+  document.body.className = cls;
+  if (wsClass) document.body.classList.add(wsClass);
+  applyAllTabColors();
+}
+
+// ── WORKSPACE THEME ───────────────────────────────────────────────
+const WS_THEMES = ['midnight','graphite','slate','navy','carbon','steel'];
+function setWorkspaceTheme(name) {
+  WS_THEMES.forEach(t => document.body.classList.remove('ws-' + t));
+  if (name !== 'midnight') document.body.classList.add('ws-' + name);
+  localStorage.setItem('mrt_workspace_theme', name);
+  // Update active state on all workspace tiles
+  WS_THEMES.forEach(t => {
+    const el = document.getElementById('ws-' + t);
+    if (!el) return;
+    const isActive = t === name;
+    el.style.borderColor = isActive ? 'var(--green)' : 'var(--border)';
+    el.style.borderWidth = isActive ? '2px' : '1px';
+    el.style.background  = isActive ? 'rgba(0,230,118,0.08)' : '';
+    // Add or remove ACTIVE badge
+    const existing = el.querySelector('.ws-active-badge');
+    if (isActive && !existing) {
+      const badge = document.createElement('div');
+      badge.className = 'ws-active-badge';
+      badge.textContent = '✓ ACTIVE';
+      badge.style.cssText = 'font-size:9px;color:var(--green);text-align:center;font-weight:700;margin-top:2px;letter-spacing:1px';
+      el.appendChild(badge);
+    } else if (!isActive && existing) {
+      existing.remove();
+    }
+  });
+  showToast('success', 'Workspace Changed', name.charAt(0).toUpperCase() + name.slice(1) + ' background applied', '🖥️', 2000);
+}
+function loadWorkspaceTheme() {
+  const saved = localStorage.getItem('mrt_workspace_theme') || 'graphite'; // Dark Graphite default
+  setWorkspaceTheme(saved);
+}
+
+// ── ENHANCED READABILITY MODE ─────────────────────────────────────
+// Touches ONLY --text2, --text3 brightness and stat-label/form-label
+// font-size (+1px each). Zero layout, spacing, or component changes.
+function toggleReadabilityMode() {
+  const active = document.body.classList.toggle('readability-mode');
+  localStorage.setItem('mrt_readability_mode', active ? '1' : '0');
+  updateReadabilityBtn(active);
+  showToast('success', 'Readability Mode', active ? 'Enhanced readability ON — brighter labels, slightly larger text.' : 'Enhanced readability OFF — default text restored.', '👁️', 2500);
+}
+function updateReadabilityBtn(active) {
+  const btn = document.getElementById('readability-btn');
+  if (!btn) return;
+  btn.textContent = active ? 'ON' : 'OFF';
+  btn.style.background  = active ? 'rgba(0,230,118,0.15)' : 'rgba(0,0,0,0.3)';
+  btn.style.borderColor = active ? 'var(--green)' : 'var(--border)';
+  btn.style.color       = active ? 'var(--green)' : 'var(--text3)';
+}
+function loadReadabilityMode() {
+  const saved = localStorage.getItem('mrt_readability_mode') === '1';
+  if (saved) document.body.classList.add('readability-mode');
+  updateReadabilityBtn(saved);
+}
 document.addEventListener('click',e=>{if(!e.target.closest('#theme-panel')&&!e.target.closest('.theme-btn'))document.getElementById('theme-panel').classList.remove('open');});
 
 // Per-tab accent colors
@@ -9238,6 +9399,8 @@ function runStrikeAssist() {
 
 // Auto-populate price from live ticker when ticker changes
 document.addEventListener('DOMContentLoaded', () => {
+  loadWorkspaceTheme(); // Apply saved workspace background before anything renders
+  loadReadabilityMode(); // Apply saved readability mode
   ['ss-ticker','ss-type','ss-setup'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('change', () => {
