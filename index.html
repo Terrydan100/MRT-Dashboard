@@ -987,6 +987,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
           </div>
           <div id="be-regime" style="font-size:10px;color:var(--text3);margin-top:4px;text-align:center"></div>
           <div id="be-conf-level" style="font-size:10px;font-weight:700;margin-top:2px;color:var(--text3)"></div>
+          <div id="be-grade" style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:900;margin-top:6px;padding:2px 12px;border-radius:10px;background:rgba(255,255,255,0.05);color:var(--text3)"></div>
         </div>
 
         <!-- RIGHT — Details -->
@@ -9129,17 +9130,37 @@ async function detectMarketRegime() {
   const shockOn = document.getElementById('shock-alert-banner')?.style.display !== 'none';
   const aplusScore = parseInt(document.getElementById('aplus-score')?.textContent) || 0;
 
+  // Phase 1: reuse the same EMA/structure helpers as the Bias Engine —
+  // no duplicate logic, just a second consumer of the same functions.
+  let emaFactors = null, structureInfo = null;
+  try {
+    const bars = await fetchIntradayBars('QQQ');
+    if (bars) { emaFactors = calcEMATrendFactors(bars); structureInfo = analyzePriceStructureDetailed(bars); }
+  } catch(e) {}
+
   let regime, regimeColor, regimeBorder, strategy, sub;
 
   if(shockOn || vix > 30) {
     regime = '🚨 SHOCK DAY'; regimeColor='var(--red)'; regimeBorder='var(--red)';
     sub = 'Extreme volatility — VIX '+(vix>0?vix.toFixed(1):'elevated');
     strategy = '⚠️ Reduce all size by 50%\n⚠️ No new positions until VIX settles\n⚠️ If in trade — tighten stop immediately\n✅ Cash is the best position today';
+  } else if(structureInfo && structureInfo.breakOfStructure) {
+    const bullBOS = structureInfo.breakOfStructure === 'bull';
+    regime = bullBOS ? '🔄 REVERSAL DAY — BULLISH BOS' : '🔄 REVERSAL DAY — BEARISH BOS';
+    regimeColor = bullBOS ? 'var(--green)' : 'var(--red)';
+    regimeBorder = regimeColor;
+    sub = `Break of structure detected — prior trend may be reversing`;
+    strategy = bullBOS
+      ? '✅ Watch for a confirmed retest of the broken swing high\n✅ First reversal trades are the highest-risk — confirm with volume\n⚠️ Reduce size until the new direction proves itself\n🚫 Do NOT assume the old downtrend resumes'
+      : '✅ Watch for a confirmed retest of the broken swing low\n✅ First reversal trades are the highest-risk — confirm with volume\n⚠️ Reduce size until the new direction proves itself\n🚫 Do NOT assume the old uptrend resumes';
   } else if(Math.abs(spyChg) >= 0.8 && Math.abs(qqqChg) >= 0.8 && (breadth.includes('BROAD RALLY') || breadth.includes('BROAD SELLOFF'))) {
     regime = spyChg > 0 ? '📈 TREND DAY UP' : '📉 TREND DAY DOWN';
     regimeColor = spyChg > 0 ? 'var(--green)' : 'var(--red)';
     regimeBorder = spyChg > 0 ? 'var(--green)' : 'var(--red)';
-    sub = `Strong ${spyChg > 0 ? 'bullish' : 'bearish'} trend — SPY ${spyChg>0?'+':''}${spyChg.toFixed(2)}%`;
+    const emaNote = emaFactors && emaFactors.stack9over21 != null
+      ? (emaFactors.stack9over21 === (spyChg > 0) ? ' · EMA stack confirms' : ' · ⚠️ EMA stack disagrees, watch closely')
+      : '';
+    sub = `Strong ${spyChg > 0 ? 'bullish' : 'bearish'} trend — SPY ${spyChg>0?'+':''}${spyChg.toFixed(2)}%${emaNote}`;
     strategy = `✅ Hold runners longer today\n✅ Move stop to BE at +$0.20\n✅ Trail stop — let winners run\n✅ Consider EOD hold if A+ score ≥80\n🚫 Do NOT take counter-trend trades`;
   } else if(Math.abs(spyChg) < 0.4 && Math.abs(qqqChg) < 0.4 && !breadth.includes('BROAD')) {
     regime = '⚡ CHOP / RANGE DAY'; regimeColor='var(--text2)'; regimeBorder='var(--border)';
@@ -10322,6 +10343,74 @@ function ipaSwingStructure(closes, lookback = 14) {
   return 'mixed';
 }
 
+// ==================== PHASE 1: EMA TREND + PRICE STRUCTURE ====================
+// Reuses fetchIntradayBars() and ipaCalcEMA() already built for the
+// Intraday Price Action layer — same data source, no new API surface.
+// All 4 EMAs computed on the 1-minute chart (QQQ) since this dashboard
+// is 0DTE-focused — a 200-period 1-min EMA (~most of a session) is the
+// intraday-relevant "long-term" reference here, not a multi-month daily one.
+
+// Pivot-based swing high/low detector — a bar is a swing high if it's
+// higher than `lookback` bars on both sides (standard swing definition).
+function detectSwingPoints(highs, lows, lookback = 3) {
+  const swingHighs = [], swingLows = [];
+  for (let i = lookback; i < highs.length - lookback; i++) {
+    const isHigh = highs.slice(i - lookback, i).every(h => h <= highs[i]) && highs.slice(i + 1, i + 1 + lookback).every(h => h <= highs[i]);
+    const isLow  = lows.slice(i - lookback, i).every(l => l >= lows[i])   && lows.slice(i + 1, i + 1 + lookback).every(l => l >= lows[i]);
+    if (isHigh) swingHighs.push({ idx: i, price: highs[i] });
+    if (isLow)  swingLows.push({ idx: i, price: lows[i] });
+  }
+  return { swingHighs, swingLows };
+}
+
+// Full price structure read: HH/HL vs LH/LL classification (reuses the
+// existing ipaSwingStructure two-half check) PLUS explicit Break of
+// Structure detection using real pivot points.
+function analyzePriceStructureDetailed(bars) {
+  const { closes, highs, lows } = bars;
+  const label = ipaSwingStructure(closes, 14);
+  const { swingHighs, swingLows } = detectSwingPoints(highs, lows, 3);
+  const price = closes[closes.length - 1];
+  let breakOfStructure = null;
+  // Bullish BOS: price breaks above the most recent swing high while
+  // structure was previously bearish (LH/LL) — a real trend-change signal.
+  if (swingHighs.length && label === 'LH/LL') {
+    const lastSwingHigh = swingHighs[swingHighs.length - 1].price;
+    if (price > lastSwingHigh) breakOfStructure = 'bull';
+  }
+  // Bearish BOS: price breaks below the most recent swing low while
+  // structure was previously bullish (HH/HL).
+  if (swingLows.length && label === 'HH/HL') {
+    const lastSwingLow = swingLows[swingLows.length - 1].price;
+    if (price < lastSwingLow) breakOfStructure = 'bear';
+  }
+  return { label, breakOfStructure, swingHighCount: swingHighs.length, swingLowCount: swingLows.length };
+}
+
+// Multi-EMA trend read: 9/21/50/200 on the same 1-min series, price vs
+// each, the classic "stack" relationships, and a simple slope check.
+function calcEMATrendFactors(bars) {
+  const closes = bars.closes;
+  const price = closes[closes.length - 1];
+  const ema9   = ipaCalcEMA(closes, 9);
+  const ema21  = ipaCalcEMA(closes, 21);
+  const ema50  = closes.length >= 50  ? ipaCalcEMA(closes, 50)  : null;
+  const ema200 = closes.length >= 200 ? ipaCalcEMA(closes, 200) : null;
+  // Slope: is EMA21 higher now than it was ~10 bars ago?
+  const ema21Prior = closes.length > 31 ? ipaCalcEMA(closes.slice(0, -10), 21) : null;
+  return {
+    ema9, ema21, ema50, ema200,
+    priceVsEma9:  price > ema9,
+    priceVsEma21: price > ema21,
+    priceVsEma50: ema50 != null ? price > ema50 : null,
+    priceVsEma200: ema200 != null ? price > ema200 : null,
+    stack9over21: ema9 > ema21,
+    stack21over50: ema50 != null ? ema21 > ema50 : null,
+    stack50over200: (ema50 != null && ema200 != null) ? ema50 > ema200 : null,
+    slopeUp: ema21Prior != null ? ema21 > ema21Prior : null,
+  };
+}
+
 function ipaAnalyzeSymbol(bars) {
   const closes = bars.closes;
   const price = closes[closes.length - 1];
@@ -10457,6 +10546,19 @@ async function _runBiasEngineInner() {
     if(nvdaR.ok) { const d = await nvdaR.json(); nvdaChg = d.dp || 0; }
   } catch(e) {}
 
+  // ── PHASE 1: EMA TREND + PRICE STRUCTURE DATA ─────────────────────
+  // Reuses fetchIntradayBars() — same function the Intraday Price Action
+  // layer already uses. Failure here just skips these factors; the rest
+  // of the confluence score is unaffected.
+  let emaFactors = null, structureInfo = null;
+  try {
+    const qqqBarsForEma = await fetchIntradayBars('QQQ');
+    if (qqqBarsForEma) {
+      emaFactors = calcEMATrendFactors(qqqBarsForEma);
+      structureInfo = analyzePriceStructureDetailed(qqqBarsForEma);
+    }
+  } catch(e) { /* silently skip — confluence score still works without it */ }
+
   // ── SCORING ENGINE ─────────────────────────────────────────────────
   let bullPts = 0, bearPts = 0, choppyPts = 0;
   const factors = [];
@@ -10469,6 +10571,26 @@ async function _runBiasEngineInner() {
 
   // Market shock = immediate override
   if(shockVis) { bearPts += 30; factors.push({ t:'🚨 Market Shock Active', d:'bear', pts:30 }); }
+
+  // ── EMA TREND SCORE (Phase 1) ──────────────────────────────────────
+  if (emaFactors) {
+    if (emaFactors.priceVsEma9 != null)  add(4, emaFactors.priceVsEma9  ? 'Price above 9 EMA'  : 'Price below 9 EMA',  emaFactors.priceVsEma9);
+    if (emaFactors.priceVsEma21 != null) add(4, emaFactors.priceVsEma21 ? 'Price above 21 EMA' : 'Price below 21 EMA', emaFactors.priceVsEma21);
+    if (emaFactors.priceVsEma50 != null) add(5, emaFactors.priceVsEma50 ? 'Price above 50 EMA' : 'Price below 50 EMA', emaFactors.priceVsEma50);
+    if (emaFactors.priceVsEma200 != null) add(6, emaFactors.priceVsEma200 ? 'Price above 200 EMA' : 'Price below 200 EMA', emaFactors.priceVsEma200);
+    if (emaFactors.stack9over21 != null) add(3, emaFactors.stack9over21 ? '9 EMA above 21 EMA' : '9 EMA below 21 EMA', emaFactors.stack9over21);
+    if (emaFactors.stack21over50 != null) add(3, emaFactors.stack21over50 ? '21 EMA above 50 EMA' : '21 EMA below 50 EMA', emaFactors.stack21over50);
+    if (emaFactors.stack50over200 != null) add(4, emaFactors.stack50over200 ? '50 EMA above 200 EMA' : '50 EMA below 200 EMA', emaFactors.stack50over200);
+    if (emaFactors.slopeUp != null) add(2, emaFactors.slopeUp ? '21 EMA sloping up' : '21 EMA sloping down', emaFactors.slopeUp);
+  }
+
+  // ── PRICE STRUCTURE SCORE (Phase 1) ────────────────────────────────
+  if (structureInfo) {
+    if (structureInfo.label === 'HH/HL') add(6, 'Structure: Higher Highs/Higher Lows', true);
+    else if (structureInfo.label === 'LH/LL') add(6, 'Structure: Lower Highs/Lower Lows', false);
+    if (structureInfo.breakOfStructure === 'bull') add(7, 'Break of Structure — bullish reversal', true);
+    else if (structureInfo.breakOfStructure === 'bear') add(7, 'Break of Structure — bearish reversal', false);
+  }
 
   // SPY/QQQ direction (15pts each)
   if(spyChg > 0.3)       add(15, `SPY +${spyChg.toFixed(2)}%`, true);
@@ -10715,6 +10837,17 @@ async function _runBiasEngineInner() {
 
   const clEl = document.getElementById('be-conf-level');
   if(clEl) { clEl.textContent = confLevel; clEl.style.color = confLevelColor; }
+
+  // ── TRADE GRADE (Phase 1) — reuses confidence + decidedPts, no new data ──
+  let grade, gradeColor;
+  if (shockVis || verdict.includes('CHOP')) { grade = 'D'; gradeColor = 'var(--red)'; }
+  else if (confidence >= 80 && decidedPts >= 30) { grade = 'A+'; gradeColor = 'var(--green)'; }
+  else if (confidence >= 70) { grade = 'A'; gradeColor = 'var(--green)'; }
+  else if (confidence >= 55) { grade = 'B'; gradeColor = 'var(--accent)'; }
+  else if (confidence >= 40) { grade = 'C'; gradeColor = 'var(--orange)'; }
+  else { grade = 'D'; gradeColor = 'var(--red)'; }
+  const gradeEl = document.getElementById('be-grade');
+  if (gradeEl) { gradeEl.textContent = `GRADE ${grade}`; gradeEl.style.color = gradeColor; gradeEl.style.background = gradeColor.replace('var(--','rgba(').replace(')',',.1)'); }
 
   // ── BUILD 2: Conflict Resolution — ONE clean action message ──────
   // Never show contradictory guidance — pick the single most important message
