@@ -10541,9 +10541,43 @@ async function _runBiasEngineInner() {
   else if(aplusScore < 40) add(4, `A+ Score low: ${aplusScore}/100`, null);
 
   // ── DETERMINE VERDICT ─────────────────────────────────────────────
-  const total = bullPts + bearPts + Math.max(choppyPts * 0.5, 0);
+  // UNIFIED CONFIDENCE + PROBABILITY — single source of truth. Both
+  // be-confidence and the Probability Summary card (prob-calls/prob-puts)
+  // now derive from these exact same two numbers, so they can never show
+  // contradictory-looking values again (e.g. "65% confidence" next to
+  // "83% puts" from two different formulas — that was the actual bug).
+  const decidedPts = bullPts + bearPts; // points where a factor actually leaned bull or bear
+  // Laplace-smoothed share so a thin sample (few factors fired yet)
+  // can't swing all the way to 96% on noise.
+  const probCalls = decidedPts > 0 ? Math.min(Math.max(Math.round((bullPts + 1) / (decidedPts + 2) * 100), 4), 96) : 50;
+  const probPuts  = 100 - probCalls;
+  // Confidence = how far the probability split sits from a 50/50 coin
+  // flip, dampened by sample size so a lopsided read on very few fired
+  // factors doesn't look as certain as a lopsided read on many.
+  const sampleFactor = Math.min(1, decidedPts / 20);
+  const confidence = Math.min(Math.round(Math.abs(probCalls - 50) * 2 * sampleFactor), 96);
   const netBull = bullPts - bearPts;
-  const confidence = total > 0 ? Math.min(Math.round(Math.abs(netBull) / (bullPts + bearPts + 1) * 100), 96) : 0;
+
+  // ── ADAPTIVE BIAS ───────────────────────────────────────────────────
+  // Require 2 consecutive scans agreeing on a NEW direction before the
+  // displayed verdict actually flips. Reduces single-scan whipsaws while
+  // still letting a genuine reversal through within ~2 scan cycles.
+  // Confidence/entry/stop/target below still use this scan's live
+  // numbers — only the CALLS-vs-PUTS branch selection is "sticky".
+  const rawDirection = netBull > 0 ? 'CALLS' : netBull < 0 ? 'PUTS' : (window._confirmedBiasDirection || 'CALLS');
+  if (window._confirmedBiasDirection === undefined) window._confirmedBiasDirection = rawDirection;
+  const prevConfirmedDirection = window._confirmedBiasDirection; // snapshot BEFORE this scan can mutate it
+  if (window._pendingBiasDirection === undefined) { window._pendingBiasDirection = rawDirection; window._pendingBiasStreak = 0; }
+  let biasIsPending = false;
+  if (rawDirection !== window._confirmedBiasDirection) {
+    if (rawDirection === window._pendingBiasDirection) window._pendingBiasStreak++;
+    else { window._pendingBiasDirection = rawDirection; window._pendingBiasStreak = 1; }
+    if (window._pendingBiasStreak >= 2) { window._confirmedBiasDirection = rawDirection; window._pendingBiasStreak = 0; }
+    else biasIsPending = true;
+  } else {
+    window._pendingBiasDirection = rawDirection; window._pendingBiasStreak = 0;
+  }
+  const confirmedIsCalls = window._confirmedBiasDirection === 'CALLS';
 
   // Session check
   const now = new Date();
@@ -10577,7 +10611,7 @@ async function _runBiasEngineInner() {
     levels = 'No trade until confidence ≥55%';
     risk = '0 contracts — stay flat';
     action = `Only ${confidence}% confidence — signals not aligned enough. Wait for stronger setup before entering.`;
-  } else if(netBull > 0) {
+  } else if(confirmedIsCalls) {
     verdict = '🟢 CALL DAY'; verdictColor = 'var(--green)'; borderColor = 'var(--green)';
     regime = confidence >= 75 ? 'Trend Up — Strong' : 'Lean Bullish';
     entry = spyPMH ? `Reclaim PM high ($${spyPMH.toFixed(2)}) or pullback to prev close ($${spyPC.toFixed(2)})` : 'Pullback to prev close or VWAP reclaim';
@@ -10589,6 +10623,7 @@ async function _runBiasEngineInner() {
     else if(h >= 11 && h < 14) action = `CALLS bias (${confidence}% confidence). Lunch hour — Session 2 opens 2:30 PM. Review setup then.`;
     else if(h < 9 || (h === 9 && m < 45)) action = `CALLS bias (${confidence}% confidence). Pre-market — wait for 9:45 AM session open for entry.`;
     else action = `CALLS bias (${confidence}% confidence). Outside session window — next entry at 2:30 PM Session 2.`;
+    if (biasIsPending) action += ` ⚠️ Raw signals now lean PUTS — needs 1 more confirming scan before the bias actually flips.`;
   } else {
     verdict = '🔴 PUT DAY'; verdictColor = 'var(--red)'; borderColor = 'var(--red)';
     regime = confidence >= 75 ? 'Trend Down — Strong' : 'Lean Bearish';
@@ -10601,19 +10636,20 @@ async function _runBiasEngineInner() {
     else if(h >= 11 && h < 14) action = `PUTS bias (${confidence}% confidence). Lunch hour — Session 2 opens 2:30 PM. Review setup then.`;
     else if(h < 9 || (h === 9 && m < 45)) action = `PUTS bias (${confidence}% confidence). Pre-market — wait for 9:45 AM session open for entry.`;
     else action = `PUTS bias (${confidence}% confidence). Outside session window — next entry at 2:30 PM Session 2.`;
+    if (biasIsPending) action += ` ⚠️ Raw signals now lean CALLS — needs 1 more confirming scan before the bias actually flips.`;
   }
 
   // ── CONFLICT RESOLUTION ───────────────────────────────────────────
   // If shock is active but bias shows bullish/bearish — explain the override
   const conflictEl = document.getElementById('be-action');
-  if(shockVis && netBull > 0 && confidence >= 55) {
+  if(shockVis && confirmedIsCalls && confidence >= 55) {
     verdict = '⚠️ CALL BIAS OVERRIDDEN'; verdictColor = 'var(--orange)'; borderColor = 'var(--orange)';
     regime = 'Market Shock Active — override in effect';
     entry = 'Do not enter — shock conditions present';
     levels = 'No trade during shock';
     risk = '0 contracts — cash only';
     action = `CALL BIAS DETECTED (${confidence}%) BUT OVERRIDDEN BY MARKET SHOCK FILTER. Wait for shock to clear before trading.`;
-  } else if(shockVis && netBull <= 0 && confidence >= 55) {
+  } else if(shockVis && !confirmedIsCalls && confidence >= 55) {
     verdict = '⚠️ PUT BIAS OVERRIDDEN'; verdictColor = 'var(--orange)'; borderColor = 'var(--orange)';
     regime = 'Market Shock Active — override in effect';
     entry = 'Do not enter — shock conditions present';
@@ -10621,27 +10657,6 @@ async function _runBiasEngineInner() {
     risk = '0 contracts — cash only';
     action = `PUT BIAS DETECTED (${confidence}%) BUT OVERRIDDEN BY MARKET SHOCK FILTER. Wait for shock to clear before trading.`;
   }
-
-  // ── PROBABILITY SUMMARY CARD ──────────────────────────────────────
-  const totalPts = bullPts + bearPts + 1;
-  const callsProb = Math.min(Math.max(Math.round((bullPts / totalPts) * 100), 4), 96);
-  const putsProb  = 100 - callsProb;
-  const confLabel = confidence >= 80 ? '💪 STRONG' : confidence >= 65 ? '✅ MODERATE' : confidence >= 50 ? '⚡ WEAK' : '❓ INSUFFICIENT';
-  const confColor = confidence >= 80 ? 'var(--green)' : confidence >= 65 ? 'var(--accent)' : 'var(--text3)';
-
-  const probCallsEl  = document.getElementById('prob-calls');
-  const probPutsEl   = document.getElementById('prob-puts');
-  const probVerdEl   = document.getElementById('prob-verdict');
-  const probConfEl   = document.getElementById('prob-confidence-label');
-  if(probCallsEl) { probCallsEl.textContent = callsProb+'%'; probCallsEl.style.color = callsProb > putsProb ? 'var(--green)' : 'var(--text3)'; }
-  if(probPutsEl)  { probPutsEl.textContent  = putsProb+'%';  probPutsEl.style.color  = putsProb > callsProb ? 'var(--red)'   : 'var(--text3)'; }
-  if(probVerdEl) {
-    if(shockVis) { probVerdEl.textContent='🚨 No Trade — Shock Active'; probVerdEl.style.color='var(--orange)'; }
-    else if(callsProb >= 60) { probVerdEl.textContent=`Highest Probability: CALLS (${callsProb}%)`; probVerdEl.style.color='var(--green)'; }
-    else if(putsProb >= 60)  { probVerdEl.textContent=`Highest Probability: PUTS (${putsProb}%)`; probVerdEl.style.color='var(--red)'; }
-    else { probVerdEl.textContent='No clear edge — wait for alignment'; probVerdEl.style.color='var(--text2)'; }
-  }
-  if(probConfEl) { probConfEl.textContent = `Confidence: ${confLabel} (${confidence}%)`; probConfEl.style.color = confColor; }
 
   // ── TOP 3 REASONS ────────────────────────────────────────────────
   const top3El = document.getElementById('top3-reasons');
@@ -10659,19 +10674,19 @@ async function _runBiasEngineInner() {
   }
 
   // ── WHAT CHANGED ─────────────────────────────────────────────────
+  // Fires only when the CONFIRMED (adaptive, 2-scan) direction actually
+  // changes — not on every noisy single-scan wobble.
   const whatChangedEl = document.getElementById('what-changed-alert');
   if(whatChangedEl) {
-    const prevDirection = window._lastBiasDirection || '';
-    const currentDirection = netBull > 0 ? 'CALLS' : 'PUTS';
-    if(prevDirection && prevDirection !== currentDirection && confidence >= 55 && !shockVis) {
+    const currentDirection = window._confirmedBiasDirection;
+    if(prevConfirmedDirection && prevConfirmedDirection !== currentDirection && !shockVis) {
       whatChangedEl.style.display = 'block';
-      whatChangedEl.textContent = `⚡ BIAS FLIPPED: ${prevDirection} → ${currentDirection}. Re-evaluate your setup.`;
-      showToast('danger', `Bias Flipped: ${currentDirection}`, `Dashboard switched from ${prevDirection} to ${currentDirection} — check your position`, '⚡', 10000);
+      whatChangedEl.textContent = `⚡ BIAS FLIPPED: ${prevConfirmedDirection} → ${currentDirection}. Re-evaluate your setup.`;
+      showToast('danger', `Bias Flipped: ${currentDirection}`, `Dashboard switched from ${prevConfirmedDirection} to ${currentDirection} — check your position`, '⚡', 10000);
       if (typeof playBiasFlipSound === 'function') playBiasFlipSound();
     } else {
       whatChangedEl.style.display = 'none';
     }
-    window._lastBiasDirection = confidence >= 55 && !shockVis ? currentDirection : prevDirection;
   }
 
   // ── RENDER ─────────────────────────────────────────────────────────
@@ -10716,16 +10731,33 @@ async function _runBiasEngineInner() {
   if(panel)  panel.style.background = verdictColor.replace('var(--','rgba(').replace(')',',.06)');
   if(pulseEl){ pulseEl.style.background = verdictColor; }
 
+  // ── EXPLAIN WHY — every factor that contributed to this verdict, not
+  // just the top 3 (that list already exists in the "Top 3 Reasons" card).
+  // This is the full audit trail: every "✔" or "✘" that fed the score.
+  if(facEl) {
+    const sortedAll = [...factors].sort((a,b) => b.pts - a.pts);
+    facEl.innerHTML = sortedAll.map(f => {
+      const c = f.d==='bull' ? 'var(--green)' : f.d==='bear' ? 'var(--red)' : 'var(--text3)';
+      const bg = f.d==='bull' ? 'rgba(0,230,118,0.08)' : f.d==='bear' ? 'rgba(255,23,68,0.08)' : 'rgba(255,255,255,0.04)';
+      const icon = f.d==='bull' ? '✔' : f.d==='bear' ? '✘' : '·';
+      return `<span style="font-size:10px;color:${c};background:${bg};border:1px solid ${c.replace(')',',.25)').replace('var(--','rgba(')};border-radius:12px;padding:3px 8px;white-space:nowrap">${icon} ${f.t}</span>`;
+    }).join('');
+  }
+
   // ── BUILD 3: Probability Summary Card ────────────────────────────
-  const probTotal = bullPts + bearPts;
-  const callsPct = probTotal > 0 ? Math.round(bullPts / probTotal * 100) : 50;
-  const putsPct  = 100 - callsPct;
-  document.getElementById('prob-calls') && (document.getElementById('prob-calls').textContent = callsPct+'%') && (document.getElementById('prob-calls').style.color = callsPct > putsPct ? 'var(--green)' : 'var(--text3)');
-  document.getElementById('prob-puts')  && (document.getElementById('prob-puts').textContent  = putsPct+'%')  && (document.getElementById('prob-puts').style.color  = putsPct > callsPct ? 'var(--red)' : 'var(--text3)');
+  // Renders from the SAME probCalls/probPuts computed at the top of this
+  // function alongside confidence — no separate formula here anymore.
+  const probCallsElB3 = document.getElementById('prob-calls');
+  const probPutsElB3  = document.getElementById('prob-puts');
+  if(probCallsElB3) { probCallsElB3.textContent = probCalls+'%'; probCallsElB3.style.color = probCalls > probPuts ? 'var(--green)' : 'var(--text3)'; }
+  if(probPutsElB3)  { probPutsElB3.textContent  = probPuts+'%';  probPutsElB3.style.color  = probPuts > probCalls ? 'var(--red)' : 'var(--text3)'; }
   const pv = document.getElementById('prob-verdict');
-  if(pv){ pv.textContent = callsPct>=70?'🟢 CALLS FAVORED':putsPct>=70?'🔴 PUTS FAVORED':'⚡ TOO CLOSE TO CALL'; pv.style.color = callsPct>=70?'var(--green)':putsPct>=70?'var(--red)':'var(--accent)'; }
+  if(pv){
+    if(shockVis) { pv.textContent='🚨 No Trade — Shock Active'; pv.style.color='var(--orange)'; }
+    else { pv.textContent = probCalls>=70?'🟢 CALLS FAVORED':probPuts>=70?'🔴 PUTS FAVORED':'⚡ TOO CLOSE TO CALL'; pv.style.color = probCalls>=70?'var(--green)':probPuts>=70?'var(--red)':'var(--accent)'; }
+  }
   const pc = document.getElementById('prob-confidence-label');
-  if(pc){ pc.textContent=confLevel; pc.style.color=confLevelColor; }
+  if(pc){ pc.textContent=`Confidence: ${confLevel} (${confidence}%)`; pc.style.color=confLevelColor; }
 
   // Auto-update dependent cards
   setTimeout(updateTodaysPlaybook, 500);
