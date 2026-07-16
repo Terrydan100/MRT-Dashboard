@@ -2473,6 +2473,14 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
             <span style="color:var(--text2)">A+ Target (+$0.50):</span>
             <span style="color:var(--green);font-weight:700" id="ps-aplus">$0</span>
           </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+            <span style="color:var(--text2)">Risk/Reward (standard):</span>
+            <span style="color:var(--accent);font-weight:700" id="ps-rr">--</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px">
+            <span style="color:var(--text2)">Risk/Reward (A+):</span>
+            <span style="color:var(--accent);font-weight:700" id="ps-rr-aplus">--</span>
+          </div>
         </div>
       </div>
     </div>
@@ -6081,6 +6089,19 @@ function calcPosition() {
   document.getElementById('ps-maxloss').textContent='-$'+maxLoss.toFixed(2);
   document.getElementById('ps-target').textContent='+$'+target.toFixed(2);
   document.getElementById('ps-aplus').textContent='+$'+aplus.toFixed(2);
+  // Phase 3: live Risk/Reward — reuses maxLoss/target/aplus already computed above
+  const rrEl = document.getElementById('ps-rr');
+  const rrAplusEl = document.getElementById('ps-rr-aplus');
+  if (rrEl) {
+    const rr = maxLoss > 0 ? (target / maxLoss) : 0;
+    rrEl.textContent = rr > 0 ? `${rr.toFixed(2)}:1` : '--';
+    rrEl.style.color = rr >= 1.5 ? 'var(--green)' : rr >= 1 ? 'var(--accent)' : 'var(--red)';
+  }
+  if (rrAplusEl) {
+    const rrA = maxLoss > 0 ? (aplus / maxLoss) : 0;
+    rrAplusEl.textContent = rrA > 0 ? `${rrA.toFixed(2)}:1` : '--';
+    rrAplusEl.style.color = rrA >= 1.5 ? 'var(--green)' : rrA >= 1 ? 'var(--accent)' : 'var(--red)';
+  }
 }
 
 // ==================== MARKET BIAS ====================
@@ -8752,20 +8773,28 @@ async function fetchSRLevels(sym) {
     const resistance = significantLevels.filter(l => l.price > currentPrice).sort((a,b) => a.price - b.price).slice(0,5);
     const support = significantLevels.filter(l => l.price < currentPrice).sort((a,b) => b.price - a.price).slice(0,5);
 
-    if(resistEl) resistEl.innerHTML = resistance.length ? resistance.map(l => `
+    // Phase 3: plain-English strength label alongside the existing touch-count stars
+    const srStrengthLabel = (count) => count >= 4 ? { label: 'Strong', color: 'var(--green)' } : count === 3 ? { label: 'Medium', color: 'var(--accent)' } : { label: 'Weak', color: 'var(--text3)' };
+
+    if(resistEl) resistEl.innerHTML = resistance.length ? resistance.map(l => { const s = srStrengthLabel(l.strength); return `
       <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);border-radius:6px;padding:6px 10px">
         <span style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:#ff5252">$${l.price.toFixed(2)}</span>
+        <span style="font-size:10px;color:${s.color};font-weight:700">${s.label}</span>
         <span style="font-size:10px;color:var(--text2)">${'★'.repeat(Math.min(l.strength,5))} ${l.strength} touches</span>
-      </div>`).join('') : '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">No resistance found</div>';
+      </div>`; }).join('') : '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">No resistance found</div>';
 
-    if(suppEl) suppEl.innerHTML = support.length ? support.map(l => `
+    if(suppEl) suppEl.innerHTML = support.length ? support.map(l => { const s = srStrengthLabel(l.strength); return `
       <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:6px;padding:6px 10px">
         <span style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:#00e676">$${l.price.toFixed(2)}</span>
+        <span style="font-size:10px;color:${s.color};font-weight:700">${s.label}</span>
         <span style="font-size:10px;color:var(--text2)">${'★'.repeat(Math.min(l.strength,5))} ${l.strength} touches</span>
-      </div>`).join('') : '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">No support found</div>';
+      </div>`; }).join('') : '<div style="color:var(--text2);font-size:12px;padding:10px;text-align:center">No support found</div>';
 
     if(nearResist && resistance.length) nearResist.textContent = '$' + resistance[0].price.toFixed(2);
     if(nearSupp && support.length) nearSupp.textContent = '$' + support[0].price.toFixed(2);
+
+    // Cache for Dynamic Entry Zone (Bias Engine) to reuse without a new fetch
+    window._lastSRLevels = { symbol: sym, resistance, support, price: currentPrice };
 
   } catch(e) {
     // Fallback: use Finnhub quote for current price only
@@ -10629,6 +10658,39 @@ async function runIntradayPriceAction() {
   }
 }
 
+// ==================== PHASE 3: DYNAMIC ENTRY ZONE ====================
+// Computes an actual price-based entry suggestion — nearest support/
+// resistance (reuses the S&R Detector's cached levels), VWAP, EMA9/21,
+// and previous close — instead of a generic "pullback to VWAP" string.
+// Falls back to null (caller keeps its existing generic text) if there
+// isn't enough data yet.
+function calcDynamicEntryZone(direction, price, qqqBars, emaFactors, prevClose, pmHigh, pmLow) {
+  if (!price) return null;
+  const candidates = [];
+  const vwap = qqqBars ? ipaCalcVWAP(qqqBars) : null;
+  if (vwap) candidates.push({ label: 'VWAP', price: vwap });
+  if (emaFactors && emaFactors.ema9)  candidates.push({ label: '9 EMA',  price: emaFactors.ema9 });
+  if (emaFactors && emaFactors.ema21) candidates.push({ label: '21 EMA', price: emaFactors.ema21 });
+  if (prevClose) candidates.push({ label: 'prev close', price: prevClose });
+  const sr = window._lastSRLevels;
+  if (sr && sr.symbol === 'QQQ') {
+    if (direction === 'CALLS' && sr.support.length)    candidates.push({ label: 'S&R support',    price: sr.support[0].price });
+    if (direction === 'PUTS'  && sr.resistance.length) candidates.push({ label: 'S&R resistance', price: sr.resistance[0].price });
+  }
+  if (direction === 'CALLS' && pmHigh) candidates.push({ label: 'PM high reclaim', price: pmHigh });
+  if (direction === 'PUTS'  && pmLow)  candidates.push({ label: 'PM low break',    price: pmLow });
+  if (!candidates.length) return null;
+
+  if (direction === 'CALLS') {
+    const below = candidates.filter(c => c.price < price).sort((a,b) => b.price - a.price);
+    if (below.length) return `Pullback to ${below[0].label} ($${below[0].price.toFixed(2)})`;
+  } else {
+    const above = candidates.filter(c => c.price > price).sort((a,b) => a.price - b.price);
+    if (above.length) return `Reject at ${above[0].label} ($${above[0].price.toFixed(2)})`;
+  }
+  return null;
+}
+
 async function _runBiasEngineInner() {
   const pulseEl = document.getElementById('be-pulse');
   // ── READ ALL EXISTING DASHBOARD DATA ──────────────────────────────
@@ -10872,7 +10934,7 @@ async function _runBiasEngineInner() {
   } else if(confirmedIsCalls) {
     verdict = '🟢 CALL DAY'; verdictColor = 'var(--green)'; borderColor = 'var(--green)';
     regime = confidence >= 75 ? 'Trend Up — Strong' : 'Lean Bullish';
-    entry = spyPMH ? `Reclaim PM high ($${spyPMH.toFixed(2)}) or pullback to prev close ($${spyPC.toFixed(2)})` : 'Pullback to prev close or VWAP reclaim';
+    entry = calcDynamicEntryZone('CALLS', qqqCurr, qqqBarsForEma, emaFactors, qqqPC, qqqPMH, qqqPML) || (spyPMH ? `Reclaim PM high ($${spyPMH.toFixed(2)}) or pullback to prev close ($${spyPC.toFixed(2)})` : 'Pullback to prev close or VWAP reclaim');
     levels = `Stop: -$0.30 · Target: ${confidence >= 75 ? '+$0.50 (A+)' : '+$0.35'}`;
     risk = confidence >= 75 ? '1-2 contracts (A+ setup confirmed)' : '1 contract standard';
     // Session-aware action
@@ -10885,7 +10947,7 @@ async function _runBiasEngineInner() {
   } else {
     verdict = '🔴 PUT DAY'; verdictColor = 'var(--red)'; borderColor = 'var(--red)';
     regime = confidence >= 75 ? 'Trend Down — Strong' : 'Lean Bearish';
-    entry = spyPML ? `Break below PM low ($${spyPML.toFixed(2)}) or reject at prev close ($${spyPC.toFixed(2)})` : 'Reject at prev close or VWAP fail';
+    entry = calcDynamicEntryZone('PUTS', qqqCurr, qqqBarsForEma, emaFactors, qqqPC, qqqPMH, qqqPML) || (spyPML ? `Break below PM low ($${spyPML.toFixed(2)}) or reject at prev close ($${spyPC.toFixed(2)})` : 'Reject at prev close or VWAP fail');
     levels = `Stop: -$0.30 · Target: ${confidence >= 75 ? '+$0.50 (A+)' : '+$0.35'}`;
     risk = confidence >= 75 ? '1-2 contracts (A+ setup confirmed)' : '1 contract standard';
     // Session-aware action
