@@ -1045,6 +1045,10 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
             <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:5px">REVERSAL PROBABILITY</div>
             <div id="reversal-prob-badge" style="font-size:12px;font-weight:700;color:var(--text3)">--</div>
           </div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:5px">SPY/QQQ CORRELATION</div>
+            <div id="correlation-badge" style="font-size:12px;font-weight:700;color:var(--text3)">--</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1172,6 +1176,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div style="font-family:Orbitron,sans-serif;font-size:11px;color:var(--accent);letter-spacing:2px">📋 TODAY'S PLAYBOOK</div>
         <div id="playbook-updated" style="font-size:10px;color:var(--text3)"></div>
       </div>
+      <div id="pb-summary" style="font-size:14px;font-weight:900;padding:8px 12px;border-radius:8px;background:rgba(0,0,0,0.25);margin-bottom:10px;text-align:center;color:var(--text2)">Scanning today's summary...</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">
         <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
           <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">MARKET REGIME</div>
@@ -1188,6 +1193,10 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
           <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">AGGRESSION</div>
           <div id="pb-aggression" style="font-size:13px;font-weight:700;color:var(--text2)">--</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">NEWS IMPACT</div>
+          <div id="pb-news-impact" style="font-size:13px;font-weight:700;color:var(--text2)">--</div>
         </div>
       </div>
       <div id="pb-note" style="margin-top:8px;font-size:11px;color:var(--text2);padding:6px 10px;background:rgba(0,0,0,0.2);border-radius:6px;border-left:3px solid var(--accent)"></div>
@@ -9778,6 +9787,32 @@ function updateTodaysPlaybook() {
   if(pbA){pbA.textContent=aggression;pbA.style.color=aggression==='AGGRESSIVE'?'var(--green)':aggression==='ZERO'||aggression==='DEFENSIVE'?'var(--red)':'var(--accent)';}
   if(pbN){pbN.textContent=note;pbN.style.borderLeftColor=color;}
   if(pbU) pbU.textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  // ── PHASE 4: NEWS IMPACT METER ─────────────────────────────────────
+  // Pure synthesis of signals that already exist elsewhere (geo alert,
+  // event probability engine, shock banner) — no new data fetched.
+  const geoActive = document.getElementById('geo-active-alert')?.style.display !== 'none';
+  const eventContent = document.getElementById('event-prob-content')?.innerHTML || '';
+  const hasTodayHighImpact = eventContent.includes('HIGH IMPACT') && eventContent.includes('⚡ TODAY');
+  let newsLabel, newsColor;
+  if (isShock || (geoActive && hasTodayHighImpact)) { newsLabel = '🔴 HIGH'; newsColor = 'var(--red)'; }
+  else if (geoActive || hasTodayHighImpact) { newsLabel = '🟡 MEDIUM'; newsColor = 'var(--accent)'; }
+  else { newsLabel = '🟢 LOW'; newsColor = 'var(--green)'; }
+  const pbNews = document.getElementById('pb-news-impact');
+  if (pbNews) { pbNews.textContent = newsLabel; pbNews.style.color = newsColor; }
+
+  // ── PHASE 4: TODAY'S TRADING SUMMARY ───────────────────────────────
+  // One-sentence distillation of the same verdict/confidence already
+  // computed by the Bias Engine — reused, not recalculated.
+  const pbSummary = document.getElementById('pb-summary');
+  if (pbSummary) {
+    let summaryState, summaryColor, summaryText;
+    if (isShock) { summaryState = 'STAY FLAT'; summaryColor = 'var(--red)'; summaryText = 'Market shock active — protect capital, no trades today.'; }
+    else if (isBullBias) { summaryState = 'BULLISH'; summaryColor = 'var(--green)'; summaryText = `Leaning bullish at ${confidence}% confidence — ${strategy.toLowerCase()}.`; }
+    else if (isBearBias) { summaryState = 'BEARISH'; summaryColor = 'var(--red)'; summaryText = `Leaning bearish at ${confidence}% confidence — ${strategy.toLowerCase()}.`; }
+    else { summaryState = 'NEUTRAL'; summaryColor = 'var(--text2)'; summaryText = 'No clear directional edge yet — wait for stronger confluence.'; }
+    pbSummary.innerHTML = `<span style="color:${summaryColor}">${summaryState}</span> — ${summaryText}`;
+  }
 }
 setTimeout(updateTodaysPlaybook, 12000);
 setInterval(updateTodaysPlaybook, 120000);
@@ -10540,6 +10575,26 @@ function calcReversalProbability(bars, ipaData) {
   return { score, label, rsi };
 }
 
+// ==================== PHASE 4: SPY/QQQ CORRELATION MONITOR ====================
+// Pearson correlation on bar-to-bar % returns (not raw price levels —
+// price levels are trivially correlated by trend; returns are the
+// standard, meaningful measure). Warns when the normal tight SPY/QQQ
+// relationship breaks down, which often precedes a choppy/unreliable session.
+function calcCorrelation(closesA, closesB) {
+  const n = Math.min(closesA.length, closesB.length);
+  if (n < 15) return null;
+  const retA = [], retB = [];
+  for (let i = closesA.length - n + 1; i < closesA.length; i++) retA.push((closesA[i] - closesA[i-1]) / closesA[i-1]);
+  for (let i = closesB.length - n + 1; i < closesB.length; i++) retB.push((closesB[i] - closesB[i-1]) / closesB[i-1]);
+  const len = Math.min(retA.length, retB.length);
+  const a = retA.slice(-len), b = retB.slice(-len);
+  const meanA = a.reduce((s,v)=>s+v,0)/len, meanB = b.reduce((s,v)=>s+v,0)/len;
+  let num=0, denA=0, denB=0;
+  for (let i=0;i<len;i++){ const da=a[i]-meanA, db=b[i]-meanB; num+=da*db; denA+=da*da; denB+=db*db; }
+  const den = Math.sqrt(denA*denB);
+  return den > 0 ? num/den : null;
+}
+
 function ipaAnalyzeSymbol(bars) {
   const closes = bars.closes;
   const price = closes[closes.length - 1];
@@ -10652,6 +10707,16 @@ async function runIntradayPriceAction() {
     const reversal = calcReversalProbability(qqqBars, qqqA);
     const reversalEl = document.getElementById('reversal-prob-badge');
     if (reversalEl) { reversalEl.textContent = `${reversal.label} (${reversal.score}%)`; reversalEl.style.color = reversal.score >= 70 ? 'var(--red)' : reversal.score >= 40 ? 'var(--accent)' : 'var(--green)'; }
+
+    // Phase 4: SPY/QQQ correlation — reuses qqqBars/spyBars already fetched above
+    const corr = calcCorrelation(qqqBars.closes, spyBars.closes);
+    const corrEl = document.getElementById('correlation-badge');
+    if (corrEl) {
+      if (corr == null) { corrEl.textContent = '--'; corrEl.style.color = 'var(--text3)'; }
+      else if (corr >= 0.7) { corrEl.textContent = `✅ ${corr.toFixed(2)} Aligned`; corrEl.style.color = 'var(--green)'; }
+      else if (corr >= 0.4) { corrEl.textContent = `⚡ ${corr.toFixed(2)} Weak`; corrEl.style.color = 'var(--accent)'; }
+      else { corrEl.textContent = `⚠️ ${corr.toFixed(2)} Diverging`; corrEl.style.color = 'var(--red)'; }
+    }
   } catch (err) {
     console.error('Intraday Price Action error:', err);
     if (vEl) { vEl.textContent = '⚠️ Could not load intraday structure — check connection.'; vEl.style.borderLeftColor = 'var(--red)'; vEl.style.color = 'var(--red)'; }
@@ -10689,6 +10754,23 @@ function calcDynamicEntryZone(direction, price, qqqBars, emaFactors, prevClose, 
     if (above.length) return `Reject at ${above[0].label} ($${above[0].price.toFixed(2)})`;
   }
   return null;
+}
+
+// ==================== PHASE 4: ADAPTIVE POSITION SIZE ====================
+// Beyond just confidence: also requires EMA + structure alignment before
+// suggesting 2 contracts. Reuses emaFactors/structureInfo already
+// computed in the Bias Engine scan — no new data.
+function suggestPositionSize(confidence, emaFactors, structureInfo, decidedPts) {
+  if (confidence < 55) return '0 contracts — stay flat';
+  let alignCount = 0, alignTotal = 0;
+  if (emaFactors) {
+    [emaFactors.stack21over50, emaFactors.stack50over200].forEach(v => { if (v != null) { alignTotal++; if (v === emaFactors.stack9over21) alignCount++; } });
+  }
+  if (structureInfo && (structureInfo.label === 'HH/HL' || structureInfo.label === 'LH/LL')) { alignTotal++; alignCount++; }
+  const alignRatio = alignTotal > 0 ? alignCount / alignTotal : 0;
+  if (confidence >= 75 && alignRatio >= 0.66 && decidedPts >= 30) return '2 contracts (A+ — confidence + structure aligned)';
+  if (confidence >= 75) return '1 contract (high confidence, structure mixed — reduced size)';
+  return '1 contract standard';
 }
 
 async function _runBiasEngineInner() {
@@ -10936,7 +11018,7 @@ async function _runBiasEngineInner() {
     regime = confidence >= 75 ? 'Trend Up — Strong' : 'Lean Bullish';
     entry = calcDynamicEntryZone('CALLS', qqqCurr, qqqBarsForEma, emaFactors, qqqPC, qqqPMH, qqqPML) || (spyPMH ? `Reclaim PM high ($${spyPMH.toFixed(2)}) or pullback to prev close ($${spyPC.toFixed(2)})` : 'Pullback to prev close or VWAP reclaim');
     levels = `Stop: -$0.30 · Target: ${confidence >= 75 ? '+$0.50 (A+)' : '+$0.35'}`;
-    risk = confidence >= 75 ? '1-2 contracts (A+ setup confirmed)' : '1 contract standard';
+    risk = suggestPositionSize(confidence, emaFactors, structureInfo, decidedPts);
     // Session-aware action
     if(inS1) action = `CALLS bias confirmed (${confidence}% confidence). You are in Session 1 — wait for pullback entry, do not chase.`;
     else if(inS2) action = `CALLS bias confirmed (${confidence}% confidence). Session 2 active (2:30–3:55 PM) — wait for pullback entry.`;
@@ -10949,7 +11031,7 @@ async function _runBiasEngineInner() {
     regime = confidence >= 75 ? 'Trend Down — Strong' : 'Lean Bearish';
     entry = calcDynamicEntryZone('PUTS', qqqCurr, qqqBarsForEma, emaFactors, qqqPC, qqqPMH, qqqPML) || (spyPML ? `Break below PM low ($${spyPML.toFixed(2)}) or reject at prev close ($${spyPC.toFixed(2)})` : 'Reject at prev close or VWAP fail');
     levels = `Stop: -$0.30 · Target: ${confidence >= 75 ? '+$0.50 (A+)' : '+$0.35'}`;
-    risk = confidence >= 75 ? '1-2 contracts (A+ setup confirmed)' : '1 contract standard';
+    risk = suggestPositionSize(confidence, emaFactors, structureInfo, decidedPts);
     // Session-aware action
     if(inS1) action = `PUTS bias confirmed (${confidence}% confidence). Session 1 active — wait for bounce rejection, do not chase the drop.`;
     else if(inS2) action = `PUTS bias confirmed (${confidence}% confidence). Session 2 active (2:30–3:55 PM) — wait for bounce rejection.`;
