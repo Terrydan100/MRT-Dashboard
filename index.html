@@ -1027,6 +1027,25 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
         </div>
         <div id="ipa-verdict" style="font-size:12px;font-weight:700;padding:8px 12px;border-radius:8px;background:rgba(0,0,0,0.2);border-left:3px solid var(--text3);color:var(--text2);margin-bottom:8px;line-height:1.5">Scanning intraday structure...</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px" id="ipa-factors"></div>
+        <!-- PHASE 2: Multi-Timeframe / Trend Strength / Reversal Probability -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:5px">MULTI-TIMEFRAME</div>
+            <div style="display:flex;justify-content:center;gap:8px" id="mtf-dots">
+              <span style="font-size:10px;color:var(--text3)">1m --</span>
+              <span style="font-size:10px;color:var(--text3)">5m --</span>
+              <span style="font-size:10px;color:var(--text3)">15m --</span>
+            </div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:5px">TREND STRENGTH</div>
+            <div id="trend-strength-badge" style="font-size:12px;font-weight:700;color:var(--text3)">--</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:5px">REVERSAL PROBABILITY</div>
+            <div id="reversal-prob-badge" style="font-size:12px;font-weight:700;color:var(--text3)">--</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -10288,9 +10307,9 @@ async function runBiasEngine() {
 // SEPARATE "Immediate Entry Signal" alongside (never replacing) the
 // existing Overall Bias confluence score. Free data source, same Yahoo
 // Finance proxy pattern already used by the Early Momentum Detector.
-async function fetchIntradayBars(symbol) {
+async function fetchIntradayBars(symbol, interval = '1m', range = '1d') {
   try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${interval}&range=${range}`;
     const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
     const r = await fetch(proxy);
     if (!r.ok) return null;
@@ -10411,6 +10430,87 @@ function calcEMATrendFactors(bars) {
   };
 }
 
+// ==================== PHASE 2: MULTI-TIMEFRAME, TREND STRENGTH, REVERSAL PROBABILITY ====================
+// Reuses fetchIntradayBars() (now generalized to accept interval/range)
+// and ipaCalcEMA() — no new fetch mechanism, just new intervals of the
+// same call.
+
+// Fetches 1m/5m/15m bars for a symbol and reads a simple EMA9-vs-EMA21
+// direction per timeframe. Returns per-timeframe direction plus how many
+// of the 3 agree — that agreement count is the actual signal.
+async function analyzeMultiTimeframe(symbol) {
+  const [bars1m, bars5m, bars15m] = await Promise.all([
+    fetchIntradayBars(symbol, '1m', '1d'),
+    fetchIntradayBars(symbol, '5m', '5d'),
+    fetchIntradayBars(symbol, '15m', '1mo'),
+  ]);
+  const dirOf = (bars) => {
+    if (!bars) return null;
+    const ema9 = ipaCalcEMA(bars.closes, 9), ema21 = ipaCalcEMA(bars.closes, 21);
+    return ema9 > ema21 ? 'bull' : 'bear';
+  };
+  const tf1m = dirOf(bars1m), tf5m = dirOf(bars5m), tf15m = dirOf(bars15m);
+  const dirs = [tf1m, tf5m, tf15m].filter(d => d != null);
+  const bullCount = dirs.filter(d => d === 'bull').length;
+  const bearCount = dirs.filter(d => d === 'bear').length;
+  return { tf1m, tf5m, tf15m, bullCount, bearCount, totalRead: dirs.length };
+}
+
+// Standard Wilder's RSI — genuinely new calc, nothing existing to reuse
+// for this one. Used only for the Reversal Probability readout below.
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return null;
+  let gains = 0, losses = 0;
+  for (let i = closes.length - period; i < closes.length; i++) {
+    const diff = closes[i] - closes[i - 1];
+    if (diff >= 0) gains += diff; else losses -= diff;
+  }
+  const avgGain = gains / period, avgLoss = losses / period;
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - (100 / (1 + rs));
+}
+
+// Trend Strength — a READOUT derived from factors already scanned this
+// cycle (EMA stack agreement + multi-TF agreement + structure). Does NOT
+// feed back into the confluence score — it would double-count signals
+// that already scored there.
+function calcTrendStrength(emaFactors, structureInfo, mtf) {
+  let alignCount = 0, total = 0;
+  if (emaFactors) {
+    [emaFactors.stack9over21, emaFactors.stack21over50, emaFactors.stack50over200].forEach(v => {
+      if (v != null) { total++; if (v === emaFactors.stack9over21) alignCount++; }
+    });
+  }
+  if (mtf && mtf.totalRead > 0) { total += mtf.totalRead; alignCount += Math.max(mtf.bullCount, mtf.bearCount); }
+  if (structureInfo && (structureInfo.label === 'HH/HL' || structureInfo.label === 'LH/LL')) { total++; alignCount++; }
+  if (total === 0) return { label: '❓ UNKNOWN', color: 'var(--text3)' };
+  const pct = alignCount / total;
+  if (pct >= 0.85) return { label: '💪 STRONG', color: 'var(--green)' };
+  if (pct >= 0.6) return { label: '✅ MODERATE', color: 'var(--accent)' };
+  return { label: '⚡ WEAK', color: 'var(--text3)' };
+}
+
+// Reversal Probability — how likely the CURRENT move fails/reverses soon.
+// Deliberately kept independent of direction (a warning, not a bull/bear
+// vote): combines RSI extremes + how far price has stretched from VWAP.
+function calcReversalProbability(bars, ipaData) {
+  const rsi = calcRSI(bars.closes, 14);
+  let score = 20; // baseline
+  if (rsi != null) {
+    if (rsi >= 75 || rsi <= 25) score += 35;
+    else if (rsi >= 68 || rsi <= 32) score += 20;
+  }
+  if (ipaData && ipaData.vwap) {
+    const pctFromVWAP = Math.abs(ipaData.price - ipaData.vwap) / ipaData.vwap * 100;
+    if (pctFromVWAP >= 0.5) score += 25;
+    else if (pctFromVWAP >= 0.25) score += 12;
+  }
+  score = Math.min(96, Math.max(4, Math.round(score)));
+  const label = score >= 70 ? '🔴 HIGH' : score >= 40 ? '🟡 MODERATE' : '🟢 LOW';
+  return { score, label, rsi };
+}
+
 function ipaAnalyzeSymbol(bars) {
   const closes = bars.closes;
   const price = closes[closes.length - 1];
@@ -10500,6 +10600,29 @@ async function runIntradayPriceAction() {
         return `<div style="font-size:10px;color:${c};padding:4px 8px;background:rgba(0,0,0,0.2);border-radius:6px;text-align:center">${f.t}</div>`;
       }).join('');
     }
+
+    // ── PHASE 2 DISPLAYS — reuse qqqBars already fetched above, no new data ──
+    const emaFactorsIpa = calcEMATrendFactors(qqqBars);
+    const structureIpa = analyzePriceStructureDetailed(qqqBars);
+    const mtfIpa = await analyzeMultiTimeframe('QQQ').catch(() => null);
+
+    const mtfDotsEl = document.getElementById('mtf-dots');
+    if (mtfDotsEl && mtfIpa) {
+      const dotHtml = (label, dir) => {
+        const c = dir === 'bull' ? 'var(--green)' : dir === 'bear' ? 'var(--red)' : 'var(--text3)';
+        const icon = dir === 'bull' ? '▲' : dir === 'bear' ? '▼' : '·';
+        return `<span style="font-size:10px;color:${c}">${label} ${icon}</span>`;
+      };
+      mtfDotsEl.innerHTML = dotHtml('1m', mtfIpa.tf1m) + dotHtml('5m', mtfIpa.tf5m) + dotHtml('15m', mtfIpa.tf15m);
+    }
+
+    const strength = calcTrendStrength(emaFactorsIpa, structureIpa, mtfIpa);
+    const strengthEl = document.getElementById('trend-strength-badge');
+    if (strengthEl) { strengthEl.textContent = strength.label; strengthEl.style.color = strength.color; }
+
+    const reversal = calcReversalProbability(qqqBars, qqqA);
+    const reversalEl = document.getElementById('reversal-prob-badge');
+    if (reversalEl) { reversalEl.textContent = `${reversal.label} (${reversal.score}%)`; reversalEl.style.color = reversal.score >= 70 ? 'var(--red)' : reversal.score >= 40 ? 'var(--accent)' : 'var(--green)'; }
   } catch (err) {
     console.error('Intraday Price Action error:', err);
     if (vEl) { vEl.textContent = '⚠️ Could not load intraday structure — check connection.'; vEl.style.borderLeftColor = 'var(--red)'; vEl.style.color = 'var(--red)'; }
@@ -10550,14 +10673,18 @@ async function _runBiasEngineInner() {
   // Reuses fetchIntradayBars() — same function the Intraday Price Action
   // layer already uses. Failure here just skips these factors; the rest
   // of the confluence score is unaffected.
-  let emaFactors = null, structureInfo = null;
+  let emaFactors = null, structureInfo = null, qqqBarsForEma = null;
   try {
-    const qqqBarsForEma = await fetchIntradayBars('QQQ');
+    qqqBarsForEma = await fetchIntradayBars('QQQ');
     if (qqqBarsForEma) {
       emaFactors = calcEMATrendFactors(qqqBarsForEma);
       structureInfo = analyzePriceStructureDetailed(qqqBarsForEma);
     }
   } catch(e) { /* silently skip — confluence score still works without it */ }
+
+  // ── PHASE 2: MULTI-TIMEFRAME CONFIRMATION ──────────────────────────
+  let mtf = null;
+  try { mtf = await analyzeMultiTimeframe('QQQ'); } catch(e) { /* skip silently */ }
 
   // ── SCORING ENGINE ─────────────────────────────────────────────────
   let bullPts = 0, bearPts = 0, choppyPts = 0;
@@ -10590,6 +10717,15 @@ async function _runBiasEngineInner() {
     else if (structureInfo.label === 'LH/LL') add(6, 'Structure: Lower Highs/Lower Lows', false);
     if (structureInfo.breakOfStructure === 'bull') add(7, 'Break of Structure — bullish reversal', true);
     else if (structureInfo.breakOfStructure === 'bear') add(7, 'Break of Structure — bearish reversal', false);
+  }
+
+  // ── MULTI-TIMEFRAME CONFIRMATION (Phase 2) ─────────────────────────
+  if (mtf && mtf.totalRead >= 2) {
+    if (mtf.bullCount === mtf.totalRead) add(10, `Multi-TF aligned: ${mtf.totalRead}/${mtf.totalRead} bullish (1m/5m/15m)`, true);
+    else if (mtf.bearCount === mtf.totalRead) add(10, `Multi-TF aligned: ${mtf.totalRead}/${mtf.totalRead} bearish (1m/5m/15m)`, false);
+    else if (mtf.bullCount > mtf.bearCount) add(5, `${mtf.bullCount} of ${mtf.totalRead} timeframes bullish`, true);
+    else if (mtf.bearCount > mtf.bullCount) add(5, `${mtf.bearCount} of ${mtf.totalRead} timeframes bearish`, false);
+    else add(3, 'Timeframes conflicting — 1m/5m/15m disagree', null);
   }
 
   // SPY/QQQ direction (15pts each)
