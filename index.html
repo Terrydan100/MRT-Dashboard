@@ -660,7 +660,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <div>
           <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:var(--accent);letter-spacing:2px;line-height:1;text-shadow:0 0 20px var(--glow)" id="main-dashboard-title">MR. T TRADING DASHBOARD</div>
-          <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--text2);letter-spacing:3px;text-transform:uppercase;margin-top:4px">AUSTIN WEALTH VENTURES LLC &nbsp;·&nbsp; OPTIONS SCALPING &nbsp;<span style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:none;cursor:default" title="MrT Dashboard v1.5 — Build: July 2026 — Last Updated: July 16, 2026">v1.5</span></div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--text2);letter-spacing:3px;text-transform:uppercase;margin-top:4px">AUSTIN WEALTH VENTURES LLC &nbsp;·&nbsp; OPTIONS SCALPING &nbsp;<span style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:none;cursor:default" title="MrT Dashboard v1.6 — Build: July 2026 — Last Updated: July 17, 2026">v1.6</span></div>
         </div>
         <!-- DASHBOARD SWITCHER DROPDOWN -->
         <div style="position:relative" id="dash-switcher-wrap">
@@ -3951,8 +3951,8 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; bottom:0; bac
 
 <script>
 // ==================== VERSION ====================
-const DASHBOARD_VERSION = 'v1.5';
-const DASHBOARD_BUILD_DATE = '2026-07-16';
+const DASHBOARD_VERSION = 'v1.6';
+const DASHBOARD_BUILD_DATE = '2026-07-17';
 console.log(`MrT Dashboard ${DASHBOARD_VERSION} — Build ${DASHBOARD_BUILD_DATE}`);
 
 // ==================== FIREBASE CONFIG ====================
@@ -10773,6 +10773,23 @@ function suggestPositionSize(confidence, emaFactors, structureInfo, decidedPts) 
   return '1 contract standard';
 }
 
+// ==================== v1.6: SHOCK DE-ESCALATION (conservative) ====================
+// Market shock triggers (SPY/QQQ %, VIX spike) are all downside/fear
+// signals — so "reclaim" here specifically means a bullish reclaim after
+// a shock, not a general-purpose two-way check. A single scan reclaiming
+// VWAP + 9 EMA + EMA stack + HH/HL structure does NOT cancel the shock
+// filter — only a genuine EASE, not a removal. Losing any of these
+// conditions on any later scan immediately restores full severity.
+function checkShockReclaim(qqqBarsForEma, emaFactors, structureInfo) {
+  if (!qqqBarsForEma || !emaFactors) return false;
+  const price = qqqBarsForEma.closes[qqqBarsForEma.closes.length - 1];
+  const vwap = ipaCalcVWAP(qqqBarsForEma);
+  return price > vwap
+    && emaFactors.priceVsEma9 === true
+    && emaFactors.stack9over21 === true
+    && structureInfo && structureInfo.label === 'HH/HL';
+}
+
 async function _runBiasEngineInner() {
   const pulseEl = document.getElementById('be-pulse');
   // ── READ ALL EXISTING DASHBOARD DATA ──────────────────────────────
@@ -10840,8 +10857,20 @@ async function _runBiasEngineInner() {
     if(bull === null)  { choppyPts+= pts; factors.push({ t: label, d: 'chop', pts }); }
   };
 
-  // Market shock = immediate override
-  if(shockVis) { bearPts += 30; factors.push({ t:'🚨 Market Shock Active', d:'bear', pts:30 }); }
+  // Market shock — full penalty by default. Only reduced (never fully
+  // removed) after 2+ consecutive scans holding a genuine bullish reclaim.
+  // Any scan that loses the reclaim conditions restores full penalty
+  // immediately (window._shockReclaimStreak resets to 0).
+  let shockPenalty = 30;
+  if (shockVis) {
+    const reclaiming = checkShockReclaim(qqqBarsForEma, emaFactors, structureInfo);
+    window._shockReclaimStreak = reclaiming ? (window._shockReclaimStreak || 0) + 1 : 0;
+    if (window._shockReclaimStreak >= 2) shockPenalty = 12;
+    const label = shockPenalty < 30 ? `🚨 Market Shock — easing (reclaim held ${window._shockReclaimStreak} scans)` : '🚨 Market Shock Active';
+    bearPts += shockPenalty; factors.push({ t: label, d:'bear', pts: shockPenalty });
+  } else {
+    window._shockReclaimStreak = 0;
+  }
 
   // ── EMA TREND SCORE (Phase 1) ──────────────────────────────────────
   if (emaFactors) {
@@ -11042,22 +11071,31 @@ async function _runBiasEngineInner() {
   }
 
   // ── CONFLICT RESOLUTION ───────────────────────────────────────────
-  // If shock is active but bias shows bullish/bearish — explain the override
+  // If shock is active but bias shows bullish/bearish — explain the override.
+  // v1.6: once the reclaim streak hits 2+, downgrade from a hard "no trade"
+  // block to a cautious reduced-size allowance — conservative, not instant.
   const conflictEl = document.getElementById('be-action');
-  if(shockVis && confirmedIsCalls && confidence >= 55) {
+  const shockEasing = shockVis && window._shockReclaimStreak >= 2;
+  if(shockVis && !shockEasing && confirmedIsCalls && confidence >= 55) {
     verdict = '⚠️ CALL BIAS OVERRIDDEN'; verdictColor = 'var(--orange)'; borderColor = 'var(--orange)';
     regime = 'Market Shock Active — override in effect';
     entry = 'Do not enter — shock conditions present';
     levels = 'No trade during shock';
     risk = '0 contracts — cash only';
     action = `CALL BIAS DETECTED (${confidence}%) BUT OVERRIDDEN BY MARKET SHOCK FILTER. Wait for shock to clear before trading.`;
-  } else if(shockVis && !confirmedIsCalls && confidence >= 55) {
+  } else if(shockVis && !shockEasing && !confirmedIsCalls && confidence >= 55) {
     verdict = '⚠️ PUT BIAS OVERRIDDEN'; verdictColor = 'var(--orange)'; borderColor = 'var(--orange)';
     regime = 'Market Shock Active — override in effect';
     entry = 'Do not enter — shock conditions present';
     levels = 'No trade during shock';
     risk = '0 contracts — cash only';
     action = `PUT BIAS DETECTED (${confidence}%) BUT OVERRIDDEN BY MARKET SHOCK FILTER. Wait for shock to clear before trading.`;
+  } else if(shockEasing) {
+    verdict = confirmedIsCalls ? '⚠️ CALL BIAS — SHOCK EASING' : '⚠️ PUT BIAS — SHOCK EASING';
+    verdictColor = 'var(--orange)'; borderColor = 'var(--orange)';
+    regime = `Shock still active but reclaim held ${window._shockReclaimStreak} scans — easing, not cleared`;
+    risk = '1 contract MAX — shock filter still partially active';
+    action = `Reclaim (VWAP + 9 EMA + structure) has held for ${window._shockReclaimStreak} consecutive scans. Shock filter easing but NOT fully cleared — small size only, tight stop, exit fast if reclaim breaks.`;
   }
 
   // ── TOP 3 REASONS ────────────────────────────────────────────────
